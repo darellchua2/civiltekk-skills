@@ -96,15 +96,17 @@
 
 ### Phase 4: Guard test + docs sweep + full suite
 
-- [ ] **4.1** Create `tests/test_requirements_inline_skill.bats` pinning: frontmatter (name==dir, Apache-2.0, category, mirrors), the detection tree invariants (skip rule, thin-AC rule, ambiguity markers, zero-reviewer rule), route invariants (Mode R max 2 rounds + agent-file-as-checklist, Mode A native questioning), no-subagent pin, no dead-letter path, wiring triple (map edge == HANDOFF5, preset membership, lean + allow rule), thin-wrapper pin (no BABOK/IEEE-830 template restatement — the specs skill owns templates)
+- [x] **4.1** Create `tests/test_requirements_inline_skill.bats` pinning: frontmatter (name==dir, Apache-2.0, category, mirrors), the detection tree invariants (skip rule, thin-AC rule, ambiguity markers, zero-reviewer rule), route invariants (Mode R max 2 rounds + agent-file-as-checklist, Mode A native questioning), no-subagent pin, no dead-letter path, wiring triple (map edge == HANDOFF5, preset membership, lean + allow rule), thin-wrapper pin (no BABOK/IEEE-830 template restatement — the specs skill owns templates)
     — **Why:** per-feature drift guard, mirroring test_code_review_inline_skill.bats
     — **Done when:** `bats tests/test_requirements_inline_skill.bats` green
     — **Consumers affected:** CI
+    — **Done:** 9 tests (frontmatter, detection-tree, routes, no-subagent, dead-letter absence, map↔HANDOFF5 mirror, preset membership incl. closure, lean+allow wiring, thin-wrapper anti-template-restatement pin) — one pin case-mismatch self-caught + fixed ("Zero-reviewer rule" vs "zero-reviewer rule"); files: tests/test_requirements_inline_skill.bats; fixes: 1
 
-- [ ] **4.2** Docs sweep: README — line 5 "120 ready-to-load skills" → 121; line 76 "120 skills" → 121; line 102 "120 skill directories" → 121; line 220 "69 primary-visible" → 70 + "all 120" → "all 121"; line 259/261 catalog 120 → 121; Planning & Alignment category row count +1 and lists `requirements-inline-skill`; line 24 two-flavors sentence optionally names the gate (keep ≤1 clause added); line 95 inline-workers preset row names the requirements gate; `deploy/setup.sh` lean comment 69 → 70; verify no other count restatements (`grep -rn "120\b" README.md deploy/setup.sh` clean of skill-count hits after edit)
+- [x] **4.2** Docs count sweep: README — line 5 "120 ready-to-load skills" → 121; line 76 "120 skills" → 121; line 102 "120 skill directories" → 121; line 220 "69 primary-visible" → 70 + "all 120" → "all 121"; line 259/261 catalog 120 → 121; Planning & Alignment category row count +1 and lists `requirements-inline-skill`; line 24 two-flavors sentence optionally names the gate (keep ≤1 clause added); line 95 inline-workers preset row names the requirements gate; `deploy/setup.sh` lean comment 69 → 70; verify no other count restatements (`grep -rn "120\b" README.md deploy/setup.sh` clean of skill-count hits after edit)
     — **Why:** count restatements drift silently; the sweep is a dedicated step with a verification grep
     — **Done when:** verification greps clean; Planning & Alignment row lists the skill; bats docs tests green
     — **Consumers affected:** README readers, doc-drift audits
+    — **Done:** README counts 120→121, lean 69→70, Planning & Alignment (3) + inline-workers row updated; setup.sh comment 69→70; verification greps clean; files: README.md, deploy/setup.sh; fixes: none
 
 - [ ] **4.3** Full suite green — `bats tests/` exits 0 (all files)
     — **Why:** exit gate — registry consistency, isolation guard, invariants, deploy guards
