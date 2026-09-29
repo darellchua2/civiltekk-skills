@@ -20,6 +20,8 @@
 # checklists at runtime (declared closure, HANDOFF4).
 # #650: the architecture-review-skill decision-tree reviewer loads the
 # reviewer baseline at runtime (declared closure, HANDOFF5).
+# #641: the inline requirements wrapper loads grilling + the specs skill at
+# runtime (declared closure, HANDOFF6).
 # Any other edge must be declared the same way or duplicated.
 HANDOFF1_OWNER="pptx-template-modifier-skill"
 HANDOFF1_TARGETS="pptx-generate-slide-skill"
@@ -31,6 +33,8 @@ HANDOFF4_OWNER="code-review-inline-skill"
 HANDOFF4_TARGETS="reviewer-baseline-skill language-review-checklists-skill"
 HANDOFF5_OWNER="architecture-review-skill"
 HANDOFF5_TARGETS="reviewer-baseline-skill"
+HANDOFF6_OWNER="requirements-inline-skill"
+HANDOFF6_TARGETS="grilling-skill civiltekk-requirements-specs-skill"
 
 @test "skill_isolation_no_shared_common_references" {
   # Catches both repo paths (skills/_common/...) and deploy strings
@@ -106,11 +110,11 @@ PYEOF
 }
 
 @test "skill_isolation_no_sibling_skill_paths_outside_declared_handoff" {
-  run python3 - "$HANDOFF1_OWNER" "$HANDOFF1_TARGETS" "$HANDOFF2_OWNER" "$HANDOFF2_TARGETS" "$HANDOFF3_OWNERS" "$HANDOFF3_TARGETS" "$HANDOFF4_OWNER" "$HANDOFF4_TARGETS" "$HANDOFF5_OWNER" "$HANDOFF5_TARGETS" <<'PYEOF'
+  run python3 - "$HANDOFF1_OWNER" "$HANDOFF1_TARGETS" "$HANDOFF2_OWNER" "$HANDOFF2_TARGETS" "$HANDOFF3_OWNERS" "$HANDOFF3_TARGETS" "$HANDOFF4_OWNER" "$HANDOFF4_TARGETS" "$HANDOFF5_OWNER" "$HANDOFF5_TARGETS" "$HANDOFF6_OWNER" "$HANDOFF6_TARGETS" <<'PYEOF'
 import re, sys
 from pathlib import Path
 
-owner1, targets1, owner2, targets2, owners3, targets3, owner4, targets4, owner5, targets5 = sys.argv[1:11]
+owner1, targets1, owner2, targets2, owners3, targets3, owner4, targets4, owner5, targets5, owner6, targets6 = sys.argv[1:13]
 allowed = {
     owner1: set(targets1.split()),
     owner2: set(targets2.split()),
@@ -119,6 +123,7 @@ for o in owners3.split():
     allowed[o] = set(targets3.split())
 allowed[owner4] = set(targets4.split())
 allowed[owner5] = set(targets5.split())
+allowed[owner6] = set(targets6.split())
 root = Path("skills")
 catalog = {d.name for d in root.iterdir()
            if d.is_dir() and not d.name.startswith("_")}

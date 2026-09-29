@@ -78,8 +78,8 @@ for name in sys.argv[1:3]:
 
 @test "requires_skills_map_entry_matches_isolation_guard_handoff_pair" {
   # AGENTS.md: HANDOFF{1,2}_OWNER/HANDOFF{1,2}_TARGETS plus the HANDOFF3
-  # multi-owner pair and the HANDOFF4 pair in the guard are the source of
-  # truth — the installer edges must be exactly those handoffs
+  # multi-owner pair and the HANDOFF4/HANDOFF5 pairs in the guard are the
+  # source of truth — the installer edges must be exactly those handoffs
   # (owner -> multi-target), never drift.
   HANDOFF1_OWNER="$(grep -oE '^HANDOFF1_OWNER="[^"]+"' "$GUARD" | cut -d'"' -f2)"
   HANDOFF1_TARGETS="$(grep -oE '^HANDOFF1_TARGETS="[^"]+"' "$GUARD" | cut -d'"' -f2)"

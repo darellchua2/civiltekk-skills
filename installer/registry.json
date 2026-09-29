@@ -1924,6 +1924,16 @@
       ]
     },
     {
+      "name": "requirements-inline-skill",
+      "description": "In-session requirements delegate — runs the AC-quality detection gate, grills reviewer-emitted Requirements Gaps inline (Mode R, agent file as checklist), and drafts BRD/SRS in-session with native questioning (Mode A). Thin wrapper: templates stay in the specs skill; never spawns a subagent. Triggers: requirements detection gate, grill requirements gaps, inline requirements.",
+      "category": "Planning & Alignment",
+      "audience": "",
+      "workflow": "",
+      "os": [],
+      "harness": "",
+      "requiredByAgents": []
+    },
+    {
       "name": "research-paper-generation-skill",
       "description": "Generate submission-ready research papers from codebase and verified experimental data — three framing strategies, reference validation, pandoc DOCX conversion. Triggers: research paper, academic paper, write paper, paper draft, journal submission, conference paper.",
       "category": "Academic & Research Writing",
