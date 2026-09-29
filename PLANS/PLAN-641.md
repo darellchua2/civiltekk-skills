@@ -6,13 +6,13 @@
 
 ## Acceptance Criteria
 
-- [ ] `skills/requirements-inline-skill/SKILL.md` ships contract-conformant (frontmatter, no-subagent pin, portability binding) with the detection decision tree (AC-quality gate + zero-reviewer rule) + skip rules + Mode A/R/B inline semantics
-- [ ] Detection gate wired at the Step 6d→7 boundary in `worktree-pipeline-skill` — data-driven, blast-radius axes unchanged, no proactive Mode R stage mismatch
-- [ ] v2 template Step 7 relay routes through the skill; Mode R max-2-rounds + user-facing fallback preserved
-- [ ] `dependency-map.json` closure + isolation-guard HANDOFF wiring (triple-edit invariant, per the #635 learning) + `registry.json` rebuilt and committed
-- [ ] Visibility wired: skill-allow rule, lean entry, preset membership + description
-- [ ] Tests: new skill contract guard, pipeline-skill prose pins, v2 template pin, count sweeps (README, setup.sh, profile pins)
-- [ ] Full bats suite green
+- [x] `skills/requirements-inline-skill/SKILL.md` ships contract-conformant (frontmatter, no-subagent pin, portability binding) with the detection decision tree (AC-quality gate + zero-reviewer rule) + skip rules + Mode A/R/B inline semantics
+- [x] Detection gate wired at the Step 6d→7 boundary in `worktree-pipeline-skill` — data-driven, blast-radius axes unchanged, no proactive Mode R stage mismatch
+- [x] v2 template Step 7 relay routes through the skill; Mode R max-2-rounds + user-facing fallback preserved
+- [x] `dependency-map.json` closure + isolation-guard HANDOFF wiring (triple-edit invariant, per the #635 learning) + `registry.json` rebuilt and committed
+- [x] Visibility wired: skill-allow rule, lean entry, preset membership + description
+- [x] Tests: new skill contract guard, pipeline-skill prose pins, v2 template pin, count sweeps (README, setup.sh, profile pins)
+- [x] Full bats suite green
 
 ## Dependency & Consumer Map
 
@@ -108,10 +108,11 @@
     — **Consumers affected:** README readers, doc-drift audits
     — **Done:** README counts 120→121, lean 69→70, Planning & Alignment (3) + inline-workers row updated; setup.sh comment 69→70; verification greps clean; files: README.md, deploy/setup.sh; fixes: none
 
-- [ ] **4.3** Full suite green — `bats tests/` exits 0 (all files)
+- [x] **4.3** Full suite green — `bats tests/` exits 0 (all files)
     — **Why:** exit gate — registry consistency, isolation guard, invariants, deploy guards
     — **Done when:** zero `not ok` lines; any pre-existing main failure stated explicitly with evidence it predates the branch
     — **Consumers affected:** CI, merge watcher
+    — **Done:** full suite run in two halves due to server-restart instability; 81 directly-related tests green + 570 remaining tests green = 651/651, zero failures; files: none; fixes: none
 
 ## Technical Notes
 
@@ -134,3 +135,7 @@
 - **Gate over-firing** (every ticket interrogated → friction): skip rule is explicit (gate green AND ≥1 reviewer selected → skip); ambiguity markers enumerated, not vibes; zero-reviewer rule requires new-work.
 - **Template bloat**: Step 7 sentence stays one clause per route; mechanics live in the skill.
 - **Registry drift** (`generated-artifact-unstaged-regn`): rebuild in 1.3, commit in the same phase commit.
+
+## Trace
+
+GATE 3a88ce3 tier=full lint=n.a typecheck=n.a build=n.a unit=t e2e=n.a (Phase 4 exit: full suite 651/651 in two halves — zero failures)
