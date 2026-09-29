@@ -63,9 +63,9 @@
     — **Done when:** array length 70; `bats tests/skill_profiles.bats` green
     — **Consumers affected:** lean deploys, CI pins
 
-- [ ] **2.3** Add `requirements-inline-skill` to `pack-inline-workers.json` members (17→18) + extend `$comment`/`description` to name the requirements detection gate
-    — **Why:** the preset is the v2 inline family's install unit; the gate is now part of that family
-    — **Done when:** members length 18, description names it, preset contract tests green
+- [ ] **2.3** Add `requirements-inline-skill` to `pack-inline-workers.json` members (17 → 20) **together with its closure members** `grilling-skill` and `civiltekk-requirements-specs-skill` (the preset convention ships knowledge-skills as members — "the closure rides preset membership"; relying on auto-install notices would contradict the preset's own design) + extend `$comment`/`description` to name the requirements detection gate
+    — **Why:** the preset is the v2 inline family's install unit; the gate is now part of that family, and its knowledge closure rides membership per convention
+    — **Done when:** members length 20, both closure skills present, description names the gate, preset contract tests green
     — **Consumers affected:** `--preset inline-workers` installs, contract test
 
 ### Phase 3: Pipeline wiring
@@ -114,7 +114,7 @@
 ## Dependencies
 
 - Hard: none beyond repo state (no npm deps; build-registry uses stdlib).
-- Install closure declared: `grilling-skill`, `civiltekk-requirements-specs-skill` (both already in pack-inline-workers? — verify in Phase 2; grilling may not be — add closure members to the preset if the map edge requires them for `--no-deps`-free installs, keeping preset growth minimal).
+- Install closure declared: `grilling-skill`, `civiltekk-requirements-specs-skill` — both ride pack-inline-workers membership (resolved by the Step 7 review finding; neither was a member before).
 
 ## Risks & Mitigation
 
