@@ -496,6 +496,11 @@
             "effect": "allow"
         },
         {
+            "action": "skill",
+            "resource": "requirements-inline-skill",
+            "effect": "allow"
+        },
+        {
             "action": "codegraph*",
             "resource": "*",
             "effect": "allow"

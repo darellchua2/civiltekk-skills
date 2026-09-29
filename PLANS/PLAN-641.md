@@ -56,20 +56,23 @@
 
 ### Phase 2: Visibility + packaging
 
-- [ ] **2.1** Add `{action: skill, resource: requirements-inline-skill, effect: allow}` to `deploy/opencode.json` permissions after `code-review-inline-skill`
+- [x] **2.1** Add `{action: skill, resource: requirements-inline-skill, effect: allow}` to `deploy/opencode.json` permissions after `code-review-inline-skill`
     — **Why:** deny-all-first allowlist — the primary invokes the skill during v2 runs
     — **Done when:** JSON parses, skill-allow count 91→92, deny-all first
     — **Consumers affected:** runtime gating on every deploy
+    — **Done:** rule added after code-review-inline-skill (allows 91→92, deny-all first); files: deploy/opencode.json; fixes: none
 
-- [ ] **2.2** Append `requirements-inline-skill` to the `lean` array in `deploy/skill-profiles.json` (69 → 70); update `tests/skill_profiles.bats` pins (header comment, test name, `-eq` assertion, the allow-count assertion string) in the same step
+- [x] **2.2** Append `requirements-inline-skill` to the `lean` array in `deploy/skill-profiles.json` (69 → 70); update `tests/skill_profiles.bats` pins (header comment, test name, `-eq` assertion, the allow-count assertion string) in the same step
     — **Why:** primary visibility at startup; count pins red otherwise (the #635 lesson — pins update with the append, not later)
     — **Done when:** array length 70; `bats tests/skill_profiles.bats` green
     — **Consumers affected:** lean deploys, CI pins
+    — **Done:** appended after code-review-inline-skill (length 70); all four 69-pins updated to 70 via sed in-step (header, test name, assertion, allow-count string); files: deploy/skill-profiles.json, tests/skill_profiles.bats; fixes: none
 
-- [ ] **2.3** Add `requirements-inline-skill` to `pack-inline-workers.json` members (17 → 20) **together with its closure members** `grilling-skill` and `civiltekk-requirements-specs-skill` (the preset convention ships knowledge-skills as members — "the closure rides preset membership"; relying on auto-install notices would contradict the preset's own design) + extend `$comment`/`description` to name the requirements detection gate
+- [x] **2.3** Add `requirements-inline-skill` to `pack-inline-workers.json` members (17 → 20) **together with its closure members** `grilling-skill` and `civiltekk-requirements-specs-skill` (the preset convention ships knowledge-skills as members — "the closure rides preset membership"; relying on auto-install notices would contradict the preset's own design) + extend `$comment`/`description` to name the requirements detection gate
     — **Why:** the preset is the v2 inline family's install unit; the gate is now part of that family, and its knowledge closure rides membership per convention
     — **Done when:** members length 20, both closure skills present, description names the gate, preset contract tests green
     — **Consumers affected:** `--preset inline-workers` installs, contract test
+    — **Done:** members 17→20 (skill after code-review-inline; closure pair after language-review-checklists), $comment + description name the gate; first rewrite attempt via python json.dump reformatted the whole file (51-line diff) — reverted and redone with targeted edits at the file's 4-space indent (+5/−2 final); files: installer/presets/pack-inline-workers.json; fixes: 1 (self-caught formatting regression before commit)
 
 ### Phase 3: Pipeline wiring
 

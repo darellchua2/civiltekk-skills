@@ -1,7 +1,7 @@
 {
-    "$comment": "Preset 'inline-workers' for installer/init.mjs (--preset inline-workers). HAND-MAINTAINED (unlike the derived presets): the /tmp/gen-presets.mjs generator is not in-repo, so regeneration would drop this file. The inline delegation family — the inline plan executor plus the 4 inline decision-tree skills, the in-session code-review wrapper (code-review-inline-skill), the architecture-review-skill decision-tree reviewer (the /run-worktree-pipeline Step 7 inline architecture-review route), and the Step 10 PR route (civiltekk-pr-workflow-skill create route + its runtime deps ticketing-skill, semantic-release-convention-skill, gh-cli-setup-skill — dependency-map.json has no requiresSkills coverage for the PR skill, so preset membership is the closure), plus their knowledge-skill dependency closure (the closure rides preset membership for the knowledge skills; the 4 workers + plan-execution-inline-skill are ALSO covered by dependency-map.json requiresSkills edges), plus the reviewer baselines the /run-worktree-pipeline inline-review arm names explicitly and the code-review checklist's core knowledge skills. Opt-in: default setup.sh deploy is unaffected.",
+    "$comment": "Preset 'inline-workers' for installer/init.mjs (--preset inline-workers). HAND-MAINTAINED (unlike the derived presets): the /tmp/gen-presets.mjs generator is not in-repo, so regeneration would drop this file. The inline delegation family — the inline plan executor plus the 4 inline decision-tree skills, the in-session code-review wrapper (code-review-inline-skill), the architecture-review-skill decision-tree reviewer (the /run-worktree-pipeline Step 7 inline architecture-review route), the in-session requirements delegate with its detection gate (requirements-inline-skill), and the Step 10 PR route (civiltekk-pr-workflow-skill create route + its runtime deps ticketing-skill, semantic-release-convention-skill, gh-cli-setup-skill — dependency-map.json has no requiresSkills coverage for the PR skill, so preset membership is the closure), plus their knowledge-skill dependency closure (the closure rides preset membership for the knowledge skills; the 4 workers + plan-execution-inline-skill are ALSO covered by dependency-map.json requiresSkills edges), plus the reviewer baselines the /run-worktree-pipeline inline-review arm names explicitly and the code-review checklist's core knowledge skills. Opt-in: default setup.sh deploy is unaffected.",
     "name": "inline-workers",
-    "description": "Inline delegation family — plan-execution-inline-skill, the testing/linting/documentation/responsive-audit inline skills, the in-session code-review wrapper (code-review-inline-skill), the architecture-review-skill decision-tree reviewer, the Step 10 PR route (civiltekk-pr-workflow-skill create route) with its runtime deps, the knowledge skills they defer to, and the reviewer baselines for inline pipeline reviews (reviewer-baseline-skill, language-review-checklists-skill). Companion to the inline-default /run-plan and /run-worktree-pipeline commands on full deploys.",
+    "description": "Inline delegation family — plan-execution-inline-skill, the testing/linting/documentation/responsive-audit inline skills, the in-session code-review wrapper (code-review-inline-skill), the architecture-review-skill decision-tree reviewer, the in-session requirements delegate with its detection gate (requirements-inline-skill), the Step 10 PR route (civiltekk-pr-workflow-skill create route) with its runtime deps, the knowledge skills they defer to, and the reviewer baselines for inline pipeline reviews (reviewer-baseline-skill, language-review-checklists-skill). Companion to the inline-default /run-plan and /run-worktree-pipeline commands on full deploys.",
     "agents": [],
     "skills": [
         "plan-execution-inline-skill",
@@ -11,6 +11,7 @@
         "responsive-audit-inline-skill",
         "code-review-inline-skill",
         "architecture-review-skill",
+        "requirements-inline-skill",
         "language-linting-skill",
         "verification-loop-skill",
         "technical-writing-skill",
@@ -18,6 +19,8 @@
         "playwright-responsive-audit-skill",
         "reviewer-baseline-skill",
         "language-review-checklists-skill",
+        "grilling-skill",
+        "civiltekk-requirements-specs-skill",
         "clean-code-skill",
         "code-smells-skill",
         "security-audit-skill",
