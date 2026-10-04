@@ -47,6 +47,10 @@ duplicating the resource.
 
 ## Traps
 
+- Amplify has TWO credential planes: the service role (`iam_service_role_arn` — build +
+  SSR logging) and whatever app CODE uses at runtime. House rule: no static execution
+  creds in the app; runtime needs resolve via SSM (Rule 11) → branch env vars. An
+  IAM-user-with-access-keys pattern is legacy (LEARNINGS: amplify-service-role-vs-execution-user).
 - `for_each` rejects sensitive-derived keys — a gate like
   `local.create = data.aws_ssm_parameter.token.value != ""` is sensitive and
   fails validate inside for_each (count tolerates it). Either use count or
