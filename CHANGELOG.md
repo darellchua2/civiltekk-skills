@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [12.17.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.16.0...v12.17.0) (2026-10-04)
+
+### Features
+
+* **skill:** shared-infra-split route in civiltekk-opentofu-skill ([6d4c33e](https://github.com/darellchua2/civiltekk-skills/commit/6d4c33e26ee13df92744ea290552ebb9a5e2ef53))
+
 ## [12.16.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.15.0...v12.16.0) (2026-10-01)
 
 ### Features
