@@ -81,3 +81,4 @@ docs/OpenCode-Agent-Tooling-Research-2026-09-24.interactive.html
 !LEARNINGS/anti-patterns/unasserted-sub-silently-noops.md
 !LEARNINGS/conventions/add-skill-deploy-checklist.md
 !LEARNINGS/anti-patterns/documented-cli-behavior-needs-source-verification.md
+!LEARNINGS/anti-patterns/directory-scoped-rename-sweep-misses-root-docs.md

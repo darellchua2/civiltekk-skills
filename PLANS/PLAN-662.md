@@ -28,6 +28,7 @@
 GATE ea646a3 tier=light lint=n.a typecheck=n.a build=- unit=t e2e=n.a
 LOG 2.1 gate-red fix 1/3: civiltekk-pr-workflow-skill/references/create.md:15 still consumed "PLAN trace block" — reworded to the ## Trace section (sixth memo-location consumer missed by the five-file plan)
 LOG 2.2 gate-red fix 2/3: tests/test_tiered_gating.bats:132 pinned the retired phrase "WORK LOG line naming the anchor" — assertion updated to the canonical "LOG line naming the anchor" (same escalation-logging invariant, now destination-bearing)
+GATE 6e2ebe1 tier=full lint=n.a typecheck=n.a build=- unit=t e2e=n.a
 
 ## Implementation Phases
 
