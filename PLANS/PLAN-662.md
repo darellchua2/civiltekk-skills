@@ -9,9 +9,9 @@
 - [x] Both executors append GATE/LOG/SKIP lines to `## Trace`; per-step `— Done:` lines unchanged
 - [x] `verification-loop-skill` §Gate memo references the `## Trace` section with create-if-absent for legacy PLANs
 - [x] `worktree-pipeline-skill` green assertion cites the `## Trace` section
-- [ ] `grep -rn "trace block" skills/` returns empty
+- [x] `grep -rn "trace block" skills/` returns empty
 - [x] `--soft` acceptance-criteria check reads to the next `^## ` heading instead of a fixed 20-line window
-- [ ] Existing bats suite green (body-only edits, no structural changes)
+- [x] Existing bats suite green (body-only edits, no structural changes)
 
 ## Dependency & Consumer Map
 
@@ -26,6 +26,8 @@
 ## Trace
 
 GATE ea646a3 tier=light lint=n.a typecheck=n.a build=- unit=t e2e=n.a
+LOG 2.1 gate-red fix 1/3: civiltekk-pr-workflow-skill/references/create.md:15 still consumed "PLAN trace block" — reworded to the ## Trace section (sixth memo-location consumer missed by the five-file plan)
+LOG 2.2 gate-red fix 2/3: tests/test_tiered_gating.bats:132 pinned the retired phrase "WORK LOG line naming the anchor" — assertion updated to the canonical "LOG line naming the anchor" (same escalation-logging invariant, now destination-bearing)
 
 ## Implementation Phases
 
@@ -57,14 +59,16 @@ GATE ea646a3 tier=light lint=n.a typecheck=n.a build=- unit=t e2e=n.a
     — **Done:** 10a citation reads "from the PLAN's `## Trace` section"; files: skills/worktree-pipeline-skill/SKILL.md; fixes: none
 
 ### Phase 2: Verification
-- [ ] **2.1** Run the dangling-reference grep gate: `grep -rn "trace block" skills/` must return empty
+- [x] **2.1** Run the dangling-reference grep gate: `grep -rn "trace block" skills/` must return empty
     — **Why:** proves the cross-reference consumed by four skills now resolves to a declared section — the ticket's core defect is gone
     — **Done when:** the grep command exits with no matches
     — **Consumers affected:** none
-- [ ] **2.2** Run the bats suite (`bats tests/`) and confirm green
+    — **Done:** repo-wide grep returns zero matches; caught + reworded a sixth consumer the plan missed (create.md:15); files: skills/civiltekk-pr-workflow-skill/references/create.md; fixes: gate-red fix 1/3
+- [x] **2.2** Run the bats suite (`bats tests/`) and confirm green
     — **Why:** body-only edits must not break the isolation, portability, or registry guard tests
     — **Done when:** the suite exits 0
     — **Consumers affected:** none
+    — **Done:** full suite 648 ok / 0 not ok (exit 0); one test pinned the retired "WORK LOG line" phrase and was updated to the canonical wording; files: tests/test_tiered_gating.bats; fixes: gate-red fix 2/3
 
 ## Technical Notes
 - Isolation contract (#437): the two executor skills intentionally duplicate prose — apply identical wording to both; never extract a shared module.

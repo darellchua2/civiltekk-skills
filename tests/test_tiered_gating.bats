@@ -129,7 +129,7 @@ PE="$SKILLS_DIR/plan-execution-skill/SKILL.md"
 }
 
 @test "tier2_gating_plan-execution_escalation_logging" {
-  grep -qiF 'WORK LOG line naming the anchor' "$PE"
+  grep -qiF 'LOG line naming the anchor' "$PE"
 }
 
 @test "tier2_gating_plan-execution_never_push_red_unchanged" {
