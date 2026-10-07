@@ -28,7 +28,7 @@ Robustness lives at the boundaries; detection runs cheaply in between. No check 
   2. the agent judges the change risk high, or is unsure — **unsure always escalates to full**;
   3. the **ticket exit gate** — the last gate before the PR for the ticket — runs full **unconditionally**, whatever the final phase touched.
 
-Escalation is **one-directional**: light is the default; full is triggered, never justified away. Per full-gate escalation, record one line in the WORK LOG naming the anchor or judgment reason; record nothing for light gates.
+Escalation is **one-directional**: light is the default; full is triggered, never justified away. Per full-gate escalation, record one LOG line in the PLAN's `## Trace` section (or the task record when no PLAN exists) naming the anchor or judgment reason; record nothing for light gates.
 
 Tiering never weakens the invariants: INCONCLUSIVE is never a pass at either tier, and never-push-red holds at every tier — the push boundary requires a green `tier=full` memo (§Gate memo).
 
