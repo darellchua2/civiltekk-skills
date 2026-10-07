@@ -44,7 +44,7 @@ Discover commands from project manifests in this order: `package.json` scripts �
 
 ### Gate memo
 
-After every green gate, write one line into the PLAN trace block (or task record when no PLAN exists):
+After every green gate, write one line into the PLAN's `## Trace` section — the append-only run-level audit trail declared in the canonical template (`grilling-skill` §PLAN emission; create the section if absent when appending to a legacy PLAN), or the task record when no PLAN exists:
 
 ```
 GATE <short-sha> tier=light|full lint=t typecheck=t build=t|- unit=t|-|n.a e2e=t|-|n.a

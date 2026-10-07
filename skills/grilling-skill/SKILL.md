@@ -118,6 +118,10 @@ After convergence, emit `PLANS/PLAN-GIT-{issue}.md` (or `PLANS/PLAN-{KEY}.md` fo
 | Node (file/module) | Depends on (must precede) | Consumers (who depends on this) | Change risk |
 |---------------------|---------------------------|---------------------------------|-------------|
 
+## Trace
+
+_Append-only run-level events, newest last, never rewritten — `GATE <short-sha> tier=… lint=… …` (format per `verification-loop-skill` §Gate memo) · `LOG <phase> <reason>` · `SKIP <N.M> <reason>`._
+
 ## Implementation Phases
 
 ### Phase 1: <name>
@@ -127,7 +131,7 @@ After convergence, emit `PLANS/PLAN-GIT-{issue}.md` (or `PLANS/PLAN-{KEY}.md` fo
     — **Consumers affected:** <who depends on this; none if N/A>
 ```
 
-Contract rules: phases parse on `^### Phase`; steps parse on `- [ ] **N.M**` with completion `- [x]`; every step carries the full rationale triple (`Why` / `Done when` / `Consumers affected`) — a step missing any field is malformed; executors read `## Dependency & Consumer Map` before executing, so author it honestly.
+Contract rules: phases parse on `^### Phase`; steps parse on `- [ ] **N.M**` with completion `- [x]`; every step carries the full rationale triple (`Why` / `Done when` / `Consumers affected`) — a step missing any field is malformed; executors read `## Dependency & Consumer Map` before executing, so author it honestly. `## Trace` is the append-only run-level audit trail — executors append GATE memos, LOG lines (full-gate escalation reasons, fix-on-fail attempts), and SKIP/deviation lines there, newest last, and never rewrite it; per-step `— Done:` lines stay with their steps.
 
 ## Rules
 
