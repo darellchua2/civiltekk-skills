@@ -44,16 +44,21 @@ LOG 1.2 deviation: LEARNINGS/decisions/goal-plugin-v2-readoption.md is repo-igno
 LOG pivot (2026-10-08 post-restore): ^0.1.59 LOADS clean on opencode 2.0.25 (no failed-to-load since restart), but sessions on strict providers fail to drain — `AI.Error: tools.function.parameters is not a valid moonshot flavored json schema ... properties.revisit_evidence: invalid type` (log 14:10:22Z+, 4 sessions). `revisit_evidence` verified in the plugin's own dist/server.js + README. User experiment confirmed causality: config deleted → sessions clean; restored → failures return. Decision (user): remove the plugin from the repo pending an upstream schema fix; pin bump alone is insufficient.
 SKIP 3.1 restart-for-load — superseded by removal (service restart happens as removal verification instead).
 SKIP 3.2 /goal catalog check — superseded (plugin absent → no /goal expected; `[plan:*]` marker aliases per plan-execution-skill remain valid without the plugin).
+LOG removal verification (2026-10-08 14:19-14:20Z): post-restart log shows only the 7 local plugins loading (20 loads each), zero goal-plugin loads, zero `failed to load plugin`, zero `Failed to drain` errors on new sessions; the 14:23Z drain errors were pre-existing stuck sessions created in the poisoned window (13:50-14:23Z) replaying captured toolsets — no new session has failed since.
+GATE b256a52 tier=light lint=n.a typecheck=n.a build=n.a unit=t(scoped bats 75/75 — 5 files reading deploy/opencode.json) e2e=n.a (Phase 1 — config+docs only)
+GATE cfa8065 tier=full lint=n.a typecheck=n.a build=n.a unit=t(bats 657/657 exit 0) e2e=n.a (TICKET EXIT GATE — final tree incl. review doc-sweep; no manifest scripts; full-suite rerun after sweep edits)
 
 ### Phase 2: User-space redeploy (no service disruption)
 - [x] **2.1** Redeploy the config from source: `cp` backup of `~/.config/opencode/opencode.json` then copy the worktree's `deploy/opencode.json` over it — the scoped equivalent of `setup_config`'s copy step for the one changed file (full alternative: `./deploy/setup.sh --quick -y`, heavier — prompts and redeploys skills/AGENTS.md too)
     — **Why:** the running service reads the deployed file, not the repo; repo rule says redeploy from source, never hand-edit deployed copies
     — **Done when:** `grep goal-plugin ~/.config/opencode/opencode.json` shows `^0.1.59`; backup file exists beside it
     — **Consumers affected:** opencode service plugin resolution at next boot
-- [ ] **2.2** Remove the frozen plugin cache: `rm -rf ~/.cache/opencode/npm/@prevalentware`
+    — **Done:** Superseded in practice by three full setup.sh redeploys from feat/665 (22:09, 22:19, 22:27 local — after user config wipes); deployed config verified JSON-valid, plugin-free (0 goal-plugin refs), skills=125 each time; files: none (runtime ops); fixes: none
+- [x] **2.2** Remove the frozen plugin cache: `rm -rf ~/.cache/opencode/npm/@prevalentware`
     — **Why:** the cache dir is keyed by the old spec resolution (0.1.48) and never re-resolves; removing it guarantees the next boot fetches 0.1.59+ (belt-and-braces alongside the changed spec string, and frees the orphaned install)
     — **Done when:** directory absent; next service start recreates it under the new spec
     — **Consumers affected:** opencode plugin installer only
+    — **Done:** Purged 13:50Z (pre-pivot) and again post-removal 14:19Z; zero @prevalentware dirs verified after each; files: none (runtime op); fixes: none
 
 ### Phase 3: Runtime verification (DISRUPTIVE — orchestrator defers until after PR creation)
 - [ ] **3.1** `opencode service restart`

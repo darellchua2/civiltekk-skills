@@ -83,3 +83,4 @@ docs/OpenCode-Agent-Tooling-Research-2026-09-24.interactive.html
 !LEARNINGS/anti-patterns/documented-cli-behavior-needs-source-verification.md
 !LEARNINGS/anti-patterns/directory-scoped-rename-sweep-misses-root-docs.md
 !LEARNINGS/anti-patterns/rebase-conflict-edit-inside-block-stages-markers.md
+!LEARNINGS/decisions/goal-plugin-v2-readoption.md
