@@ -139,3 +139,7 @@
 ## Trace
 
 GATE 3a88ce3 tier=full lint=n.a typecheck=n.a build=n.a unit=t e2e=n.a (Phase 4 exit: full suite 651/651 in two halves — zero failures)
+LOG resume: branch rebased onto origin/main (main gained #650 HANDOFF5 architecture-review, #654 harness-setup skill, v2-command retirement) — requirements handoff renumbered HANDOFF6 and wired into both guards, detection gate folded into the surviving /run-worktree-pipeline command, inline-workers preset union-merged, README counts swept 125, lean slot swapped to requirements-inline (70 budget, user-approved), registry rebuilt. Full suite 657/657 at 35a8bfd.
+LOG step9 review fix 1/2: conflict markers + duplicate variant shipped in worktree-pipeline-skill soft-deps paragraph (resolution error, caught by review; no test greps markers) — resolved, marker grep clean.
+LOG step9 review fix 2/2: skill-profiles.json line-join cosmetic restored (JSON valid).
+GATE 5d37dba tier=full lint=n.a typecheck=n.a build=n.a unit=t e2e=n.a (post-review-fix re-gate: full suite 657/657)
