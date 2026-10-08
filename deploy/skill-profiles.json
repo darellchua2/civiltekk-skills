@@ -55,6 +55,7 @@
     "responsive-audit-inline-skill",
     "playwright-responsive-audit-skill",
     "code-review-inline-skill",
+    "requirements-inline-skill",
     "civiltekk-react-quality-skill",
     "reviewer-baseline-skill",
     "search-first-skill",
@@ -69,7 +70,6 @@
     "wayfinder-skill",
     "wireframer-skill",
     "worktree-pipeline-skill",
-    "civiltekk-zai-media-skill",
-    "civiltekk-coding-harness-setup-skill"
+    "civiltekk-zai-media-skill"
   ]
 }

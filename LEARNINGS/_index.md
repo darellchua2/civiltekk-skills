@@ -2050,3 +2050,12 @@
 - **Confidence**: n.a.
 - **Scope**: project
 - **Summary**: install.md claimed claude `.claude/` as a project destination; `TARGETS` (installer/init.mjs) gives claude no project dirs and `--project --target claude` degrades to opencode dirs with a note — `.claude/agents` is copilot's. Rule: verify every prose CLI-behavior claim by grepping its distinctive token in the implementing source (destination table, flag parser), not the README; PLAN Done-whens for such prose must name the source table, not just the CLI usage header (#657 review).
+
+### Anti-pattern: rebase conflict edits inside the block stage the markers with the fix
+
+- **Category**: anti-pattern
+- **File**: `LEARNINGS/anti-patterns/rebase-conflict-edit-inside-block-stages-markers.md`
+- **Confidence**: 0.9
+- **Scope**: project
+- **Summary**: A conflict resolution edit whose oldString matches text inside the conflict block replaces only that region — markers and the losing side stay and get staged. #641's resume rebase shipped them (657 tests green, no marker guard); caught by Step 9 diff review. Rule: the resolution edit must span the whole block; run `git diff --check` / a marker grep before staging; add a repo-level marker guard test.
+- **Date**: 2026-10-08

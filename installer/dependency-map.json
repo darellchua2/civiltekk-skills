@@ -1,5 +1,5 @@
 {
-  "$comment": "Non-frontmatter dependency edges for installer/init.mjs. The PRIMARY dependency source is agent frontmatter permissions rules (action:\"skill\" allows = requiresSkills, action:\"subagent\" allows = delegatesTo). This map covers edges frontmatter cannot express: impliesMcp (skill->MCP: when a skill is installed, the listed MCP server(s) should also be enabled — values MUST match mcp.servers.<key> in deploy/opencode.json), requiresSkills (skill->skill: when a skill is installed, the listed skill(s) are auto-installed too, mirroring SKILL.md prerequisite declarations; --no-deps opts out), and shipsPlugins (skill->plugin artifacts: repo plugins/ entries copied into the target's opencode plugin dir so runtime enforcement travels with the skill — opencode targets only; non-opencode targets get a notice; --no-deps opts out. Trailing-slash entries mean the whole directory). The requiresSkills entries must match tests/test_skill_isolation.bats HANDOFF1_OWNER/HANDOFF1_TARGETS, HANDOFF2_OWNER/HANDOFF2_TARGETS, HANDOFF3_OWNERS/HANDOFF3_TARGETS, and HANDOFF4_OWNER/HANDOFF4_TARGETS (multi-owner pair: every owner in HANDOFF3_OWNERS maps to every target in HANDOFF3_TARGETS; source of truth per AGENTS.md §Skill Isolation Contract); shipsPlugins is a skill->plugin edge, deliberately outside that invariant.",
+  "$comment": "Non-frontmatter dependency edges for installer/init.mjs. The PRIMARY dependency source is agent frontmatter permissions rules (action:\"skill\" allows = requiresSkills, action:\"subagent\" allows = delegatesTo). This map covers edges frontmatter cannot express: impliesMcp (skill->MCP: when a skill is installed, the listed MCP server(s) should also be enabled — values MUST match mcp.servers.<key> in deploy/opencode.json), requiresSkills (skill->skill: when a skill is installed, the listed skill(s) are auto-installed too, mirroring SKILL.md prerequisite declarations; --no-deps opts out), and shipsPlugins (skill->plugin artifacts: repo plugins/ entries copied into the target's opencode plugin dir so runtime enforcement travels with the skill — opencode targets only; non-opencode targets get a notice; --no-deps opts out. Trailing-slash entries mean the whole directory). The requiresSkills entries must match tests/test_skill_isolation.bats HANDOFF1_OWNER/HANDOFF1_TARGETS, HANDOFF2_OWNER/HANDOFF2_TARGETS, HANDOFF3_OWNERS/HANDOFF3_TARGETS, HANDOFF4_OWNER/HANDOFF4_TARGETS, and HANDOFF5_OWNER/HANDOFF5_TARGETS (multi-owner pair: every owner in HANDOFF3_OWNERS maps to every target in HANDOFF3_TARGETS; source of truth per AGENTS.md §Skill Isolation Contract); shipsPlugins is a skill->plugin edge, deliberately outside that invariant.",
   "impliesMcp": {
     "civiltekk-nextjs-skill": ["next-devtools"],
     "markitdown-mcp-skill": ["markitdown"],
@@ -18,6 +18,10 @@
       "language-review-checklists-skill"
     ],
     "architecture-review-skill": ["reviewer-baseline-skill"],
+    "requirements-inline-skill": [
+      "grilling-skill",
+      "civiltekk-requirements-specs-skill"
+    ],
     "autoresearch-code-skill": ["autoresearch-core-skill"],
     "autoresearch-ml-skill": ["autoresearch-core-skill"],
     "autoresearch-research-skill": ["autoresearch-core-skill"]

@@ -33,6 +33,7 @@ plan_template() {
 @test "pipeline: template carries in-session checklist mechanics for steps 7/9/10" {
   run pipe_template
   [[ "$output" == *"code-review-inline-skill"* ]]
+  [[ "$output" == *"requirements-inline-skill"* ]]
   [[ "$output" == *"civiltekk-pr-workflow-skill"* ]]
   [[ "$output" == *"create route"* ]]
   [[ "$output" == *"reviewer-baseline-skill"* ]]

@@ -89,7 +89,10 @@ Usage: `/run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>`
   back inline per the arm-selection rule). Soft deps
   degrade with a note: `ticketing-skill` (only for new-work tickets,
   Step 3), `architecture-review-subagent` / `uiux-reviewer-subagent` /
-  `requirements-specialist-subagent` (Step 7 skip-with-note rule). The
+  `requirements-specialist-subagent` (Step 7 skip-with-note rule),
+  `requirements-inline-skill` (inline arm only — the Step 7 detection gate
+  is a quality gate, not a correctness backstop; skip-with-note when
+  absent). The
   inline arm routes architecture review to skill `architecture-review-skill`
   (reviewer-baseline-skill first) instead of the deployed agent file.
 - **Execution model (pipelined)**: ticket order = authoring order, but only
@@ -185,18 +188,32 @@ Usage: `/run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>`
      opt-in subagent arm.
    - `uiux-reviewer-subagent` iff **frontend signal** (tsx/jsx/vue/svelte/css
      files, components/pages/app paths, UI keywords in the diff).
+   **Requirements detection gate (before reviewer selection)**: run the
+   inline skill `requirements-inline-skill` — its decision tree inspects
+   the ticket + PLAN acceptance criteria (thin set, ambiguity markers,
+   conflicting ACs) plus the triage outcome (zero reviewers selected on
+   new-work tickets) and either skips with a one-line reason or
+   interrogates the ACs inline (grilling-shaped, answers applied to the
+   ticket/PLAN before reviewers run). This is data-driven AC
+   interrogation, NOT a PLAN review by requirements-specialist — the
+   stage-mismatch decision stands. Inline arm: the skill degrades soft
+   with a note when absent (quality gate, not a correctness backstop);
+   subagent arm: skip the gate.
    No proactive requirements review — requirements coverage is
    reviewer-owned: each selected reviewer verifies the PLAN against the
    ticket's stated requirements and emits **Requirements Gaps** for
    anything missing or ambiguous (never a silent assumption). A thin-map
    backend ticket may select zero reviewers — Step 9 code review
-   (unconditional) backstops.
+   (unconditional) backstops, and the detection gate above covers AC
+   quality when no reviewer runs.
    **Requirements Gaps relay**: any reviewer (here or Step 9) returning a
-   non-empty `Requirements Gaps` array → relay it to
-   `requirements-specialist-subagent` **Mode R** and apply the answers to
-   the PLAN before proceeding (max 2 relay rounds — agent contract bound;
-   agent absent → surface the gaps to the user directly and proceed on
-   their answers).
+   non-empty `Requirements Gaps` array → relay it (inline arm: invoke
+   `requirements-inline-skill` Mode R — it loads the deployed
+   `requirements-specialist-subagent.md` as checklist; subagent arm:
+   delegate to `requirements-specialist-subagent` **Mode R**) and apply
+   the answers to the PLAN before proceeding (max 2 relay rounds — agent
+   contract bound; skill/agent absent → surface the gaps to the user
+   directly and proceed on their answers).
    Triage assumptions (stated, not hidden): a thin Consumer Map may skip
    architecture review, so author the map honestly at Step 6.
    `coverage-subagent` is NOT part of plan review — it is a coverage
