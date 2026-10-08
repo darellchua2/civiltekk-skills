@@ -10,14 +10,13 @@ A personal software-development skills collection — the agents, skills, and pi
 
 ## Daily-driver commands
 
-These four commands carry most of my day-to-day flow. **Slash commands ship with a full deploy** — a single-skill `npx add` install gives you the skills (invoked by natural language), not the command bindings.
+These three commands carry most of my day-to-day flow. **Slash commands ship with a full deploy** — a single-skill `npx add` install gives you the skills (invoked by natural language), not the command bindings.
 
 | Command | What it does |
 |---------|--------------|
 | `/create-ticket` | Structured GitHub issue or JIRA ticket — platform detection, intake validation, labels. Ticket only: no branch, no PLAN, no execution. |
 | `/run-worktree-pipeline` | Tracker-ticket-to-merged-PR pipeline via git worktrees — sync, PLAN authoring, adaptive review, gated execution, code review, PR merge; fully inline by default (subagents only on explicit request). Usage: `/run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>` |
 | `/run-plan` | Fully-automated per-phase PLAN execution with a tiered verification gate (scoped lint + typecheck + affected tests per phase; full gate on anchors and at exit), per-step traceability → commit → push; inline by default (subagent workers on explicit request). |
-| `/goal` | Session goal tracking with budgets and auto-continue (server-side, from the goal plugin). |
 
 The first two compose: `/create-ticket` makes the ticket, `/run-worktree-pipeline #NNN` takes it to a merged PR.
 
