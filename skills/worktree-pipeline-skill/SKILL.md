@@ -269,8 +269,8 @@ Usage: `/run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>`
     overlap-hold, never a failed ticket. Clear → `pr-workflow-subagent`
     creates the PR **target
     `<base>`** — the Task prompt MUST state gates are green by citing the
-    final `GATE <short-sha> tier=full` memo line for the pushed SHA from the PLAN
-    trace block (that citation IS the pipeline-mode gate memo per
+    final `GATE <short-sha> tier=full` memo line for the pushed SHA from the PLAN's
+    `## Trace` section (that citation IS the pipeline-mode gate memo per
     `verification-loop-skill` §Gate memo; a `tier=light` line is phase
      evidence and never satisfies this citation) and instruct it to skip its
     steps 2 / 2.5 / 3 / 4: run-plan verified the gate per phase, docstrings

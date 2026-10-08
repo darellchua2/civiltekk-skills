@@ -53,7 +53,7 @@ All modes parse the same structure:
 
 **Step 3 — Tick per phase, commit once at the end:** when all phase tasks complete + acceptance criteria met + tests pass → tick checkboxes + write Done lines in the PLAN (working tree only — no commit), confirm applied, next phase. At end of run, land the single trailing tick commit: `git add "$PLAN_FILE" && git commit -m "docs(plan): tick ${PLAN_FILE##*/} — run complete"` — the only `docs(plan)` commit a `--soft` run produces.
 
-**Step 4 — Final validation:** `grep "## Acceptance Criteria" -A 20 "$PLAN_FILE" | grep "^- \[ \]"` — empty → done; else list remaining criteria.
+**Step 4 — Final validation:** `awk '/^## Acceptance Criteria/{f=1;next} /^## /{f=0} f && /^- \[ \]/' "$PLAN_FILE"` — reads to the next `## ` heading (no fixed line window); empty → done; else list remaining criteria.
 
 **Step 5 — Report:** per phase — branch, PLAN path, phase progress (done/total), recent completions, next steps.
 
@@ -66,9 +66,9 @@ All modes parse the same structure:
    - [guardrail] `phases_done >= MAX_PHASES` (12) or `total_fixes >= MAX_FIXES` (20) → HALT + `[goal:blocked]`
    - 4a. IMPLEMENT — every atomic step; delegate per matrix below; keep a per-step WORK LOG
    - 4b. TEST NEW CODE — new/modified source files (`git diff --name-only --diff-filter=AM`, minus configs/docs/PLAN) get tests (TS: `bar.test.ts` sibling; PY: `tests/foo/test_bar.py`; mirror the nearest existing test). Trivial pure-data additions exempt.
-   - 4c. VERIFY — the gate per `verification-loop-skill` §The gate contract, at the tier §Tiered gating there selects: **light** (scoped lint + typecheck + affected tests) is the per-phase default; **full** when the phase hit a critical-area anchor, judgment says high risk, or you are unsure; the **ticket exit gate** — the last gate of this PLAN run — runs full unconditionally. E2E per the E2E rule. On green, append the memo line `GATE <short-sha> tier=light|full lint=t typecheck=t build=t|- unit=t|-|n.a e2e=t|-|n.a` to the PLAN trace block (memo format: §Gate memo there); per full-gate escalation, add one WORK LOG line naming the anchor or judgment reason (nothing for light). The **final** pushed SHA of the run must carry a green `tier=full` memo (the ticket exit gate provides it); intermediate phase pushes carry their tier memo as phase evidence.
-   - 4d. FIX-ON-FAIL — max 3 attempts per gate step: read full output → root cause → fix → append to WORK LOG → re-run failed step then the whole tier-selected gate. Each attempt increments `total_fixes`. After 3 failures: STOP — no checkbox, no commit, no push; report blocker + ask user. **Never push red code.**
-   - 4e. ON GREEN — tick ALL checkboxes (phase-level, every sub-step, satisfied acceptance criteria) + write the `— Done:` line per step (see Traceability)
+   - 4c. VERIFY — the gate per `verification-loop-skill` §The gate contract, at the tier §Tiered gating there selects: **light** (scoped lint + typecheck + affected tests) is the per-phase default; **full** when the phase hit a critical-area anchor, judgment says high risk, or you are unsure; the **ticket exit gate** — the last gate of this PLAN run — runs full unconditionally. E2E per the E2E rule. On green, append the memo line `GATE <short-sha> tier=light|full lint=t typecheck=t build=t|- unit=t|-|n.a e2e=t|-|n.a` to the PLAN's `## Trace` section (memo format: §Gate memo there); per full-gate escalation, append one LOG line naming the anchor or judgment reason to `## Trace` (nothing for light). The **final** pushed SHA of the run must carry a green `tier=full` memo (the ticket exit gate provides it); intermediate phase pushes carry their tier memo as phase evidence.
+   - 4d. FIX-ON-FAIL — max 3 attempts per gate step: read full output → root cause → fix → append a LOG line to the PLAN's `## Trace` section → re-run failed step then the whole tier-selected gate. Each attempt increments `total_fixes`. After 3 failures: STOP — no checkbox, no commit, no push; report blocker + ask user. **Never push red code.**
+   - 4e. ON GREEN — tick ALL checkboxes (phase-level, every sub-step, satisfied acceptance criteria) + write the `— Done:` line per step (see Traceability); deliberate deviations append a `SKIP <N.M> <reason>` line to `## Trace` (mirroring the todolist `skip:` entries)
    - 4f/4g. COMMIT + PUSH — one atomic commit: phase files + PLAN update together (see Commit + push)
    - 4h. REPORT — one-line phase status, continue
 
@@ -98,6 +98,8 @@ Run e2e ONLY IF both: Playwright configured (`playwright.config.*` + `@playwrigh
 ```
 
 Rules: `fixes:` MUST list every gate fix for that step; one logical line; only tick `[x]` when `Done when` is objectively satisfied AND the gate passed; note deliberate deviations. A completed phase leaves zero unchecked boxes (`grep -n "^- \[ \]" <PLAN>` within it → empty).
+
+Split: the `— Done:` lines above are **per-step** evidence tied to the rationale triple; **run-level** events (GATE memos, full-gate-escalation and fix-on-fail LOG lines, deliberate-deviation SKIP lines) append to the PLAN's `## Trace` section — append-only, newest last, never rewritten (declared in the canonical template, `grilling-skill` §PLAN emission; create the section if absent when appending to a legacy PLAN).
 
 ### Commit + push
 

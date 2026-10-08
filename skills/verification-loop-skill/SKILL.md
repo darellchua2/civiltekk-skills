@@ -28,7 +28,7 @@ Robustness lives at the boundaries; detection runs cheaply in between. No check 
   2. the agent judges the change risk high, or is unsure — **unsure always escalates to full**;
   3. the **ticket exit gate** — the last gate before the PR for the ticket — runs full **unconditionally**, whatever the final phase touched.
 
-Escalation is **one-directional**: light is the default; full is triggered, never justified away. Per full-gate escalation, record one line in the WORK LOG naming the anchor or judgment reason; record nothing for light gates.
+Escalation is **one-directional**: light is the default; full is triggered, never justified away. Per full-gate escalation, record one LOG line in the PLAN's `## Trace` section (or the task record when no PLAN exists) naming the anchor or judgment reason; record nothing for light gates.
 
 Tiering never weakens the invariants: INCONCLUSIVE is never a pass at either tier, and never-push-red holds at every tier — the push boundary requires a green `tier=full` memo (§Gate memo).
 
@@ -44,7 +44,7 @@ Discover commands from project manifests in this order: `package.json` scripts �
 
 ### Gate memo
 
-After every green gate, write one line into the PLAN trace block (or task record when no PLAN exists):
+After every green gate, write one line into the PLAN's `## Trace` section — the append-only run-level audit trail declared in the canonical template (`grilling-skill` §PLAN emission; create the section if absent when appending to a legacy PLAN), or the task record when no PLAN exists:
 
 ```
 GATE <short-sha> tier=light|full lint=t typecheck=t build=t|- unit=t|-|n.a e2e=t|-|n.a
