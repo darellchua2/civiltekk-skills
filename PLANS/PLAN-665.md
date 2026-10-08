@@ -41,9 +41,12 @@
 
 ## Trace
 LOG 1.2 deviation: LEARNINGS/decisions/goal-plugin-v2-readoption.md is repo-ignored (.gitignore:37, no negation) — update applied to main-checkout memory; repo landing rides the end-of-ticket chore(learnings) sweep with a `!LEARNINGS/decisions/goal-plugin-v2-readoption.md` negation.
+LOG pivot (2026-10-08 post-restore): ^0.1.59 LOADS clean on opencode 2.0.25 (no failed-to-load since restart), but sessions on strict providers fail to drain — `AI.Error: tools.function.parameters is not a valid moonshot flavored json schema ... properties.revisit_evidence: invalid type` (log 14:10:22Z+, 4 sessions). `revisit_evidence` verified in the plugin's own dist/server.js + README. User experiment confirmed causality: config deleted → sessions clean; restored → failures return. Decision (user): remove the plugin from the repo pending an upstream schema fix; pin bump alone is insufficient.
+SKIP 3.1 restart-for-load — superseded by removal (service restart happens as removal verification instead).
+SKIP 3.2 /goal catalog check — superseded (plugin absent → no /goal expected; `[plan:*]` marker aliases per plan-execution-skill remain valid without the plugin).
 
 ### Phase 2: User-space redeploy (no service disruption)
-- [ ] **2.1** Redeploy the config from source: `cp` backup of `~/.config/opencode/opencode.json` then copy the worktree's `deploy/opencode.json` over it — the scoped equivalent of `setup_config`'s copy step for the one changed file (full alternative: `./deploy/setup.sh --quick -y`, heavier — prompts and redeploys skills/AGENTS.md too)
+- [x] **2.1** Redeploy the config from source: `cp` backup of `~/.config/opencode/opencode.json` then copy the worktree's `deploy/opencode.json` over it — the scoped equivalent of `setup_config`'s copy step for the one changed file (full alternative: `./deploy/setup.sh --quick -y`, heavier — prompts and redeploys skills/AGENTS.md too)
     — **Why:** the running service reads the deployed file, not the repo; repo rule says redeploy from source, never hand-edit deployed copies
     — **Done when:** `grep goal-plugin ~/.config/opencode/opencode.json` shows `^0.1.59`; backup file exists beside it
     — **Consumers affected:** opencode service plugin resolution at next boot
