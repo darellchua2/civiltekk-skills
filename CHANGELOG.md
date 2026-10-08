@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [12.19.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.18.0...v12.19.0) (2026-10-08)
+
+### Features
+
+* **pipeline:** requirements detection gate + requirements-inline-skill ([#664](https://github.com/darellchua2/civiltekk-skills/issues/664)) ([5692f59](https://github.com/darellchua2/civiltekk-skills/commit/5692f597711ac604c60d7f4c5c2cffa6832938c6)), closes [#641](https://github.com/darellchua2/civiltekk-skills/issues/641) [#635](https://github.com/darellchua2/civiltekk-skills/issues/635) [654/#657](https://github.com/654/civiltekk-skills/issues/657) [#650](https://github.com/darellchua2/civiltekk-skills/issues/650) [#641](https://github.com/darellchua2/civiltekk-skills/issues/641)
+
 ## [12.18.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.17.0...v12.18.0) (2026-10-08)
 
 ### Features
