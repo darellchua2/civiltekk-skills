@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [12.19.1](https://github.com/darellchua2/civiltekk-skills/compare/v12.19.0...v12.19.1) (2026-10-08)
+
+### Bug Fixes
+
+* **config:** remove goal plugin — tool schema breaks strict providers ([#665](https://github.com/darellchua2/civiltekk-skills/issues/665)) ([#666](https://github.com/darellchua2/civiltekk-skills/issues/666)) ([6e993ed](https://github.com/darellchua2/civiltekk-skills/commit/6e993ed24e410cdcaa781d99305d45bbf44d5ede))
+
 ## [12.19.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.18.0...v12.19.0) (2026-10-08)
 
 ### Features
