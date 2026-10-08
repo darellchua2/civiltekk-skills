@@ -23,18 +23,24 @@
 ## Implementation Phases
 
 ### Phase 1: Repo source bump
-- [ ] **1.1** Change the plugins entry in `deploy/opencode.json` from `"@prevalentware/opencode-goal-plugin@^0.1.48"` to `"@prevalentware/opencode-goal-plugin@^0.1.59"`
+- [x] **1.1** Change the plugins entry in `deploy/opencode.json` from `"@prevalentware/opencode-goal-plugin@^0.1.48"` to `"@prevalentware/opencode-goal-plugin@^0.1.59"`
     — **Why:** the repo is the single source for the deployed config; 0.1.59 is the upstream fix (dependency aliased `effect-goal-state: npm:effect@^3.21.2`, sidestepping the 2.0.25 host's `effect` interception whose `Schema` lacks `optionalWith`)
     — **Done when:** `git -C <worktree> diff` shows exactly that one-line change; JSON still parses (`python3 -m json.tool` exit 0 — the file is JSON)
     — **Consumers affected:** `deploy/setup.sh` config deploy; all deployed sessions' goal mode
-- [ ] **1.2** Sync `LEARNINGS/decisions/goal-plugin-v2-readoption.md`: update the Pattern line's pin to `^0.1.59`, add a dated note recording the 2.0.25 breakage (host-intercepted `effect` lacking `optionalWith`; caret pin did not float because the opencode npm cache freezes the resolved install — cache clear required on floor bumps)
+    — **Done:** Pin bumped in `deploy/opencode.json` (line 540), exactly one line changed, JSON parses clean; files: deploy/opencode.json; fixes: none
+- [x] **1.2** Sync `LEARNINGS/decisions/goal-plugin-v2-readoption.md`: update the Pattern line's pin to `^0.1.59`, add a dated note recording the 2.0.25 breakage (host-intercepted `effect` lacking `optionalWith`; caret pin did not float because the opencode npm cache freezes the resolved install — cache clear required on floor bumps)
     — **Why:** the decision file is the recall home for this plugin's pinning rationale; leaving `^0.1.48` in the Pattern text makes future sessions recall a stale floor and re-break
     — **Done when:** file references `^0.1.59`, carries the breakage note with the 2026-10-08 date, and keeps the existing caret-pin rationale intact
     — **Consumers affected:** future sessions recalling goal-plugin config facts (LEARNINGS autoinject)
-- [ ] **1.3** Commit Phase 1 (`fix(config): bump goal plugin pin to ^0.1.59 for opencode 2.0.25 (#665)`) and push `feat/665`
+    — **Done:** Pattern line now reads `deploy/opencode.json` + `^0.1.59` (also fixed the stale `opencode_app/` path from pre-#607), dated Update note appended with the host-interception cause and the cache-clear-on-floor-bump rule; files: LEARNINGS/decisions/goal-plugin-v2-readoption.md (main-checkout memory; repo-ignored — lands via end-of-ticket chore(learnings) sweep with .gitignore negation, deviation logged in Trace); fixes: none
+- [x] **1.3** Commit Phase 1 (`fix(config): bump goal plugin pin to ^0.1.59 for opencode 2.0.25 (#665)`) and push `feat/665`
     — **Why:** the repo change must be durable before any runtime mutation; the commit footer carries the ticket ref for close-on-merge plumbing
     — **Done when:** `git log -1` shows the commit on `feat/665` and `git push` succeeds
     — **Consumers affected:** PR creation (Step 10), `Closes #665` detection
+    — **Done:** Single atomic commit (config bump + PLAN ticks/Done/Trace) pushed to feat/665; files: deploy/opencode.json, PLANS/PLAN-665.md; fixes: none
+
+## Trace
+LOG 1.2 deviation: LEARNINGS/decisions/goal-plugin-v2-readoption.md is repo-ignored (.gitignore:37, no negation) — update applied to main-checkout memory; repo landing rides the end-of-ticket chore(learnings) sweep with a `!LEARNINGS/decisions/goal-plugin-v2-readoption.md` negation.
 
 ### Phase 2: User-space redeploy (no service disruption)
 - [ ] **2.1** Redeploy the config from source: `cp` backup of `~/.config/opencode/opencode.json` then copy the worktree's `deploy/opencode.json` over it — the scoped equivalent of `setup_config`'s copy step for the one changed file (full alternative: `./deploy/setup.sh --quick -y`, heavier — prompts and redeploys skills/AGENTS.md too)

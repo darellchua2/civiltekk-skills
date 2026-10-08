@@ -537,7 +537,7 @@
         }
     ],
     "plugins": [
-        "@prevalentware/opencode-goal-plugin@^0.1.48"
+        "@prevalentware/opencode-goal-plugin@^0.1.59"
     ],
     "instructions": [
         "AGENTS.md"
