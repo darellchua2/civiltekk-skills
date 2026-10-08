@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [12.18.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.17.0...v12.18.0) (2026-10-08)
+
+### Features
+
+* **skills:** formalize ## Trace section in the PLAN contract ([#663](https://github.com/darellchua2/civiltekk-skills/issues/663)) ([45f69bd](https://github.com/darellchua2/civiltekk-skills/commit/45f69bd02a320b8f60d3f8e12fc23b8ab5bd2820)), closes [#662](https://github.com/darellchua2/civiltekk-skills/issues/662) [#662](https://github.com/darellchua2/civiltekk-skills/issues/662)
+
+### Documentation
+
+* **skill:** amplify dual credential plane trap in shared-infra-split ([692aeeb](https://github.com/darellchua2/civiltekk-skills/commit/692aeeba531e26bb7318f48f2dc772dfc286c5e9))
+
 ## [12.17.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.16.0...v12.17.0) (2026-10-04)
 
 ### Features
