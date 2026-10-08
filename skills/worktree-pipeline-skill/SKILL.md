@@ -89,19 +89,12 @@ Usage: `/run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>`
   back inline per the arm-selection rule). Soft deps
   degrade with a note: `ticketing-skill` (only for new-work tickets,
   Step 3), `architecture-review-subagent` / `uiux-reviewer-subagent` /
-<<<<<<< HEAD
   `requirements-specialist-subagent` (Step 7 skip-with-note rule),
   `requirements-inline-skill` (inline arm only — the Step 7 detection gate
   is a quality gate, not a correctness backstop; skip-with-note when
   absent). The
   inline arm routes architecture review to skill `architecture-review-skill`
   (reviewer-baseline-skill first) instead of the deployed agent file.
-=======
-  `requirements-specialist-subagent` (Step 7 skip-with-note rule),
-  `requirements-inline-skill` (inline arm only — the Step 7 detection gate
-  is a quality gate, not a correctness backstop; skip-with-note when
-  absent).
->>>>>>> d96984e (feat(pipeline): implement Phase 3 — requirements detection gate + skill-routed Mode R relay)
 - **Execution model (pipelined)**: ticket order = authoring order, but only
   **one implementation runs at a time**. The next ticket's implementation
   starts once the active ticket has **created its PR (Step 10a)** — not once
