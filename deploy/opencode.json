@@ -536,9 +536,7 @@
             "effect": "deny"
         }
     ],
-    "plugins": [
-        "@prevalentware/opencode-goal-plugin@^0.1.48"
-    ],
+    "plugins": [],
     "instructions": [
         "AGENTS.md"
     ],
@@ -551,7 +549,7 @@
     },
     "commands": {
         "run-plan": {
-            "description": "Fully-automated plan execution loop — implement PLAN*.md phase-by-phase inline via plan-execution-inline-skill (tiered verification gate per verification-loop-skill: light — scoped lint + typecheck + affected tests — per phase; full on critical-area anchors and the ticket exit gate; then commit + push per phase). Subagent workers only on explicit request. For long hands-off runs prefer the runtime-guarded /goal path (@prevalentware/opencode-goal-plugin, user-space).",
+            "description": "Fully-automated plan execution loop — implement PLAN*.md phase-by-phase inline via plan-execution-inline-skill (tiered verification gate per verification-loop-skill: light — scoped lint + typecheck + affected tests — per phase; full on critical-area anchors and the ticket exit gate; then commit + push per phase). Subagent workers only on explicit request.",
             "template": "Execute the plan file given as the argument INLINE by default via `plan-execution-inline-skill` (same gate contract): $ARGUMENTS. Route to `plan-execution-skill` --gate (subagent workers) ONLY on explicit user request + OpenCode harness + the skill resolving; otherwise proceed inline with a note.",
             "agent": "build",
             "subagent": false

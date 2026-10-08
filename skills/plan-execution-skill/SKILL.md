@@ -30,7 +30,7 @@ contract).
 
 | Invocation | Mode | Behavior |
 |------------|------|----------|
-| `/run-plan PLAN-*.md`, `/goal "load plan-execution-skill and implement PLAN-*.md"`, "fully implement the plan", "run the plan end-to-end", "automation loop" | `--gate` (default for `/run-plan`) | Hard verification gate between phases: implement, gate, bounded fix-on-fail, tick + `— Done:` traceability, one atomic commit + push per phase |
+| `/run-plan PLAN-*.md`, "fully implement the plan", "run the plan end-to-end", "automation loop" | `--gate` (default for `/run-plan`) | Hard verification gate between phases: implement, gate, bounded fix-on-fail, tick + `— Done:` traceability, one atomic commit + push per phase |
 | "execute plan", "implement plan phases" (interactive) | `--soft` | Sequential phase execution with delegation and progress ticks — no hard gate; ticks land as one trailing end-of-run `docs(plan)` commit |
 | "update plan", "sync plan", "update PLAN.md", "mark plan progress" | `--update` | Detect the branch's PLAN and sync checkboxes to actual progress; commit (standalone use only) |
 
@@ -129,7 +129,7 @@ Parse overrides from `$ARGUMENTS`; garbage flags ignored. HALT is terminal for t
 [goal:blocked] <concrete reason — failing gate, budget exhausted, needs user input>
 ```
 
-`[goal:complete]` only valid right after a non-empty `[goal:evidence]` line. Markers on their own final line(s); `[plan:*]` aliases acceptable without the plugin. Under `/goal`, also close the goal via `update_goal` (complete+evidence / unmet+blocker). Runtime-enforced guardrails only via the goal plugin (`@prevalentware/opencode-goal-plugin`); Docker endpoint plugin-inert until the v2 binary bump (#387).
+`[goal:complete]` only valid right after a non-empty `[goal:evidence]` line. Markers on their own final line(s); `[plan:*]` aliases acceptable without the plugin.
 
 ### Stop conditions
 

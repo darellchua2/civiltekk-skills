@@ -119,10 +119,10 @@ End every run with exactly one block (the inter-skill terminal protocol — `wor
 [goal:blocked] <concrete reason — failing gate, budget exhausted, needs user input>
 ```
 
-`[goal:complete]` only valid right after a non-empty `[goal:evidence]` line. Markers on their own final line(s); `[plan:*]` aliases acceptable without the plugin. Under `/goal`, also close the goal via `update_goal` (complete+evidence / unmet+blocker).
+`[goal:complete]` only valid right after a non-empty `[goal:evidence]` line. Markers on their own final line(s); `[plan:*]` aliases acceptable without the plugin.
 
 Capability binding for marker handling and skill loading:
-- OpenCode: markers read by the goal plugin / orchestrating skill; inline skills loaded via the skill loader
+- OpenCode: markers read by the orchestrating skill (goal plugin, when installed); inline skills loaded via the skill loader
 - Claude Code: markers consumed by the orchestrating workflow; skills via the Skill tool
 - Other/none: emit markers as plain final lines; follow referenced skills if present, else their documented behavior inline
 
