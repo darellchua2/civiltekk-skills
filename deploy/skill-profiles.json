@@ -58,8 +58,7 @@
     "requirements-inline-skill",
     "civiltekk-react-quality-skill",
     "reviewer-baseline-skill",
-    "search-first-skill",
-    "security-audit-skill",
+    "search-first-skill",    "security-audit-skill",
     "skill-generalizer",
     "solid-principles-skill",
     "technical-writing-skill",
@@ -70,7 +69,6 @@
     "wayfinder-skill",
     "wireframer-skill",
     "worktree-pipeline-skill",
-    "civiltekk-zai-media-skill",
-    "civiltekk-coding-harness-setup-skill"
+    "civiltekk-zai-media-skill"
   ]
 }

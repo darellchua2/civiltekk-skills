@@ -41,7 +41,7 @@ SKILL_MD="skills/requirements-inline-skill/SKILL.md"
     [ "$output" = "0" ]
 }
 
-@test "req_inline: dependency-map edge mirrors guard HANDOFF5" {
+@test "req_inline: dependency-map edge mirrors guard HANDOFF6" {
     run node -e "
     const m = require('./installer/dependency-map.json').requiresSkills;
     const edge = m['requirements-inline-skill'] || [];
@@ -49,8 +49,8 @@ SKILL_MD="skills/requirements-inline-skill/SKILL.md"
     if (want.some(w => !edge.includes(w))) process.exit(1);
     "
     [ "$status" -eq 0 ]
-    grep -q 'HANDOFF5_OWNER="requirements-inline-skill"' tests/test_skill_isolation.bats
-    grep -q 'HANDOFF5_TARGETS="grilling-skill civiltekk-requirements-specs-skill"' tests/test_skill_isolation.bats
+    grep -q 'HANDOFF6_OWNER="requirements-inline-skill"' tests/test_skill_isolation.bats
+    grep -q 'HANDOFF6_TARGETS="grilling-skill civiltekk-requirements-specs-skill"' tests/test_skill_isolation.bats
 }
 
 @test "req_inline: pack-inline-workers membership incl. closure + description" {
