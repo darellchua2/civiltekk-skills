@@ -98,7 +98,7 @@ export default {
 
     if (!existsSync(join(cfg.sidecar_dir, "sidecar.mjs"))) {
       console.warn(
-        `[laya-guard] sidecar not provisioned at ${cfg.sidecar_dir} — plugin inactive. Run setup.sh (or --enable-pack laya for the model).`,
+        `[laya-guard] sidecar not provisioned at ${cfg.sidecar_dir} — plugin inactive. Run deploy/setup.sh to provision it (LAYA_GUARD_WARM=1 pre-pulls the model; otherwise it downloads on first classify).`,
       )
       return
     }

@@ -68,6 +68,6 @@ MIT attributions for vendored code: see [ATTRIBUTION.md](ATTRIBUTION.md).
 `deploy_plugins()`'s directory copy. The plugin file stays zero-dependency
 (house rule above); ONNX inference runs in a Node >= 24 sidecar that
 `setup.sh` provisions into `~/.cache/laya-guard` — the ~1.7 GB model pre-pull
-is opt-in via `--enable-pack laya`. Ships in shadow mode (log-only). Config:
+is opt-in (interactive prompt at deploy time, or `LAYA_GUARD_WARM=1`). Ships in shadow mode (log-only). Config:
 first-wins `laya-guard.config.json` (project root → project `.opencode/` →
 the shipped copy in this directory). See `laya-guard/README.md`.

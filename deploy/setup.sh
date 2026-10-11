@@ -2717,7 +2717,7 @@ setup_config() {
             # Heavy (~3-4 GB) — only runs when explicitly opted in.
             install_docling
 
-            # Provision the laya-guard sidecar (#671); model pre-pull is opt-in (--enable-pack laya).
+            # Provision the laya-guard sidecar (#671); model pre-pull is opt-in (prompt at deploy time, or LAYA_GUARD_WARM=1).
             provision_laya_guard
 
             # Deploy vibeguard secret-masking config (PLAN-GIT-315).
@@ -2908,8 +2908,8 @@ install_docling() {
 # Provision the laya-guard Node sidecar (#671): copies the sidecar scripts +
 # pinned package.json into ~/.cache/laya-guard and npm-installs there, so the
 # opencode plugin file itself stays dependency-free. The ~1.7 GB model
-# pre-pull is opt-in via --enable-pack laya (heavy-install house policy,
-# mirrors markitdown/docling); without it the model downloads lazily on the
+# pre-pull is opt-in (interactive prompt at deploy time, or LAYA_GUARD_WARM=1
+# headless); without it the model downloads lazily on the
 # first classify. Idempotent: the marker records the provisioned
 # package.json hash. Linux-only (Ubuntu target — non-Linux gets a skip
 # notice, which is also what Windows reaches through the setup.ps1 thin
@@ -2971,8 +2971,19 @@ provision_laya_guard() {
         fi
     fi
 
-    # Model pre-pull: opt-in (heavy-install policy — mirrors markitdown/docling)
-    if echo "$ENABLE_PACK" | grep -qw "laya"; then
+    # Model pre-pull: interactive prompt, or LAYA_GUARD_WARM=1 headless.
+    # Deliberately NOT --enable-pack: validate_enable_pack fail-fasts on
+    # non-MCP pack names, and run_pack_merger would choke on the missing
+    # pack partial — laya toggles no MCP servers (#672 post-merge fix).
+    local warm_model=false
+    if [ "${LAYA_GUARD_WARM:-0}" = "1" ]; then
+        warm_model=true
+    elif [ -t 0 ] && [ "$AUTO_ACCEPT" = false ]; then
+        if prompt_yes_no "Pre-pull the ~1.7 GB Laya model bundle now? (skip is fine — the first classify downloads it)" "n"; then
+            warm_model=true
+        fi
+    fi
+    if [ "$warm_model" = true ]; then
         if [ "$DRY_RUN" = "true" ]; then
             log_info "[DRY-RUN] Would pre-pull the ~1.7 GB Laya model bundle (node warm.mjs)"
         elif [ -f "$dest_dir/node_modules/@receptron/laya/package.json" ]; then

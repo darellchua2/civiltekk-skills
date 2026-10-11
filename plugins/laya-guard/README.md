@@ -37,12 +37,13 @@ Laya handles the gray zone; config handles the certainties.
 
 ```sh
 ./deploy/setup.sh                       # provisions sidecar deps (Linux; small)
-./deploy/setup.sh --enable-pack laya    # + pre-pulls the ~1.7 GB model bundle
+LAYA_GUARD_WARM=1 ./deploy/setup.sh     # + pre-pulls the ~1.7 GB model bundle
+                                        #   (interactive deploys: just answer y)
 LAYA_GUARD_SKIP=1 ./deploy/setup.sh     # skip laya-guard provisioning entirely
 ```
 
-Provisioning is idempotent (marker + version check). Without `--enable-pack
-laya`, the model downloads on first classify instead (same pinned revision).
+Provisioning is idempotent (marker + version check). Without the pre-pull,
+the model downloads on first classify instead (same pinned revision).
 Windows deploys skip provisioning with a notice — the plugin file deploys but
 stays inert without `~/.cache/laya-guard`.
 
@@ -92,7 +93,7 @@ recreated on demand.
 
 ## Air-gap / offline
 
-Provision once on a connected machine (`--enable-pack laya`), or point
+Provision once on a connected machine (`LAYA_GUARD_WARM=1`, or answer y at the provisioning prompt), or point
 `model_dir` at a locally exported ONNX bundle (see `export/export_onnx.py` in
 the receptron/laya repo). After that, classification never touches the
 network — the plugin itself contains zero endpoints.
