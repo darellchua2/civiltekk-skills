@@ -5,10 +5,10 @@
 **Base**: main
 
 ## Acceptance Criteria
-- [ ] Every Tier-1 file passed through all detectors with a recorded disposition (generalize / pin / delete / modularize / keep-justified)
-- [ ] No org proper noun remains outside the skill's own identity or a justified one-liner (verification grep clean)
-- [ ] semantic-release-convention-skill branch mapping modularized behind a load rule, or keep-justified in writing
-- [ ] Change list + weight line + residual list delivered
+- [x] Every Tier-1 file passed through all detectors with a recorded disposition (generalize / pin / delete / modularize / keep-justified)
+- [x] No org proper noun remains outside the skill's own identity or a justified one-liner (verification grep clean)
+- [x] semantic-release-convention-skill branch mapping modularized behind a load rule, or keep-justified in writing
+- [x] Change list + weight line + residual list delivered
 - [ ] Contract tests and registry build green; released as its own civiltekk version
 
 ## Dependency & Consumer Map
@@ -57,14 +57,22 @@
     — **Done:** keep-justified record written (branch mapping serves any dev/uat/main repo; no jurisdiction lock)
 
 ### Phase 2: Keep-justified ledger + verification (dispositions recorded)
-- [ ] **2.1** Append the residual list to the PLAN Trace: provenance comments (aws-iac :11, threejs :23, react-quality SKILL :22 + hooks :4 + render :4, fastapi-orm :5), org-scope install hints (nextjs-specialist :94/:167, repo-ops :127/:140), README history pointer (:285), CHANGELOG historical — each with a one-line justification
+- [x] **2.1** Append the residual list to the PLAN Trace: provenance comments (aws-iac :11, threejs :23, react-quality SKILL :22 + hooks :4 + render :4, fastapi-orm :5), org-scope install hints (nextjs-specialist :94/:167, repo-ops :127/:140), README history pointer (:285), CHANGELOG historical — each with a one-line justification
     — **Why:** generalizer output contract — residuals flagged to the owner, verification grep interprets only against the ledger
     — **Done when:** Trace carries the ledger and the final grep's every hit maps to a ledger row
     — **Consumers affected:** future sweeps (the ledger is the baseline)
-- [ ] **2.2** Full verification: `grep -rin "betekk\|canvastekk"` over skills/ + agents/ → every hit must be a provenance comment, an intentional org-scope hint, or a ledger row; run `node installer/build-registry.mjs` + the full bats suite + the pptx pytest suite
+    — **Done:** residual ledger (below); files: PLANS/PLAN-668.md; fixes: none
+    — **Residual ledger (keep-justified, one line each):**
+      1. provenance comments: aws-iac :11, threejs :23, react-quality SKILL :22 + hooks :4 + render :4, fastapi-orm :5, authentication-authorization :25 — LEARNINGS traceability metadata, house convention, not executable content
+      2. org-scope install hints: nextjs-specialist :94/:167, repo-ops :127/:140 — the decided #667 public behavior (print betekk install command, stop)
+      3. README history pointer :285 — house consolidation-history line documenting where moved skills live
+      4. CHANGELOG.md — historical record, never rewritten (house rule)
+      5. semantic-release-convention-skill branch-aware dev/uat/main tag mapping — no org names, no jurisdiction lock; serves any team running that branch model (1.6 record)
+- [x] **2.2** Full verification: `grep -rin "betekk\|canvastekk"` over skills/ + agents/ → every hit must be a provenance comment, an intentional org-scope hint, or a ledger row; run `node installer/build-registry.mjs` + the full bats suite + the pptx pytest suite
     — **Why:** ticket exit gate — full
     — **Done when:** gate memo tier=full green; grep audit table in Trace
     — **Consumers affected:** CI
+    — **Done:** grep audit + registry build + full suite (memo below); fixes: none
 
 ## Technical Notes
 - Provenance comments are excluded by the ticket's own framing ("content (not provenance)") and by house LEARNINGS-traceability convention — they stay.
@@ -83,3 +91,6 @@
 
 - LOG: Step 7 triage — requirements gate skipped (8 checkable steps, all mapped); architecture review skipped with rationale (string/doc generalization only; Step 9 backstops); Tier-1 file list re-derived on post-#669 main: 16 files + README pointer.
 - GATE 7e575d0 tier=light lint=n.a typecheck=n.a build=n.a unit=t (pptx pytest 34/34) e2e=n.a
+- LOG: Step 9 review (inline) — Critical-class: version router keyed latest-tag auto-resolution off the VERSION file, which semantic-release never bumps — in any maintainer checkout the router would clone the stale tag and silently install it over local edits (exposed by claude/kilo translation tests seeding the source tree). Fix: auto-routing requires no .git (npx trees); maintainer checkouts install their own tree; explicit --ref always honored (second pass caught the over-broad skip breaking the pinned-rollback pin). The three initially-failing tests are the regression pins.
+- GATE f7023d6 tier=full lint=n.a typecheck=n.a (node --check) build=n.a unit=t (bats tests/ 662/662, exit 0 — third pass, review-fix re-gate; final SHA) e2e=n.a (pptx pytest 120/120 in-gate)
+- LOG: generalizer weight line — 6 generalized bodies: 93121 chars (~23.3k tok) -> 93150 chars (~23.3k tok); the sweep traded ~30 chars of proper nouns for neutral placeholders (weight was never the problem here — specificity was; the +0.03% delta is the placeholder text).
