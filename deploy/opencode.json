@@ -72,16 +72,6 @@
         },
         {
             "action": "skill",
-            "resource": "git-branch-workflow-setup-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "dev-uat-promotion-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
             "resource": "civiltekk-git-commits-skill",
             "effect": "allow"
         },
@@ -163,11 +153,6 @@
         {
             "action": "skill",
             "resource": "semantic-release-convention-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "version-bump-standard-skill",
             "effect": "allow"
         },
         {

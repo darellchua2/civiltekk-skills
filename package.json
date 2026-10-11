@@ -1,6 +1,10 @@
 {
   "name": "opencode-skill",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darellchua2/civiltekk-skills.git"
+  },
   "private": true,
   "description": "opencode skill/agent registry + CLI installer",
   "type": "module",

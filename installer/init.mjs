@@ -30,8 +30,8 @@
 // global ~/.config/opencode config. Agents/skills directories are ADDITIVE (unioned).
 // => isolation (curated subset) only holds on a clean slate (no global deploy).
 
-import { readFile, writeFile, mkdir, readdir, rm, cp, copyFile } from "node:fs/promises";
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { readFile, writeFile, mkdir, readdir, rm, cp, copyFile, mkdtemp } from "node:fs/promises";
+import { existsSync, readdirSync, statSync, readFileSync } from "node:fs";
 import { dirname, join, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -55,6 +55,63 @@ const MODELS_DEFAULT = join(INSTALLER, "models.default.json");
 const PROVIDER_MODELS = join(INSTALLER, "provider-models.json");
 const RESOLVER = join(INSTALLER, "resolve-models.mjs");
 const SOURCE_OC = join(REPO, "deploy/opencode.json");
+const VERSION_FILE = join(REPO, "VERSION");
+const SIDECAR = ".skill-source.json";
+// Install provenance (recorded in .skill-source.json + manifest entries).
+// Resolved once by the version router in main(); lazily defaulted otherwise.
+let installSource = null; // { source, ref, version }
+function repoUrl() {
+  // npm-canonical source for ls-remote/clone; the npx-fetched tree has no .git,
+  // so a git remote lookup would fail there — package.json is the stable home.
+  const pkg = JSON.parse(readFileSync(join(REPO, "package.json"), "utf8"));
+  const url = (pkg.repository && (typeof pkg.repository === "string" ? pkg.repository : pkg.repository.url)) || "";
+  if (!url) die("package.json has no repository field — cannot resolve release refs", 2);
+  return url.replace(/^git\+/, "").replace(/^git@github\.com:/, "https://github.com/");
+}
+async function treeVersion() { return (await readFile(VERSION_FILE, "utf8")).trim(); }
+function semverKey(v) { const [, a, b, c] = v.match(/^v(\d+)\.(\d+)\.(\d+)$/) || []; return a ? [+a, +b, +c] : null; }
+export function parseTagLines(out) {
+  // ls-remote --tags output → highest vX.Y.Z (peeled `^{}` lines dropped).
+  const tags = out.split("\n")
+    .map((l) => (l.split("\t")[1] || "").trim())
+    .filter((t) => /^refs\/tags\/v\d+\.\d+\.\d+$/.test(t))
+    .map((t) => t.replace("refs/tags/", ""));
+  const valid = tags.filter((t) => semverKey(t));
+  valid.sort((x, y) => { const a = semverKey(x), b = semverKey(y); return a[0] - b[0] || a[1] - b[1] || a[2] - b[2]; });
+  return valid.at(-1) || null;
+}
+function resolveLatestTag(url) {
+  const r = spawnSync("git", ["ls-remote", "--tags", url], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+  if (r.error || r.status !== 0) throw new Error(`git ls-remote --tags ${url} failed: ${(r.stderr || r.error || "").toString().trim()}`);
+  return parseTagLines(r.stdout);
+}
+async function stampMissingRef(ref, changedNames) {
+  // Post-exec provenance sweep for installs done by an older tagged inner
+  // installer: ONLY entries the inner run actually wrote (hash changed or new
+  // — `changedNames`) get stamped, never pre-existing legacy entries (their
+  // provenance is genuinely unknown; labeling them with today's ref would lie).
+  const version = ref.replace(/^v/, "");
+  const shortSource = repoUrl().replace(/^https:\/\/github\.com\//, "github:").replace(/\.git$/, "");
+  const prev = await readJsonMaybe(USER_MANIFEST);
+  if (!prev || !prev.entries) return;
+  const entries = { ...prev.entries };
+  let touched = false;
+  for (const [name, ent] of Object.entries(entries)) {
+    if (ent.type !== "skill" || ent.ref || !changedNames.has(name)) continue;
+    for (const t of Object.keys(ent.targets || {})) {
+      const cfg = TARGETS[t];
+      const dir = cfg && cfg.skillsDir ? join(cfg.skillsDir, name) : null;
+      if (dir && existsSync(dir)) {
+        if (!existsSync(join(dir, SIDECAR))) {
+          await writeFile(join(dir, SIDECAR), JSON.stringify({ source: shortSource, ref, version, installedAt: new Date().toISOString(), files: listSkillFiles(dir) }, null, 2) + "\n", "utf8");
+        }
+        entries[name] = { ...ent, ref, version };
+        touched = true;
+      }
+    }
+  }
+  if (touched) await writeFile(USER_MANIFEST, JSON.stringify({ ...prev, entries }, null, 2) + "\n", "utf8");
+}
 const BUILTINS = new Set(["explore", "general", "scout", "build", "plan", "compaction", "title", "summary"]);
 const USER_OC = join(os.homedir(), ".config/opencode");
 const USER_AGENTS = join(USER_OC, "agents");
@@ -174,6 +231,8 @@ async function hashSkillDir(dir, transform) {
     if (!existsSync(d)) return;
     for (const e of await readdir(d, { withFileTypes: true })) {
       const rel = prefix ? `${prefix}/${e.name}` : e.name;
+      if (rel === SIDECAR) continue; // installer-owned provenance stamp — excluded so
+      // installed hashes always match source-tree hashes (update stays idempotent)
       if (e.isDirectory()) await walk(join(d, e.name), rel);
       else files.push([rel, await readFile(join(d, e.name))]);
     }
@@ -368,7 +427,31 @@ async function cmdList(kind, reg, opts) {
     process.stdout.write(JSON.stringify(rows, null, 2) + "\n");
     return;
   }
-  die(`--list: unknown kind '${kind}'. Use agents|skills|categories|mcps|presets.`);
+  if (kind === "installed") {
+    // Installed-vs-latest per skill (update marker = re-run `add`). One
+    // ls-remote for the latest tag; sidecar/manifest carry installed provenance.
+    const prev = await readJsonMaybe(USER_MANIFEST);
+    const entries = Object.entries((prev && prev.entries) || {}).filter(([, e]) => e.type === "skill");
+    let latest = null;
+    try { latest = resolveLatestTag(repoUrl()); } catch (e) { console.error(`note: latest-tag lookup failed (${e.message.split("\n")[0]})`); }
+    const rows = [];
+    for (const [name, ent] of entries) {
+      let installedRef = ent.ref || null, installedVersion = ent.version || null;
+      if (!installedRef) {
+        for (const t of Object.keys(ent.targets || {})) {
+          const cfg = TARGETS[t];
+          const sc = cfg && cfg.skillsDir ? join(cfg.skillsDir, name, SIDECAR) : null;
+          if (sc && existsSync(sc)) { const m = JSON.parse(await readFile(sc, "utf8")); installedRef = m.ref; installedVersion = m.version; break; }
+        }
+      }
+      const norm = String(installedVersion || "").replace(/^v/, "");
+      rows.push({ name, installedRef, installedVersion, latest: latest || null, updateAvailable: !!(latest && norm && latest !== `v${norm}`) });
+    }
+    rows.sort((a, b) => a.name.localeCompare(b.name));
+    process.stdout.write(JSON.stringify(rows, null, 2) + "\n");
+    return;
+  }
+  die(`--list: unknown kind '${kind}'. Use agents|skills|categories|mcps|presets|installed.`);
 }
 
 async function cmdDescribe(name, reg) {
@@ -577,7 +660,7 @@ export async function writeInstall(sel, opts, reg, depMap) {
     content = await composeAgentBody({ stem: a.stem, body: content, agentsSrc: AGENTS_SRC, target: pTarget, agentMode: pCfg.agentMode, warn: (m) => console.error(`  overlay (${a.stem}): ${m}`) });
     await writeFile(a.dst, content, "utf8");
   }
-  for (const s of plan.skills) { await mkdir(dirname(s.dst), { recursive: true }); await cp(s.src, s.dst, { recursive: true, force: true }); }
+  for (const s of plan.skills) { await mkdir(dirname(s.dst), { recursive: true }); await cp(s.src, s.dst, { recursive: true, force: true }); await writeSkillSidecar(s.dst); }
 
   // opencode-specific artifacts (opencode target only — kimi project installs
   // carry no opencode config; #454)
@@ -873,6 +956,40 @@ async function cmdAdd(args, opts, reg, depMap) {
   await writeUserScopeInstall(sel, opts, reg, depMap);
 }
 
+async function skillSourceMeta() {
+  if (installSource) return installSource;
+  const version = await treeVersion();
+  const url = repoUrl();
+  return { source: url.replace(/^https:\/\/github\.com\//, "github:").replace(/\.git$/, ""), ref: `v${version}`, version };
+}
+function listSkillFiles(dir) {
+  // recursive relative file list for the sidecar (sorted, dirs excluded)
+  const files = [];
+  const walk = (d, prefix) => {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      const rel = prefix ? `${prefix}/${e.name}` : e.name;
+      if (e.isDirectory()) walk(join(d, e.name), rel);
+      else files.push(rel);
+    }
+  };
+  walk(dir, "");
+  return files.sort();
+}
+async function writeSkillSidecar(dst) {
+  // provenance stamp per installed skill dir (rollback/upgrade surface for
+  // `list installed`); excluded from hashSkillDir so update stays idempotent.
+  const meta = await skillSourceMeta();
+  await writeFile(join(dst, SIDECAR), JSON.stringify({ ...meta, installedAt: new Date().toISOString(), files: listSkillFiles(dst) }, null, 2) + "\n", "utf8");
+}
+async function skillEntryHashes() {
+  const prev = await readJsonMaybe(USER_MANIFEST);
+  const out = {};
+  for (const [name, ent] of Object.entries((prev && prev.entries) || {})) {
+    if (ent.type === "skill") out[name] = JSON.stringify(ent.targets || {});
+  }
+  return out;
+}
+
 async function writeUserScopeInstall(sel, opts, reg, depMap) {
   const dry = !!opts.dryRun;
   const target = opts.target || "opencode";
@@ -949,6 +1066,7 @@ async function writeUserScopeInstall(sel, opts, reg, depMap) {
             await writeFile(skillMd, stripModelLine(await readFile(skillMd, "utf8")), "utf8");
         }
         newEntries[sname] = { type: "skill", targets: { ...(newEntries[sname]?.targets || {}), [t]: await hashSkillDir(dst) } };
+        await writeSkillSidecar(dst);
       }
     }
   }
@@ -974,6 +1092,11 @@ async function writeUserScopeInstall(sel, opts, reg, depMap) {
   const entries = { ...(prevManifest.entries || {}) };
   for (const [name, ent] of Object.entries(newEntries)) {
     entries[name] = { type: ent.type, targets: { ...(entries[name]?.targets || {}), ...ent.targets } };
+    if (ent.type === "skill") {
+      const meta = await skillSourceMeta();
+      entries[name].ref = meta.ref;
+      entries[name].version = meta.version;
+    }
   }
   const manifest = {
     generatedAt: new Date().toISOString(),
@@ -1677,6 +1800,50 @@ async function main() {  const opts = parseArgs(process.argv.slice(2));
   if (opts.global && opts.project)
     die("cannot combine --global with --project (user scope is already the default; drop -g)", 2);
 
+  // Version router (#667): `add` installs from the LATEST release tag by
+  // default, not the running tree. If the tree already IS that release
+  // (npx main after a release, or the tag itself), proceed locally; otherwise
+  // shallow-clone the wanted ref and re-exec THIS installer from that tree
+  // (same version as the installed content). `--ref <ref>` overrides (e.g.
+  // --ref main for the unreleased tree); `--source <dir>` dev mode installs
+  // from the running tree with no fetch. Other verbs keep local-tree semantics.
+  if (opts.rest[0] === "add" && !opts.source && !opts.dryRun) {
+    const url = repoUrl();
+    const local = await treeVersion();
+    let wanted = opts.ref || null;
+    if (!wanted) {
+      try { wanted = resolveLatestTag(url); } catch (e) {
+        die(`cannot resolve the latest release tag (${e.message.split("\n")[0]}). Pass --ref <tag|main> explicitly, or --source . to install from the running tree.`, 2);
+      }
+    }
+    if (!wanted) die("no release tags found on the repository — pass --ref main or --source .", 2);
+    if (wanted === `v${local}`) {
+      installSource = { source: url.replace(/^https:\/\/github\.com\//, "github:").replace(/\.git$/, ""), ref: wanted, version: local };
+    } else {
+      const tmp = await mkdtemp(join(os.tmpdir(), "opencode-skill-"));
+      console.error(`fetching ${wanted} (running tree: v${local})…`);
+      const clone = spawnSync("git", ["clone", "--depth", "1", "--branch", wanted, url, tmp], { stdio: ["ignore", "ignore", "inherit"] });
+      if (clone.status !== 0) { await rm(tmp, { recursive: true, force: true }); die(`clone of ${wanted} failed — check the ref name and your credentials, or use --source . to install from the running tree`, 2); }
+      const before = await skillEntryHashes();
+      const r = spawnSync(process.execPath, [join(tmp, "installer", "init.mjs"), ...process.argv.slice(2), "--source", tmp, "--install-ref", wanted], { stdio: "inherit" });
+      await rm(tmp, { recursive: true, force: true });
+      if ((r.status ?? 1) !== 0) process.exit(r.status ?? 1);
+      // Older tagged installers predate the provenance stamp — the outer
+      // (current) installer post-stamps ONLY the entries this run actually
+      // wrote (hash changed or new). No-op for new inners (they stamp at
+      // install time) and for legacy entries (unknown provenance stays unknown).
+      const after = await skillEntryHashes();
+      const changed = new Set(Object.keys(after).filter((n) => after[n] !== before[n]));
+      await stampMissingRef(wanted, changed);
+      process.exit(0);
+    }
+  } else if (opts.source) {
+    // dev mode: install from the running tree (--source <dir> is accepted for
+    // router re-exec symmetry; the running tree's REPO is already the source)
+    const version = await treeVersion();
+    installSource = { source: repoUrl().replace(/^https:\/\/github\.com\//, "github:"), ref: opts.ref || `v${version}`, version };
+  }
+
   const reg = await loadRegistry();
   reg.__presets = await loadPresets();
   const depMap = await loadDepMap();
@@ -1717,7 +1884,7 @@ async function main() {  const opts = parseArgs(process.argv.slice(2));
   // read modes
   if (opts.rest[0] === "list" || opts.rest[0] === "ls") {
     const what = opts.rest[1];
-    if (!what) die("list: specify a category — agents|skills|categories|mcps|presets (e.g. 'opencode-skill list skills')", 2);
+    if (!what) die("list: specify a category — agents|skills|categories|mcps|presets|installed (e.g. 'opencode-skill list skills')", 2);
     cmdList(what, reg, opts);
     return;
   }

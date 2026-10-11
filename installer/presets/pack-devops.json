@@ -20,8 +20,7 @@
     "plan-execution-skill",
     "search-first-skill",
     "semantic-release-convention-skill",
-    "ticketing-skill",
-    "version-bump-standard-skill"
+    "ticketing-skill"
   ],
   "mcps": [
     "codegraph"

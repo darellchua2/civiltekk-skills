@@ -26,7 +26,6 @@ Use this skill when:
 ## Related Skills
 
 - **civiltekk-opentofu-skill** (route `explore`, AWS section): AWS resource discovery (Lambda Function URL CNAME pattern).
-- **civiltekk-opentofu-skill** (route `ecr-provision`): ECR provisioning (lowercase-safe naming pattern).
 - **security-audit-skill**: Security auditing (Lambda public-without-auth, local Terraform state patterns).
 - **docker-containerization-skill**: Docker patterns (no-rollback-on-deploy pattern).
 

@@ -41,9 +41,6 @@ permissions:
     resource: general
     effect: allow
   - action: skill
-    resource: version-bump-standard-skill
-    effect: allow
-  - action: skill
     resource: semantic-release-convention-skill
     effect: allow
   - action: skill
@@ -127,7 +124,7 @@ You handle **anything pertaining to git repository setup and operations**:
 
 Load these skills to apply the correct standards and conventions:
 
-- **version-bump-standard**: The CanvasTekk release standard (dev → uat → main, PR-label-driven versioning, workflow templates, onboarding/audit scripts)
+- **version-bump-standard**: The betekk org release standard (dev → uat → main, PR-label-driven versioning, workflow templates, onboarding/audit scripts) — **org-scope**: install via `npx github:betekk/betekk-skills add version-bump-standard-skill`; absent → proceed without it and say so
 - **semantic-release-convention**: Single source of truth for commit → PR → merge → release → CI/CD conventions, versioning labels, changelog generation
 - **civiltekk-pr-workflow** (`create` + `merge` routes): PR creation with quality checks and semver labels; post-merge — merge, CI monitoring, auto-fix, JIRA status update, branch cleanup
 - **ticketing-skill**: Full ticket lifecycle on GitHub Issues or JIRA — create, classify/label (incl. semver labels, PR-only), start (in-progress), update from commits, close post-merge, ticket-key↔branch plumbing
@@ -140,7 +137,7 @@ Load these skills to apply the correct standards and conventions:
 
 ## Repository Setup Workflow
 
-1. **Determine the standard** — load `semantic-release-convention-skill` and `version-bump-standard-skill` to identify the governing conventions
+1. **Determine the standard** — load `semantic-release-convention-skill`; the org-scope `version-bump-standard-skill` rides the betekk install (`npx github:betekk/betekk-skills add version-bump-standard-skill`) — absent → print that hint, note it, and proceed with `semantic-release-convention-skill` as the governing convention
 2. **Audit existing state** — check for existing workflow files, branch protection, labels, tags
 3. **Apply the standard** — create/update workflow files, set branch protection, create labels, configure releases
 4. **Validate** — run `bash -n` on scripts, `yaml.safe_load` on templates, verify label colors match governance standard
