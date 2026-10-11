@@ -88,9 +88,9 @@ _Every step is atomic and carries rationale. Format: N.M action — Why / Done w
     — **Why:** custom tool is the verified v2 mechanism for skill decision trees; the tool advises, the agent decides — no autonomous gating of skill logic.
     — **Done when:** `ctx.tool.list()` in a loaded session exposes the tool; args schema validates (additionalProperties false).
     — **Consumers affected:** the three wired skills (Phase 6), interactive users.
-- [ ] **2.5** Write the shadow logger — append-only JSONL to `<project>/.opencode/laya-guard-shadow.jsonl`: `{ts, action, target, questions:{name:p}, would_be, mode}`; target = action metadata only (resources array), never file contents or env values; every append wrapped in try/catch (logging must never break the agent loop)
-    — **Why:** shadow calibration (Week 1–2) is the enforce-flip prerequisite; metadata-only keeps vibeguard exposure at zero.
-    — **Done when:** no code path writes message bodies, diffs, or env values to the log; append failure is swallowed.
+- [ ] **2.5** Write the shadow logger — append-only JSONL to `<project>/.opencode/laya-guard-shadow.jsonl`: `{ts, action, target, questions:{name:p}, would_be, mode}`; target = action metadata only (resources array, truncated to 200 chars), never file contents or env values; every append wrapped in try/catch (logging must never break the agent loop)
+    — **Why:** shadow calibration (Week 1–2) is the enforce-flip prerequisite; metadata-only keeps vibeguard exposure at zero; truncation bounds the one residual leak path (a bash command carrying an inline credential) — local gitignored log, not a new surface, but cheap to bound.
+    — **Done when:** no code path writes message bodies, diffs, or env values to the log; target truncation present in source; append failure is swallowed.
     — **Consumers affected:** calibration workflow; `.gitignore` (3.4).
 
 ### Phase 3: Config + docs
