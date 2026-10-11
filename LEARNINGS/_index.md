@@ -2059,3 +2059,13 @@
 - **Scope**: project
 - **Summary**: A conflict resolution edit whose oldString matches text inside the conflict block replaces only that region — markers and the losing side stay and get staged. #641's resume rebase shipped them (657 tests green, no marker guard); caught by Step 9 diff review. Rule: the resolution edit must span the whole block; run `git diff --check` / a marker grep before staging; add a repo-level marker guard test.
 - **Date**: 2026-10-08
+- **File**: `LEARNINGS/anti-patterns/skill-removal-sweeps-miss-agent-frontmatter.md`
+- **Confidence**: 0.9
+- **Scope**: project
+- **Summary**: Skill removal/migration sweeps that grep only skills/ content miss agents/*.md frontmatter permission rules and delegation steps naming the skill (#667 review found 2 unmapped agent consumers). Rule: removal checklists grep agents/ too; drop/replace permission rules, rewrite delegations to org-scope skip-with-note.
+- **Date**: 2026-10-11
+- **File**: `LEARNINGS/solutions/tagged-installer-reexec-runs-old-code.md`
+- **Confidence**: 0.9
+- **Scope**: project
+- **Summary**: A version router that re-execs the tag clone's own installer runs code as of that tag — newer post-install features silently skip on older refs. Fix: outer process snapshots manifest hashes pre-spawn and post-stamps only hash-changed/new entries (changed-set guard keeps legacy entries' unknown provenance unknown) (#667).
+- **Date**: 2026-10-11
