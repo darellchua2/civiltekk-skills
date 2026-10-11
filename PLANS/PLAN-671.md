@@ -8,18 +8,18 @@
 
 From #671 (inherited verbatim; the PLAN never rewrites them):
 
-- [ ] `plugins/opencode-laya-guard.ts` committed — zero npm imports; registers evaluate hook + `laya_classify` tool
-- [ ] Node >=24 sidecar (`plugins/laya-guard/`) — JSONL stdio protocol; warm model; exits with parent
-- [ ] Fail-closed invariants hold (missing answers => p=1; sidecar failure => hook degrades to `ask` in enforce, log in shadow)
-- [ ] `laya-guard.config.json` shipped with `mode: "shadow"`; thresholds in config, never model
-- [ ] setup.sh provisions deps + model idempotently, offline-safe on re-run, Linux-gated with Windows notice; `setup.ps1` mirrors the skip
-- [ ] `deploy/opencode.json`: 3 hard deny rules merged above the skill allowlist
-- [ ] Shadow log metadata-only (no file contents/env values); repo `.gitignore` entry
-- [ ] `plugins/ATTRIBUTION.md` entries for `@receptron/laya` (MIT) + Convai weights (Apache-2.0)
-- [ ] Bats suite green in CI: air-gap, fail-closed, shadow-default, no-content-leak guards (grep-based, CI-safe)
-- [ ] README: usage, calibration (shadow->enforce), tuning notes
-- [ ] Three skills wired with optional classifier consult lines
-- [ ] Enforce NOT enabled by default
+- [x] `plugins/opencode-laya-guard.ts` committed — zero npm imports; registers evaluate hook + `laya_classify` tool
+- [x] Node >=24 sidecar (`plugins/laya-guard/`) — JSONL stdio protocol; warm model; exits with parent
+- [x] Fail-closed invariants hold (missing answers => p=1; sidecar failure => hook degrades to `ask` in enforce, log in shadow)
+- [x] `laya-guard.config.json` shipped with `mode: "shadow"`; thresholds in config, never model
+- [x] setup.sh provisions deps + model idempotently, offline-safe on re-run, Linux-gated with Windows notice; `setup.ps1` mirrors the skip
+- [x] `deploy/opencode.json`: 3 hard deny rules merged above the skill allowlist
+- [x] Shadow log metadata-only (no file contents/env values); repo `.gitignore` entry
+- [x] `plugins/ATTRIBUTION.md` entries for `@receptron/laya` (MIT) + Convai weights (Apache-2.0)
+- [x] Bats suite green in CI: air-gap, fail-closed, shadow-default, no-content-leak guards (grep-based, CI-safe)
+- [x] README: usage, calibration (shadow->enforce), tuning notes
+- [x] Three skills wired with optional classifier consult lines
+- [x] Enforce NOT enabled by default
 
 ## Dependency & Consumer Map
 
@@ -181,10 +181,11 @@ _Every step is atomic and carries rationale. Format: N.M action — Why / Done w
 
 ### Phase 7: Exit gate + runbook
 
-- [ ] **7.1** Run the full verification gate (tier=full) and write the gate memo into the PLAN `## Trace` — includes: bats full suite, `bash -n` on setup.sh, JSON parse of opencode.json + config, plugin file syntax check (tsc-free: node --check on the transpiled form is not available; structural greps per 5.1 stand in), manual smoke path documented (scratch project, `echo hello` shadow pass line, `git push --force` config-denied, ambiguous curl logged high-exfiltration)
+- [x] **7.1** Run the full verification gate (tier=full) and write the gate memo into the PLAN `## Trace` — includes: bats full suite, `bash -n` on setup.sh, JSON parse of opencode.json + config, plugin file syntax check (tsc-free: node --check on the transpiled form is not available; structural greps per 5.1 stand in), manual smoke path documented (scratch project, `echo hello` shadow pass line, `git push --force` config-denied, ambiguous curl logged high-exfiltration)
     — **Why:** ticket exit gate is full tier per the pipeline contract; the memo's `GATE <sha> tier=full` line is the PR-creation citation.
     — **Done when:** memo line present naming the final implementation SHA.
     — **Consumers affected:** Step 9 review, Step 10a PR body.
+    — **Done:** full gate re-run on the final tree — bats 670 ok / 0 failures; bash -n; opencode.json + config JSON parse; node --check x3 (sidecar, warm, plugin strip-types); deployed-path smoke green (provisioned ~/.cache/laya-guard, live systemOne: exfiltration p=0.91 / destructive p=0.88 on curl -d @.env — matches the runbook expectation); files: (gate run); fixes: none
 
 ## Technical Notes
 
@@ -220,3 +221,4 @@ None — no `blocked-by` tickets. External: Hugging Face network access once (pr
 - LOG fix 2 (Phase 4, tests/test_select_items.bats): #537 plugin-inventory pins hardcoded 6 .ts plugins; the 7th (opencode-laya-guard.ts) is a legitimate inventory change — pins updated to 7 (expected length, select-items count, list-items 7/7) with #671 comments; full suite otherwise green (660/662 before, inventory tests 19/19 after)
 - GATE 956f7dc tier=full lint=n.a typecheck=n.a (node --check sidecar.mjs/warm.mjs; node strip-types parse on the plugin .ts) build=n.a unit=t (bats tests/ 662/662 post-pin-fix; bash -n setup.sh; opencode.json + config JSON parse) e2e=n.a (no frontend touched)
 - GATE d5bd58e tier=full lint=n.a typecheck=n.a build=n.a unit=t (bats tests/ 670 ok / 0 failures — 662 + 8 laya-guard guards) e2e=n.a
+- GATE 6b273af tier=full lint=n.a typecheck=n.a (node --check sidecar.mjs + warm.mjs; strip-types parse on plugins/opencode-laya-guard.ts) build=n.a unit=t (bats tests/ 670 ok / 0 failures; bash -n; both JSON configs parse; deployed-path live smoke via ~/.cache/laya-guard: init+ping+systemOne green, calibrated outputs) e2e=n.a (no frontend touched) — ticket exit gate; docs-only tick commit follows, implementation tree = 6b273af
