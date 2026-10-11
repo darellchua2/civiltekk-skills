@@ -150,14 +150,16 @@ _Every step is atomic and carries rationale. Format: N.M action — Why / Done w
 
 ### Phase 5: Tests
 
-- [ ] **5.1** Write `tests/test_laya_guard.bats` — grep-based guards (CI-safe, no ripgrep per repo learning): no `https?://` in the plugin file (air-gap); `?? 1` present (fail-closed); `"mode": "shadow"` in shipped config; config file exists; no `process.env` in the plugin file (no content/env leak surface); no `readFileSync` in `sidecar.mjs` (sidecar never reads files); `git push --force` deny present in `deploy/opencode.json`
+- [x] **5.1** Write `tests/test_laya_guard.bats` — grep-based guards (CI-safe, no ripgrep per repo learning): no `https?://` in the plugin file (air-gap); `?? 1` present (fail-closed); `"mode": "shadow"` in shipped config; config file exists; no `process.env` in the plugin file (no content/env leak surface); no `readFileSync` in `sidecar.mjs` (sidecar never reads files); `git push --force` deny present in `deploy/opencode.json`
     — **Why:** the invariants are structural and grep-checkable; these four are the brief's air-gap + fail-closed + shadow-default + no-leak ACs made mechanical.
     — **Done when:** `bats tests/test_laya_guard.bats` all green.
     — **Consumers affected:** CI.
-- [ ] **5.2** Run the full bats suite (`bats tests/`) — whole-repo green
+    — **Done:** 8 guards (air-gap, fail-closed ?? 1, shadow default, config exists, no process.env, sidecar no readFileSync, push --force deny shipped, enforce-not-default); 8/8 green; grep-based + cwd-independent per repo learnings; files: tests/test_laya_guard.bats; fixes: none
+- [x] **5.2** Run the full bats suite (`bats tests/`) — whole-repo green
     — **Why:** setup.sh and opencode.json edits have existing guard tests; the ticket must not regress them.
     — **Done when:** zero failing files, noted in the gate memo.
     — **Consumers affected:** CI, maintainers.
+    — **Done:** full bats suite 670 ok / 0 failures (662 pre-existing + 8 new); files: (run); fixes: none
 
 ### Phase 6: Skill wiring (optional-consult lines, body-only edits — frontmatter untouched)
 
@@ -213,3 +215,4 @@ None — no `blocked-by` tickets. External: Hugging Face network access once (pr
 - GATE 36ad759 tier=light lint=n.a typecheck=n.a build=n.a unit=t (config JSON parse, shadow-default grep, check-ignore exit 0) e2e=n.a
 - LOG full-gate escalation (Phase 4): deploy/setup.sh + deploy/opencode.json touched — critical-area anchor per the Consumer Map (bats suite + ps1 parity consumers); gate tier=full
 - LOG fix 2 (Phase 4, tests/test_select_items.bats): #537 plugin-inventory pins hardcoded 6 .ts plugins; the 7th (opencode-laya-guard.ts) is a legitimate inventory change — pins updated to 7 (expected length, select-items count, list-items 7/7) with #671 comments; full suite otherwise green (660/662 before, inventory tests 19/19 after)
+- GATE 956f7dc tier=full lint=n.a typecheck=n.a (node --check sidecar.mjs/warm.mjs; node strip-types parse on the plugin .ts) build=n.a unit=t (bats tests/ 662/662 post-pin-fix; bash -n setup.sh; opencode.json + config JSON parse) e2e=n.a (no frontend touched)
