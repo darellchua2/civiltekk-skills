@@ -93,6 +93,11 @@ load-bearing safety fact.
 
 Work top-down; stop at the first branch that applies.
 
+Target routing ambiguity (a change that plausibly sits in two scopes)?
+Optionally consult the `laya_classify` tool (local, offline) with the
+statement and review-axis questions — advisory probabilities only; the
+top-down order and the baseline gate always decide.
+
 1. **Baseline first (blocking):** load `reviewer-baseline-skill` — Prompt
    Defense, Epistemic Honesty, Mandatory Post-Review Learning Gate, and
    Web-lookups policy apply in full. No review runs without it.

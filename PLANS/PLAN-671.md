@@ -163,18 +163,21 @@ _Every step is atomic and carries rationale. Format: N.M action — Why / Done w
 
 ### Phase 6: Skill wiring (optional-consult lines, body-only edits — frontmatter untouched)
 
-- [ ] **6.1** `skills/requirements-inline-skill/SKILL.md` — one line in the Detection decision tree: when a branch hinges on judgment (thin-vs-substantive, ambiguity calls), optionally consult `laya_classify` with the statement; deterministic checks stay in code
+- [x] **6.1** `skills/requirements-inline-skill/SKILL.md` — one line in the Detection decision tree: when a branch hinges on judgment (thin-vs-substantive, ambiguity calls), optionally consult `laya_classify` with the statement; deterministic checks stay in code
     — **Why:** the skill's routing has genuinely fuzzy branches; the tool advises, the agent decides (locked decision: no autoresearch-evaluator use).
     — **Done when:** line present in the decision tree section; frontmatter byte-identical.
     — **Consumers affected:** requirements gate runs.
-- [ ] **6.2** `skills/architecture-review-skill/SKILL.md` — same consult line in `## §2. Decision Tree` for target-routing ambiguity
+    — **Done:** consult line added after the skip rule (judgment-shaped branch → laya_classify advisory; deterministic stays in code); frontmatter region byte-identical; files: skills/requirements-inline-skill/SKILL.md; fixes: none
+- [x] **6.2** `skills/architecture-review-skill/SKILL.md` — same consult line in `## §2. Decision Tree` for target-routing ambiguity
     — **Why:** target routing (which review axis applies) is judgment-shaped at the edges.
     — **Done when:** line present; frontmatter byte-identical.
     — **Consumers affected:** plan reviews.
-- [ ] **6.3** `skills/markitdown-mcp-skill/SKILL.md` — same consult line in `## Decision Tree` for layout-complexity ambiguity (markitdown vs docling escalation)
+    — **Done:** consult line added under the decision-tree preamble (target-routing ambiguity); top-down order + baseline gate still decide; frontmatter region byte-identical; files: skills/architecture-review-skill/SKILL.md; fixes: none
+- [x] **6.3** `skills/markitdown-mcp-skill/SKILL.md` — same consult line in `## Decision Tree` for layout-complexity ambiguity (markitdown vs docling escalation)
     — **Why:** extraction-tier routing is the documented fuzzy branch.
     — **Done when:** line present; frontmatter byte-identical.
     — **Consumers affected:** document-extraction routing.
+    — **Done:** consult line added under the preamble (layout-complexity ambiguity; escalate-to-docling bias preserved); frontmatter region byte-identical; files: skills/markitdown-mcp-skill/SKILL.md; fixes: none
 
 ### Phase 7: Exit gate + runbook
 
@@ -216,3 +219,4 @@ None — no `blocked-by` tickets. External: Hugging Face network access once (pr
 - LOG full-gate escalation (Phase 4): deploy/setup.sh + deploy/opencode.json touched — critical-area anchor per the Consumer Map (bats suite + ps1 parity consumers); gate tier=full
 - LOG fix 2 (Phase 4, tests/test_select_items.bats): #537 plugin-inventory pins hardcoded 6 .ts plugins; the 7th (opencode-laya-guard.ts) is a legitimate inventory change — pins updated to 7 (expected length, select-items count, list-items 7/7) with #671 comments; full suite otherwise green (660/662 before, inventory tests 19/19 after)
 - GATE 956f7dc tier=full lint=n.a typecheck=n.a (node --check sidecar.mjs/warm.mjs; node strip-types parse on the plugin .ts) build=n.a unit=t (bats tests/ 662/662 post-pin-fix; bash -n setup.sh; opencode.json + config JSON parse) e2e=n.a (no frontend touched)
+- GATE d5bd58e tier=full lint=n.a typecheck=n.a build=n.a unit=t (bats tests/ 670 ok / 0 failures — 662 + 8 laya-guard guards) e2e=n.a
