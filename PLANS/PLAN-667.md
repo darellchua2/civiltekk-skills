@@ -8,9 +8,9 @@
 - [x] The three org skills (dev-uat-promotion-skill, version-bump-standard-skill, git-branch-workflow-setup-skill) and skills/civiltekk-opentofu-skill/references/ecr.md are removed; org-marker grep over skills/ returns provenance-only hits
 - [x] registry.json, dependency-map.json, presets, README counts and setup.sh banner consistent; `node installer/build-registry.mjs` green
 - [x] repo-ops-specialist-subagent skips with an install note when git-branch-workflow-setup-skill is absent
-- [ ] `npx github:darellchua2/civiltekk-skills add <skill>` installs from the latest vX.Y.Z tag; `#main` opt-in works
-- [ ] Every installed skill dir carries `.skill-source.json` with source/ref/version/installedAt/files
-- [ ] `list` verb prints installed vs latest per skill; contract tests updated and green
+- [x] `npx github:darellchua2/civiltekk-skills add <skill>` installs from the latest vX.Y.Z tag; `#main` opt-in works
+- [x] Every installed skill dir carries `.skill-source.json` with source/ref/version/installedAt/files
+- [x] `list` verb prints installed vs latest per skill; contract tests updated and green
 
 ## Dependency & Consumer Map
 
@@ -58,26 +58,31 @@
     — **Done:** registry regenerated (count 122, four-route tofu description, timestamp only); full bats suite green; files: installer/registry.json, tests/skill_profiles.bats; fixes: 4 count-pin failures on first run — README 5 derived literals stale (125→122, lean 70→68) + skill_profiles.bats two lean pins 70→68 (both removed skills were lean members)
 
 ### Phase 2: Versioned installer (WS3, civiltekk side)
-- [ ] **2.1** Add ref resolution to installer/init.mjs: helper that resolves the latest semver tag via `git ls-remote --tags <repo-url>` (sort -V, ignore `^{}`), honors `--ref <ref>` flag (`#main` opt-in = `--ref main`), and `--source .` dev mode that installs from the running tree without fetching
+- [x] **2.1** Add ref resolution to installer/init.mjs: helper that resolves the latest semver tag via `git ls-remote --tags <repo-url>` (sort -V, ignore `^{}`), honors `--ref <ref>` flag (`#main` opt-in = `--ref main`), and `--source .` dev mode that installs from the running tree without fetching
     — **Why:** AC requires latest-tag default install with main opt-in; the running npx tree may be ahead of the last release
     — **Done when:** a unit-callable node check resolves `v12.19.1` (or newer) from the live repo and `--ref main`/`--source .` parse
     — **Consumers affected:** 2.2, 2.3
-- [ ] **2.2** Rework the `add` verb: fetch the selected ref's tree (`git clone --depth 1 --branch <ref>` into a temp dir; `--source .` skips the fetch), copy the skill dir plus its declared dependency-map prerequisites from that tree, write `.skill-source.json` (`{source, ref, version, installedAt, files[]}`) into each installed skill dir, and record ref+version in the `.skill-manifest.json` entries
+    — **Done:** parseTagLines (exported, pure) + resolveLatestTag + repoUrl() from new package.json repository field; --ref/--source flow through the generic parser; files: installer/init.mjs, package.json; fixes: none
+- [x] **2.2** Rework the `add` verb: fetch the selected ref's tree (`git clone --depth 1 --branch <ref>` into a temp dir; `--source .` skips the fetch), copy the skill dir plus its declared dependency-map prerequisites from that tree, write `.skill-source.json` (`{source, ref, version, installedAt, files[]}`) into each installed skill dir, and record ref+version in the `.skill-manifest.json` entries
     — **Why:** delivers pinned/provenance-stamped installs; the sidecar is the rollback/upgrade surface for `list` and users
     — **Done when:** `node installer/init.mjs add <skill> --source .` into a scratch HOME installs the dir with a populated `.skill-source.json` and a manifest entry carrying ref
     — **Consumers affected:** list verb (2.3), README docs (2.4), manifest consumers
-- [ ] **2.3** Add the `list` verb: enumerate installed skills (manifest entries / dirs carrying `.skill-source.json`), print each with its installed ref/version and the remote latest tag (single `git ls-remote --tags` call), flagging update-available
+    — **Done:** version router in main() (latest-tag default, local shortcut when tree==tag, shallow-clone + re-exec of the tagged installer otherwise, old-installer post-stamp sweep via stampMissingRef); writeSkillSidecar on both scope paths; manifest entries carry ref/version; SIDECAR excluded from hashSkillDir so update stays idempotent; files: installer/init.mjs; fixes: router re-exec initially produced unstamped installs (tagged installers predate the sidecar) — outer post-stamp pass added
+- [x] **2.3** Add the `list` verb: enumerate installed skills (manifest entries / dirs carrying `.skill-source.json`), print each with its installed ref/version and the remote latest tag (single `git ls-remote --tags` call), flagging update-available
     — **Why:** AC requires installed-vs-latest visibility; upgrade is then "re-run add"
     — **Done when:** `node installer/init.mjs list` prints name, installed ref, latest tag, and an update marker in a scratch HOME with one installed skill
     — **Consumers affected:** README docs (2.4)
-- [ ] **2.4** README: add a "Versioning & rollback" section documenting latest-tag default, `#vX.Y.Z` pinned install, `--ref main`, upgrade-by-rerun, and the sidecar; update the install section to match
+    — **Done:** cmdList kind `installed` (JSON rows: name/installedRef/installedVersion/latest/updateAvailable; sidecar-or-manifest provenance, single ls-remote, offline-degradable with note); files: installer/init.mjs; fixes: die-guard lost its conditional during edit — caught and restored pre-gate
+- [x] **2.4** README: add a "Versioning & rollback" section documenting latest-tag default, `#vX.Y.Z` pinned install, `--ref main`, upgrade-by-rerun, and the sidecar; update the install section to match
     — **Why:** the versioning capability is invisible to end users until documented (audit finding)
     — **Done when:** README documents all four flows with copy-paste commands
     — **Consumers affected:** none
-- [ ] **2.5** Update/extend contract tests for the new verbs + sidecar + manifest ref; run the full bats suite
+    — **Done:** Versioning & rollback subsection under the one-skill install path: latest default, #vX.Y.Z pinned, --ref main, list installed, upgrade-by-rerun, post-stamp + --source notes; files: README.md; fixes: none
+- [x] **2.5** Update/extend contract tests for the new verbs + sidecar + manifest ref; run the full bats suite
     — **Why:** behavior change without a pinned test regresses silently; ticket exit gate is full
     — **Done when:** bats tests/ green including new installer-verb pins
     — **Consumers affected:** CI
+    — **Done:** tests/test_installer_versions.bats (5 tests: parseTagLines unit, sidecar+manifest stamp, hash-transparency/update idempotency, list installed rows, live --ref v12.18.0 rollback pin with network skip guard); full suite 662/662; files: tests/test_installer_versions.bats; fixes: none
 
 ## Technical Notes
 - The ECR route content moves to betekk/betekk-skills#9 (betekk-ecr-oidc-skill) — this ticket only removes; no content is lost (full text preserved in that ticket's work).
@@ -100,3 +105,5 @@
 - LOG: architecture review (inline arm, recovered after skill-permission allow) — Major finding applied: two unmapped agent consumers (agents/pr-workflow-subagent.md:69 permissions rule, agents/nextjs-specialist-subagent.md:94 detection delegation) folded into step 1.4 + Consumer Map; root-docs sweep keep-justified (CHANGELOG historical). Atomicity re-check: 11/11 steps well-formed.
 - LOG: Phase 1 gate fix-on-fail (1 attempt) — first full-suite run exit 1: 4 count-pin failures (readme_skill_total_and_lean_match_derived, skill_count_consistent_across_docs, 2× skill_profiles lean pins). Fixed: README 5 derived literals (125→122 disk, 70→68 lean), tests/skill_profiles.bats 70→68 ×2. Re-run: exit 0, 657/657.
 - GATE 2e6d940 tier=light lint=n.a typecheck=n.a build=n.a unit=t (bats tests/ 657/657, exit 0) e2e=n.a
+- LOG: Phase 2 docstrings skipped deliberately — init.mjs house style is inline comments, not JSDoc; new helpers carry explanatory comments matching the surrounding code.
+- GATE 6ab6e17 tier=full lint=n.a typecheck=n.a build=n.a unit=t (bats tests/ 662/662 incl. 5 new installer-version pins, exit 0 — ticket exit gate) e2e=n.a

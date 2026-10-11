@@ -37,6 +37,17 @@ npx github:darellchua2/civiltekk-opencode-claude-skills                         
 npx github:darellchua2/civiltekk-opencode-claude-skills remove solid-principles-skill
 ```
 
+**Versioning & rollback** — `add` installs from the **latest release tag** by default, never an untagged moving tree. Every installed skill dir carries a `.skill-source.json` provenance stamp (`source`, `ref`, `version`, `installedAt`, `files`), and `list installed` shows what you have vs. the latest release:
+
+```bash
+npx github:darellchua2/civiltekk-opencode-claude-skills add <skill>                 # latest vX.Y.Z release
+npx github:darellchua2/civiltekk-opencode-claude-skills#v12.18.0 add <skill>        # pinned — rollback = older tag
+npx github:darellchua2/civiltekk-opencode-claude-skills --ref main add <skill>      # unreleased main tree
+npx github:darellchua2/civiltekk-opencode-claude-skills list installed              # installed vs latest + update marker
+```
+
+Upgrade = re-run `add` (idempotent overwrite); downgrade = same with an older `#vX.Y.Z`. Installs carry an exact ref even when the fetched release's own installer predates stamping — the current installer post-stamps provenance after the tagged install. (`--source .` installs from a local checkout for maintainers; user-scope manifest entries record `ref`/`version` alongside the hashes.)
+
 **Other harnesses** — skills follow the [Agent Skills](https://agentskills.io) open standard; `--target` controls the destination:
 
 | Target | Destination | Notes |
