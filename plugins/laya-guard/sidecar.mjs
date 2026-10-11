@@ -53,10 +53,16 @@ function handle(msg) {
     if (typeof msg.state === "undefined" || !msg.questions || typeof msg.questions !== "object") {
       return Promise.resolve({ ok: false, error: "systemOne requires state and questions" })
     }
-    queue = queue.then(() => getModel()).then((model) => model.systemOne(msg.state, msg.questions)).then(
-      (result) => ({ ok: true, answers: result.answers, usage: result.usage ?? null }),
+    const run = queue
+      .then(() => getModel())
+      .then((model) => model.systemOne(msg.state, msg.questions))
+    // The queue tail swallows outcomes — one failed inference must not poison
+    // every later call. The caller's promise (run) still carries the error.
+    queue = run.then(
+      () => undefined,
+      () => undefined,
     )
-    return queue
+    return run.then((result) => ({ ok: true, answers: result.answers, usage: result.usage ?? null }))
   }
   return Promise.resolve({ ok: false, error: `unknown op: ${String(msg.op).slice(0, 40)}` })
 }

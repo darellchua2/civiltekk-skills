@@ -122,6 +122,12 @@ export default {
     function ensureChild() {
       if (child && child.exitCode === null && !child.killed) return child
       child = spawn("node", [join(cfg.sidecar_dir, "sidecar.mjs")], { stdio: ["pipe", "pipe", "pipe"] })
+      // EPIPE from a dying child arrives as an emitted 'error' event — try/catch
+      // around write() cannot catch it, and an unhandled 'error' would crash the
+      // host process. Swallow here; the 'exit' handler recovers the client.
+      child.stdin?.on("error", () => {})
+      child.stdout?.on("error", () => {})
+      child.stderr?.on("error", () => {})
       buffer = ""
       child.stdout.on("data", (chunk: Buffer) => {
         buffer += chunk.toString("utf8")
