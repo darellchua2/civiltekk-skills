@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [12.20.1](https://github.com/darellchua2/civiltekk-skills/compare/v12.20.0...v12.20.1) (2026-10-11)
+
+### Bug Fixes
+
+* generalizer sweep: neutralize org markers; router checkout fix ([#670](https://github.com/darellchua2/civiltekk-skills/issues/670)) ([03a8d97](https://github.com/darellchua2/civiltekk-skills/commit/03a8d97bd6c748226c879f6a5124eb61c3f0b6d6)), closes [#668](https://github.com/darellchua2/civiltekk-skills/issues/668)
+
 ## [12.20.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.19.1...v12.20.0) (2026-10-11)
 
 ### Features
