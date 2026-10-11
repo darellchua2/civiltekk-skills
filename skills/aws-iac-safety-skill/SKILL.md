@@ -65,7 +65,7 @@ resource "github_actions_variable" "registry_token" {
 Passing the full SSM path as a `TF_VAR_*` via GitHub Actions CI hardcodes the dev path. All environments receive the dev token, causing cross-env auth failures (HTTP 401 in UAT/prod).
 
 ```hcl
-# BAD — CI passes TF_VAR_registry_ssm_parameter="/canvastekk/workflow-engine/dev/..."
+# BAD — CI passes TF_VAR_registry_ssm_parameter="/<org>/<service>/dev/..."
 variable "registry_ssm_parameter" {
   type = string
 }
@@ -75,7 +75,7 @@ data "aws_ssm_parameter" "registry_token" {
 
 # GOOD — derive path locally from var.environment; remove the variable + CI TF_VAR line
 locals {
-  ssm_path = "/canvastekk/workflow-engine/${var.environment}/registry-service-token"
+  ssm_path = "/<org>/<service>/${var.environment}/registry-service-token"
 }
 data "aws_ssm_parameter" "registry_token" {
   name = local.ssm_path
@@ -95,8 +95,8 @@ Every new `aws_ssm_parameter` resource must be documented in `docs/SSM_SECRETS_R
 
 | Parameter | Environment | Description |
 |-----------|-------------|-------------|
-| `/canvastekk/workflow-engine/dev/registry-service-token` | dev | ECR auth token |
-| `/canvastekk/workflow-engine/uat/registry-service-token` | uat | ECR auth token |
+| `/<org>/<service>/dev/registry-service-token` | dev | ECR auth token |
+| `/<org>/<service>/uat/registry-service-token` | uat | ECR auth token |
 ```
 
 ---

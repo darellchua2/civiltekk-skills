@@ -329,8 +329,8 @@ After the `.pptx` is produced, verify each slide visually:
    image_overflow, visual_balance, container_overflow.
 
    container_overflow = text spilling outside its visual container (colored
-   card, accent panel, decorative shape). BETeKK V9.1.1 slide 4 is the
-   canonical example. Phase 3.4.3 (BT-142).
+   card, accent panel, decorative shape). The reference-template slide 4
+   (body text past its card) is the canonical example. Phase 3.4.3 (BT-142).
 
    Return JSON: {"sizing_ok": <bool>, "issues": [...], "confidence": <0-1>}
    ```

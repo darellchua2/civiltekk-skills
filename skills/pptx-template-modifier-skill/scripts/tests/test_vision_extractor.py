@@ -61,12 +61,12 @@ def test_build_image_analyzer_prompt_contains_required_fields():
         slide_index=2,
         slide_count=10,
         png_path="/tmp/slide-3.png",
-        pptx_name="BETEKK.pptx",
+        pptx_name="sample-theme.pptx",
     )
     assert "slide 2" in p.lower() or "slide index: 2" in p.lower()
     assert "10" in p  # slide count
     assert "/tmp/slide-3.png" in p
-    assert "BETEKK.pptx" in p
+    assert "sample-theme.pptx" in p
     assert "dominant_bg_hex" in p
     assert "JSON" in p
 

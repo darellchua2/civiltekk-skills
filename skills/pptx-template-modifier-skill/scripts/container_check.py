@@ -3,7 +3,7 @@
 When ``designer_promoter`` (Phase 3.4.1) reverse-engineers per-shape branding
 into text placeholders on a layout, a placeholder's bounding box may extend
 beyond its visual container shape (orange card, teal panel, decorative band).
-BETEKK V9.1.1 slide 4 is the canonical example: the body text spilled outside
+The reference-template slide 4 is the canonical example: the body text spilled outside
 its orange box.
 
 This module performs a **pure-geometry** check (no rendering, no LLM) at

@@ -1,8 +1,8 @@
 # Route: shared-infra-split
 
 Provision-once shared modules vs per-env stacks, and live migrations between
-the two. Reference implementations: `canvastekk-simplified-ecr-infra` (ECR),
-`canvastekk-simplified-amplify-infra` (Amplify app + branches + domain),
+the two. Reference implementations (org-internal repos, pattern shown here):
+ECR module and Amplify app + branches + domain module,
 `tofu-state-management-resource` (state locking).
 
 ## Ownership decision table
@@ -14,20 +14,20 @@ the two. Reference implementations: `canvastekk-simplified-ecr-infra` (ECR),
 | Rule of thumb | anything an `aws_amplify_*`-style service-API resource → shared module; anything IAM/secret/DNS per env → env stack | |
 
 Consumers reference shared resources by output + SSM pointer param
-(`/canvastekk/{service}/{thing-id}`), never by cross-state reads or
+(`/{org}/{service}/{thing-id}`), never by cross-state reads or
 duplicating the resource.
 
 ## Shared-module contracts
 
 - No `environment` variable — the module is env-agnostic. State key has NO
-  `-ENV` suffix (`CANVASTEKK-<module-name>/terraform.tfstate`); env-suffixed
+  `-ENV` suffix (`<ORG>-<module-name>/terraform.tfstate`); env-suffixed
   keys on an env-agnostic module produce dual-claimant states.
 - Workflow offers `plan`/`apply` only — no `destroy` input (state-mgmt
   pattern). Crown-jewel resources carry `prevent_destroy`; removing THAT
   lifecycle first is the deliberate teardown act.
 - Per-env variation inside the shared module is `for_each` over an env map
   (branch specs, webhook per branch), env values from per-env SSM paths
-  (`/canvastekk/{service}/{env}/{secret}`).
+  (`/{org}/{service}/{env}/{secret}`).
 - Ordering-coupled resources (e.g. `aws_amplify_domain_association` subdomains
   → branches) MUST live in the same state so one apply creates targets before
   referents. Cross-state subdomain management is an anti-pattern.
