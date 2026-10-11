@@ -2069,3 +2069,8 @@
 - **Scope**: project
 - **Summary**: A version router that re-execs the tag clone's own installer runs code as of that tag — newer post-install features silently skip on older refs. Fix: outer process snapshots manifest hashes pre-spawn and post-stamps only hash-changed/new entries (changed-set guard keeps legacy entries' unknown provenance unknown) (#667).
 - **Date**: 2026-10-11
+- **File**: `LEARNINGS/anti-patterns/unmaintained-version-files-unsound-for-release-routing.md`
+- **Confidence**: 0.9
+- **Scope**: project
+- **Summary**: Forking install behavior on "VERSION == latest tag" is unsound when release tooling does not maintain VERSION (semantic-release only tags) — permanent drift made every maintainer-checkout add clone the stale tag over local edits (#670). Fix: route on .git presence (npx caches auto-resolve, checkouts install own tree); explicit --ref always honored.
+- **Date**: 2026-10-11
