@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [12.21.1](https://github.com/darellchua2/civiltekk-skills/compare/v12.21.0...v12.21.1) (2026-10-11)
+
+### Bug Fixes
+
+* **deploy:** laya model pre-pull via LAYA_GUARD_WARM, not --enable-pack ([#671](https://github.com/darellchua2/civiltekk-skills/issues/671)) ([90e82b6](https://github.com/darellchua2/civiltekk-skills/commit/90e82b65ed8d354307e9ffa297e33f43181d887c))
+
 ## [12.21.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.20.1...v12.21.0) (2026-10-11)
 
 ### Features
