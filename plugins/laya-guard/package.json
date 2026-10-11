@@ -1,0 +1,10 @@
+{
+  "name": "laya-guard-sidecar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Node sidecar for the laya-guard opencode plugin — stdio JSONL RPC around @receptron/laya. Provisioned into ~/.cache/laya-guard by deploy/setup.sh; never loaded by opencode itself.",
+  "dependencies": {
+    "@receptron/laya": "0.1.2"
+  }
+}

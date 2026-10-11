@@ -36,6 +36,12 @@ work or a retry.
 
 1. **Skip rule (default):** AC quality passes AND at least one reviewer was
    selected → report `skip` (one line: why), continue to reviewer triage.
+
+   Branch hinges on judgment (thin-vs-substantive ACs, ambiguity calls)?
+   Optionally consult the `laya_classify` tool with the statement — it returns
+   calibrated p(yes) per question (local, offline); weigh the probabilities and
+   decide. Deterministic checks (field presence, counts, template shape) stay
+   in code — never classify what a rule already answers.
 2. **AC-quality rule:** run the interrogation route when ANY holds —
    fewer than 3 ACs; ambiguity markers (vague quantifiers like "fast"/"most",
    "and/or" coupling, no verifiable predicate an implementation can

@@ -114,6 +114,10 @@ All converters below are **100% local** (no network calls, verified via `ss -tnp
 
 Choose the right tool for the job. **Read this before calling `convert_to_markdown`.**
 
+Layout complexity genuinely ambiguous (multi-column? scanned?)? Optionally
+consult the `laya_classify` tool (local, offline) with the document
+statement — advisory p(yes); escalate to docling when in doubt either way.
+
 ```
 Need to understand a binary/office document?
 │

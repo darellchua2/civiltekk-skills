@@ -2074,3 +2074,10 @@
 - **Scope**: project
 - **Summary**: Forking install behavior on "VERSION == latest tag" is unsound when release tooling does not maintain VERSION (semantic-release only tags) — permanent drift made every maintainer-checkout add clone the stale tag over local edits (#670). Fix: route on .git presence (npx caches auto-resolve, checkouts install own tree); explicit --ref always honored.
 - **Date**: 2026-10-11
+
+- **Title**: laya-guard runs ONNX in a Node sidecar — opencode v2 plugin runtime is embedded Bun (#671)
+- **Date**: 2026-10-11
+- **File**: `LEARNINGS/decisions/opencode-v2-plugin-runtime-embedded-bun-sidecar.md`
+- **Confidence**: 0.95
+- **Scope**: project
+- **Summary**: opencode v2 ships a bun-compile binary ($bunfs strings, Bun v1.4.2; npm @opencode/cli is a launcher; the Node SEA channel exists but is not shipped), so in-process native modules target embedded Bun — laya-guard keeps the plugin file zero-dep and runs ONNX in a provisioned Node >= 24 stdio sidecar; v2 API truth lives at /v2/docs (the /docs pages are V1).
