@@ -26,6 +26,21 @@
             "effect": "allow"
         },
         {
+            "action": "bash",
+            "resource": "git push --force*",
+            "effect": "deny"
+        },
+        {
+            "action": "bash",
+            "resource": "rm -rf /*",
+            "effect": "deny"
+        },
+        {
+            "action": "bash",
+            "resource": "curl * | sh",
+            "effect": "deny"
+        },
+        {
             "action": "skill",
             "resource": "*",
             "effect": "deny"

@@ -2717,6 +2717,9 @@ setup_config() {
             # Heavy (~3-4 GB) — only runs when explicitly opted in.
             install_docling
 
+            # Provision the laya-guard sidecar (#671); model pre-pull is opt-in (--enable-pack laya).
+            provision_laya_guard
+
             # Deploy vibeguard secret-masking config (PLAN-GIT-315).
             local vg_src="${REPO_DIR}/plugins/vibeguard.config.json"
             if [ -f "$vg_src" ]; then
@@ -2899,6 +2902,89 @@ install_docling() {
         log_info "NOTE: first 'docling convert' will download ~hundreds of MB of models from huggingface.co (cached thereafter)."
     else
         log_warn "pip install failed for docling-mcp (offline, OOM, or PEP 668?). The pack is opt-in — OpenCode will work without it. Re-run setup when online to enable."
+    fi
+}
+
+# Provision the laya-guard Node sidecar (#671): copies the sidecar scripts +
+# pinned package.json into ~/.cache/laya-guard and npm-installs there, so the
+# opencode plugin file itself stays dependency-free. The ~1.7 GB model
+# pre-pull is opt-in via --enable-pack laya (heavy-install house policy,
+# mirrors markitdown/docling); without it the model downloads lazily on the
+# first classify. Idempotent: the marker records the provisioned
+# package.json hash. Linux-only (Ubuntu target — non-Linux gets a skip
+# notice, which is also what Windows reaches through the setup.ps1 thin
+# launcher, #474). LAYA_GUARD_SKIP=1 escapes entirely.
+provision_laya_guard() {
+    if [ "${LAYA_GUARD_SKIP:-0}" = "1" ]; then
+        log_info "LAYA_GUARD_SKIP=1 — skipping laya-guard provisioning"
+        return 0
+    fi
+    if [ "$(uname -s)" != "Linux" ]; then
+        log_info "laya-guard provisioning is Linux-only (Ubuntu target) — skipped on $(uname -s); the plugin deploys but stays inert"
+        return 0
+    fi
+    if ! command_exists node; then
+        log_warn "node not found — cannot provision the laya-guard sidecar. Install Node >= 24 and re-run."
+        return 0
+    fi
+    local node_major
+    node_major="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
+    if [ "${node_major:-0}" -lt 24 ]; then
+        log_warn "Node >= 24 required for the laya-guard sidecar (found $(node --version 2>/dev/null || echo none)) — skipping; the plugin stays inert."
+        return 0
+    fi
+    if ! command_exists npm; then
+        log_warn "npm not found — cannot provision the laya-guard sidecar. Install npm and re-run."
+        return 0
+    fi
+
+    local src_dir="${REPO_DIR}/plugins/laya-guard"
+    local dest_dir="${LAYA_GUARD_DIR:-$HOME/.cache/laya-guard}"
+    local pkg_hash marker
+    pkg_hash="$(sha256sum "$src_dir/package.json" | cut -d' ' -f1)"
+    marker="$dest_dir/.provisioned"
+
+    if [ -f "$marker" ] && [ -f "$dest_dir/sidecar.mjs" ] && [ "$(cat "$marker" 2>/dev/null)" = "$pkg_hash" ]; then
+        log_info "laya-guard sidecar already provisioned ($dest_dir)"
+    else
+        echo ""
+        log_info "Provisioning the laya-guard sidecar (local decision-model runtime)..."
+        run_cmd mkdir -p "$dest_dir"
+        if [ "$DRY_RUN" = "true" ]; then
+            log_info "[DRY-RUN] Would copy sidecar + warm + package.json to $dest_dir and npm install there"
+        else
+            if cp "$src_dir/sidecar.mjs" "$dest_dir/sidecar.mjs" \
+                && cp "$src_dir/warm.mjs" "$dest_dir/warm.mjs" \
+                && cp "$src_dir/package.json" "$dest_dir/package.json"; then
+                if (cd "$dest_dir" && npm install --omit=dev --no-audit --no-fund >/dev/null 2>&1); then
+                    printf '%s
+' "$pkg_hash" > "$marker"
+                    log_success "laya-guard sidecar provisioned ($dest_dir)"
+                else
+                    log_warn "npm install failed for the laya-guard sidecar (offline?). OpenCode works without it; re-run setup when online."
+                    return 0
+                fi
+            else
+                log_warn "laya-guard sidecar copy failed — the plugin stays inert"
+                return 0
+            fi
+        fi
+    fi
+
+    # Model pre-pull: opt-in (heavy-install policy — mirrors markitdown/docling)
+    if echo "$ENABLE_PACK" | grep -qw "laya"; then
+        if [ "$DRY_RUN" = "true" ]; then
+            log_info "[DRY-RUN] Would pre-pull the ~1.7 GB Laya model bundle (node warm.mjs)"
+        elif [ -f "$dest_dir/node_modules/@receptron/laya/package.json" ]; then
+            log_info "Pre-pulling the ~1.7 GB Laya model bundle (one-time; laya-managed cache)..."
+            if (cd "$dest_dir" && node warm.mjs >/dev/null 2>&1); then
+                log_success "Laya model bundle ready — classification is fully offline from here"
+            else
+                log_warn "Model pre-pull failed (network?). The first classify downloads it instead."
+            fi
+        else
+            log_warn "Model pre-pull skipped — sidecar deps are missing (npm install failed earlier?)"
+        fi
     fi
 }
 

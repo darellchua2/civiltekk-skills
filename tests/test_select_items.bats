@@ -177,7 +177,7 @@ REGEN_MODULE="installer/deploy-plan-items.mjs"
   node -e '
     import("./installer/deploy-plan-items.mjs").then((m) => {
       const names = m.scanPluginNames("plugins");
-      if (names.length !== 6) throw new Error("expected 6 .ts plugins, got " + names.length);
+      if (names.length !== 7) throw new Error("expected 7 .ts plugins, got " + names.length); // 7th = opencode-laya-guard.ts (#671)
       for (const n of names) if (!n.endsWith(".ts")) throw new Error("non-.ts selectable: " + n);
       if (names.some((n) => n.includes("README"))) throw new Error("README offered as a plugin");
     });
@@ -186,7 +186,7 @@ REGEN_MODULE="installer/deploy-plan-items.mjs"
   [ "$status" -eq 0 ]
   local count
   count=$(echo "$output" | node -e 'let d="";process.stdin.on("data",(c)=>d+=c).on("end",()=>{const p=JSON.parse(d);if(p.plugins.some((x)=>x.includes("README")))process.exit(3);console.log(p.plugins.length)})')
-  [ "$count" = "6" ]
+  [ "$count" = "7" ]
   [[ "$output" == *"opencode-ponytail-scoped.ts"* ]]
   [[ "$output" != *"README"* ]]
 }
@@ -202,7 +202,7 @@ REGEN_MODULE="installer/deploy-plan-items.mjs"
   [ "$status" -eq 0 ]
   local counts
   counts=$(echo "$output" | node -e 'let d="";process.stdin.on("data",(c)=>d+=c).on("end",()=>{const p=JSON.parse(d);if(!p.packs.includes("docling")||p.packs.some((x)=>x.includes("README")))process.exit(3);console.log(p.packs.length+"/"+p.plugins.length)})')
-  [[ "$counts" == "7/6" ]]
+  [[ "$counts" == "7/7" ]] # 7 packs / 7 plugins (7th = laya-guard, #671)
   # cwd-independence (arch review WARN): node -e import() resolves relative
   # specifiers against process cwd — the module path must be argv-absolute.
   run bash -c "export HOME='$d'; cd /tmp && '$PWD/deploy/setup.sh' --list-items 2>/dev/null | grep -c '\"docling\"'" </dev/null

@@ -127,22 +127,26 @@ _Every step is atomic and carries rationale. Format: N.M action — Why / Done w
 
 ### Phase 4: Deploy wiring
 
-- [ ] **4.1** Edit `deploy/opencode.json` — insert 3 bash deny rules immediately after the existing read-denies and before the skill entries: `git push --force*`, `rm -rf /*`, `curl * | sh`
+- [x] **4.1** Edit `deploy/opencode.json` — insert 3 bash deny rules immediately after the existing read-denies and before the skill entries: `git push --force*`, `rm -rf /*`, `curl * | sh`
     — **Why:** configured deny is final and never invokes the hook (verified v2 semantics) — certainties belong in config, gray zone in Laya (brief §3.3).
     — **Done when:** JSON parses (node -e), three rules present above the first `"action": "skill"` entry.
     — **Consumers affected:** every session using the deployed config.
-- [ ] **4.2** Add `provision_laya_guard()` to `deploy/setup.sh` + call it from `setup_config()` next to `install_docling` — Linux-gated (non-Linux: one-line skip note); idempotent via `~/.cache/laya-guard/.provisioned` marker + version check against the committed package.json; copies `sidecar.mjs`, `warm.mjs`, `package.json` to `~/.cache/laya-guard/` and runs `npm install --omit=dev` there (sidecar deps: always, small); model pre-pull (`node warm.mjs`) only when `--enable-pack laya` requested (heavy-install house policy, mirrors markitdown/docling); `run_cmd`-wrapped for dry-run safety; no unquoted expansions (`set -u` safe); honors `LAYA_GUARD_SKIP=1` escape
+    — **Done:** 3 bash deny rules (git push --force*, rm -rf /*, curl * | sh) inserted after the read rules, before the first skill entry; JSON parses; files: deploy/opencode.json; fixes: none
+- [x] **4.2** Add `provision_laya_guard()` to `deploy/setup.sh` + call it from `setup_config()` next to `install_docling` — Linux-gated (non-Linux: one-line skip note); idempotent via `~/.cache/laya-guard/.provisioned` marker + version check against the committed package.json; copies `sidecar.mjs`, `warm.mjs`, `package.json` to `~/.cache/laya-guard/` and runs `npm install --omit=dev` there (sidecar deps: always, small); model pre-pull (`node warm.mjs`) only when `--enable-pack laya` requested (heavy-install house policy, mirrors markitdown/docling); `run_cmd`-wrapped for dry-run safety; no unquoted expansions (`set -u` safe); honors `LAYA_GUARD_SKIP=1` escape
     — **Why:** sidecar deps must exist for the plugin to function; heavy model download follows the repo's documented opt-in rule (`never on a plain deploy`) while remaining fully provisioned via setup.sh when requested — this reconciles AC-5 with house policy.
     — **Done when:** `bash -n setup.sh` passes; full bats suite green (dry-run leak guard, err/nounset guard included); second consecutive provision run is a no-op.
     — **Consumers affected:** bats suite, setup.ps1 parity, end-user deploys.
-- [ ] **4.3** Mirror the skip in `deploy/setup.ps1` — Windows provision block prints the laya-guard skip notice (plugin file deploys but stays inert without `~/.cache/laya-guard`)
+    — **Done:** provision_laya_guard() defined after install_docling (LAYA_GUARD_SKIP escape, uname Linux gate, node>=24 + npm checks, sha-marked idempotency, run_cmd/DRY-RUN-safe, --enable-pack laya model pre-pull) + call site in setup_config() beside install_docling; bash -n green; files: deploy/setup.sh; fixes: none
+- [x] **4.3** Mirror the skip in `deploy/setup.ps1` — Windows provision block prints the laya-guard skip notice (plugin file deploys but stays inert without `~/.cache/laya-guard`)
     — **Why:** ps1 is the documented Windows mirror; the plugin is Ubuntu-locked by design (locked decision 2).
     — **Done when:** ps1 syntax-valid and prints the notice in its config phase; `test_setup_ps1_vars.bats` still green.
     — **Consumers affected:** Windows users (informed), ps1 tests.
-- [ ] **4.4** Update `plugins/README.md` — add the plugin row to the naming-convention table context and a short section noting the laya-guard subdirectory travels with the plugin file through `deploy_plugins()`'s dir copy
+    — **Done:** no ps1 edit required — setup.ps1 is the #474 thin launcher forwarding everything (incl. --enable-pack, line 123) to setup.sh, whose uname gate prints the skip notice; duplicating logic would violate the one-implementation contract; ps1 tests green in full suite; files: none (verified); fixes: none
+- [x] **4.4** Update `plugins/README.md` — add the plugin row to the naming-convention table context and a short section noting the laya-guard subdirectory travels with the plugin file through `deploy_plugins()`'s dir copy
     — **Why:** plugins/README is the plugin-consumer doc; silent new files drift it.
     — **Done when:** README references `opencode-laya-guard.ts` and the subdirectory.
     — **Consumers affected:** plugin consumers.
+    — **Done:** plugins/README.md gained the laya-guard section (dir travels via deploy_plugins copy, provisioning pointer); root README synced — Six→Seven, details summary, tree comment, laya-guard paragraph before the Attribution footer; files: plugins/README.md README.md; fixes: none
 
 ### Phase 5: Tests
 
@@ -206,3 +210,6 @@ None — no `blocked-by` tickets. External: Hugging Face network access once (pr
 - LOG fix 1 (2.2, sidecar.mjs): stdin-close killed an in-flight model load — close now drains (inFlight counter + maybeExit); caught by Phase 2 verification smoke (init responded, systemOne never did); re-smoked green
 - LOG warm pull verified live: node warm.mjs -> "laya model ready" (~/.cache/receptron-laya, revision 68f27df); live systemOne through sidecar: destructive p=0.9437 / exfiltration p=0.2063 on rm -rf node_modules — model path proven end-to-end on this host
 - GATE b21531c tier=light lint=n.a typecheck=n.a build=n.a unit=t (air-gap / fail-closed / no-env / no-fs-reads greps green; node strip-types parse OK; live sidecar systemOne smoke green incl. init op + drain-exit) e2e=n.a
+- GATE 36ad759 tier=light lint=n.a typecheck=n.a build=n.a unit=t (config JSON parse, shadow-default grep, check-ignore exit 0) e2e=n.a
+- LOG full-gate escalation (Phase 4): deploy/setup.sh + deploy/opencode.json touched — critical-area anchor per the Consumer Map (bats suite + ps1 parity consumers); gate tier=full
+- LOG fix 2 (Phase 4, tests/test_select_items.bats): #537 plugin-inventory pins hardcoded 6 .ts plugins; the 7th (opencode-laya-guard.ts) is a legitimate inventory change — pins updated to 7 (expected length, select-items count, list-items 7/7) with #671 comments; full suite otherwise green (660/662 before, inventory tests 19/19 after)

@@ -61,3 +61,13 @@ otherwise the auto-continue busy-stall watchdog could be fed by keepalive
 touches and never fire for true silent hangs.
 
 MIT attributions for vendored code: see [ATTRIBUTION.md](ATTRIBUTION.md).
+
+## laya-guard (#671)
+
+`opencode-laya-guard.ts` + the `laya-guard/` subdirectory travel together through
+`deploy_plugins()`'s directory copy. The plugin file stays zero-dependency
+(house rule above); ONNX inference runs in a Node >= 24 sidecar that
+`setup.sh` provisions into `~/.cache/laya-guard` — the ~1.7 GB model pre-pull
+is opt-in via `--enable-pack laya`. Ships in shadow mode (log-only). Config:
+first-wins `laya-guard.config.json` (project root → project `.opencode/` →
+the shipped copy in this directory). See `laya-guard/README.md`.

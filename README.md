@@ -111,7 +111,7 @@ npx github:darellchua2/civiltekk-opencode-claude-skills --project . --preset rev
 civiltekk-opencode-claude-skills/
 ├── skills/                      # 122 skill directories (source of truth)
 ├── agents/                      # 34 subagent .md files (source of truth)
-├── plugins/                     # Local OpenCode plugins (vibeguard, ponytail, learnings, auto-continue, question-repair)
+├── plugins/                     # Local OpenCode plugins (vibeguard, ponytail, learnings, auto-continue, question-repair, location-keepalive, laya-guard)
 │   └── vibeguard.config.json    # Secret-masking regex patterns
 ├── deploy/                      # User-space deployment (setup.sh = bin: opencode-setup; opencode.json = config source of truth)
 ├── installer/                   # npx installer (init.mjs = bin: opencode-skill; registry, tiers, presets)
@@ -260,9 +260,9 @@ Adding a skill **to this repo** touches five surfaces, not one — the deeper ch
 </details>
 
 <details>
-<summary><strong>Plugins — vibeguard, ponytail, learnings auto-inject, auto-continue, question repair, location keepalive</strong></summary>
+<summary><strong>Plugins — vibeguard, ponytail, learnings auto-inject, auto-continue, question repair, location keepalive, laya-guard</strong></summary>
 
-Six local plugins ship in `plugins/` — zero runtime npm dependencies, air-gap safe, active on OpenCode v2.
+Seven local plugins ship in `plugins/` — zero runtime npm dependencies, air-gap safe, active on OpenCode v2.
 
 **Vibeguard (secret masking).** Masks `.env` secrets in provider-bound traffic via regex patterns (`vibeguard.config.json`); the LLM provider never sees plaintext values, tools receive real values at execution time. Verify with `OPENCODE_VIBEGUARD_DEBUG=1 opencode` (replace-counts > 0). Per-project keywords: uncommitted `./vibeguard.config.json` at project root (first config wins — re-include the global patterns). Residual risks (documented honestly): `/share` exports plaintext (never share sessions that processed secrets); no fail-closed if config is missing; session DB stores plaintext locally; MCP structured (non-string) output bypasses redaction. Prefer `$ENV_VAR` references over inline literals in everything you generate.
 
@@ -275,6 +275,8 @@ Six local plugins ship in `plugins/` — zero runtime npm dependencies, air-gap 
 **Question repair.** Normalizes malformed `question` tool payloads before the schema validator hard-fails (fills missing `label`/`description`/`question`/`header` from their counterparts, defaults `multiple`, drops beyond-repair items). Valid payloads pass through as the same reference. Debug: `OPENCODE_QUESTION_REPAIR_DEBUG=1` at server start.
 
 **Location keepalive v2.** Protects actively-running sessions from OpenCode v2's 60-minute location TTL: the server evicts any location (per project directory) with no *durable* session event for 60 min and interrupts its running sessions — but streaming deltas and `session.tool.progress` are ephemeral, so a healthy agent inside a long silent tool or generation looks idle and dies mid-run with `reason: "inactivity"` (verified against v2.0.18: bulk same-second session interruptions matching `location services evicted` log lines). Every interval (default 30 min), each probe-confirmed busy session is PATCHed with its own unchanged title, publishing a durable `session.renamed` that resets the TTL; idle sessions are never touched, so idle locations still evict. Keep `OPENCODE_AUTO_CONTINUE_STALL_MS` (15 min default) below the keepalive interval so the auto-continue watchdog still wins races for true silent hangs. Env prefix: `OPENCODE_LOCATION_KEEPALIVE_*` (`ENABLED` on, `INTERVAL_MS` 30 min with a 90%-of-TTL clamp, `DEBUG` off).
+
+**Laya-guard (local decision-model gate).** Shadow/enforce permission gate for `bash`/`edit` plus the advisory `laya_classify` tool for skill decision trees, powered by the Laya 421M decision model (Apache-2.0, Convai Innovations) running fully offline in a Node >= 24 sidecar (`~/.cache/laya-guard`, provisioned by setup.sh; `--enable-pack laya` pre-pulls the ~1.7 GB bundle). Ships in `shadow` mode — log-only calibration before any enforcement; fail-closed by construction (missing answer = p(yes)=1). Config: first-wins `laya-guard.config.json`. See `plugins/laya-guard/README.md` (#671).
 
 Attribution: `plugins/ATTRIBUTION.md`; skill-level attributions in `THIRD_PARTY_LICENSES.md`.
 </details>
