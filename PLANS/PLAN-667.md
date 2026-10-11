@@ -107,3 +107,5 @@
 - GATE 2e6d940 tier=light lint=n.a typecheck=n.a build=n.a unit=t (bats tests/ 657/657, exit 0) e2e=n.a
 - LOG: Phase 2 docstrings skipped deliberately — init.mjs house style is inline comments, not JSDoc; new helpers carry explanatory comments matching the surrounding code.
 - GATE 6ab6e17 tier=full lint=n.a typecheck=n.a build=n.a unit=t (bats tests/ 662/662 incl. 5 new installer-version pins, exit 0 — ticket exit gate) e2e=n.a
+- LOG: Step 9 review (inline, code-review-subagent checklist) — Major: stampMissingRef over-stamped ref-less legacy manifest entries with the run's ref; fixed via pre/post hash snapshot changed-set (stampMissingRef(ref, changed)) + all-targets stamping + shared listSkillFiles helper. Minor (flat files listing) fixed same pass. Full re-gate on the fixed tree below.
+- GATE d03f438 tier=full lint=n.a typecheck=n.a build=n.a unit=t (bats tests/ 662/662, exit 0 — review-fix re-gate; final SHA) e2e=n.a

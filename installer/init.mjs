@@ -85,10 +85,11 @@ function resolveLatestTag(url) {
   if (r.error || r.status !== 0) throw new Error(`git ls-remote --tags ${url} failed: ${(r.stderr || r.error || "").toString().trim()}`);
   return parseTagLines(r.stdout);
 }
-async function stampMissingRef(ref) {
+async function stampMissingRef(ref, changedNames) {
   // Post-exec provenance sweep for installs done by an older tagged inner
-  // installer: every user-scope skill entry (and its installed dir) that came
-  // back without a ref gets stamped with the ref actually installed.
+  // installer: ONLY entries the inner run actually wrote (hash changed or new
+  // — `changedNames`) get stamped, never pre-existing legacy entries (their
+  // provenance is genuinely unknown; labeling them with today's ref would lie).
   const version = ref.replace(/^v/, "");
   const shortSource = repoUrl().replace(/^https:\/\/github\.com\//, "github:").replace(/\.git$/, "");
   const prev = await readJsonMaybe(USER_MANIFEST);
@@ -96,18 +97,16 @@ async function stampMissingRef(ref) {
   const entries = { ...prev.entries };
   let touched = false;
   for (const [name, ent] of Object.entries(entries)) {
-    if (ent.type !== "skill" || ent.ref) continue;
+    if (ent.type !== "skill" || ent.ref || !changedNames.has(name)) continue;
     for (const t of Object.keys(ent.targets || {})) {
       const cfg = TARGETS[t];
       const dir = cfg && cfg.skillsDir ? join(cfg.skillsDir, name) : null;
       if (dir && existsSync(dir)) {
         if (!existsSync(join(dir, SIDECAR))) {
-          const files = readdirSync(dir, { withFileTypes: true }).map((e) => e.isFile() ? e.name : `${e.name}/`).sort();
-          await writeFile(join(dir, SIDECAR), JSON.stringify({ source: shortSource, ref, version, installedAt: new Date().toISOString(), files }, null, 2) + "\n", "utf8");
+          await writeFile(join(dir, SIDECAR), JSON.stringify({ source: shortSource, ref, version, installedAt: new Date().toISOString(), files: listSkillFiles(dir) }, null, 2) + "\n", "utf8");
         }
         entries[name] = { ...ent, ref, version };
         touched = true;
-        break; // stamp the dir once (targets share content); ref recorded on the entry
       }
     }
   }
@@ -960,11 +959,11 @@ async function cmdAdd(args, opts, reg, depMap) {
 async function skillSourceMeta() {
   if (installSource) return installSource;
   const version = await treeVersion();
-  return { source: repoUrl().replace(/^https:\/\/github\.com\//, "github:").replace(/\.git$/, ""), ref: `v${version}`, version };
+  const url = repoUrl();
+  return { source: url.replace(/^https:\/\/github\.com\//, "github:").replace(/\.git$/, ""), ref: `v${version}`, version };
 }
-async function writeSkillSidecar(dst) {
-  // provenance stamp per installed skill dir (rollback/upgrade surface for
-  // `list installed`); excluded from hashSkillDir so update stays idempotent.
+function listSkillFiles(dir) {
+  // recursive relative file list for the sidecar (sorted, dirs excluded)
   const files = [];
   const walk = (d, prefix) => {
     for (const e of readdirSync(d, { withFileTypes: true })) {
@@ -973,9 +972,22 @@ async function writeSkillSidecar(dst) {
       else files.push(rel);
     }
   };
-  walk(dst, "");
+  walk(dir, "");
+  return files.sort();
+}
+async function writeSkillSidecar(dst) {
+  // provenance stamp per installed skill dir (rollback/upgrade surface for
+  // `list installed`); excluded from hashSkillDir so update stays idempotent.
   const meta = await skillSourceMeta();
-  await writeFile(join(dst, SIDECAR), JSON.stringify({ ...meta, installedAt: new Date().toISOString(), files: files.sort() }, null, 2) + "\n", "utf8");
+  await writeFile(join(dst, SIDECAR), JSON.stringify({ ...meta, installedAt: new Date().toISOString(), files: listSkillFiles(dst) }, null, 2) + "\n", "utf8");
+}
+async function skillEntryHashes() {
+  const prev = await readJsonMaybe(USER_MANIFEST);
+  const out = {};
+  for (const [name, ent] of Object.entries((prev && prev.entries) || {})) {
+    if (ent.type === "skill") out[name] = JSON.stringify(ent.targets || {});
+  }
+  return out;
 }
 
 async function writeUserScopeInstall(sel, opts, reg, depMap) {
@@ -1812,14 +1824,17 @@ async function main() {  const opts = parseArgs(process.argv.slice(2));
       console.error(`fetching ${wanted} (running tree: v${local})…`);
       const clone = spawnSync("git", ["clone", "--depth", "1", "--branch", wanted, url, tmp], { stdio: ["ignore", "ignore", "inherit"] });
       if (clone.status !== 0) { await rm(tmp, { recursive: true, force: true }); die(`clone of ${wanted} failed — check the ref name and your credentials, or use --source . to install from the running tree`, 2); }
+      const before = await skillEntryHashes();
       const r = spawnSync(process.execPath, [join(tmp, "installer", "init.mjs"), ...process.argv.slice(2), "--source", tmp, "--install-ref", wanted], { stdio: "inherit" });
       await rm(tmp, { recursive: true, force: true });
       if ((r.status ?? 1) !== 0) process.exit(r.status ?? 1);
       // Older tagged installers predate the provenance stamp — the outer
-      // (current) installer post-stamps every skill entry the inner left
-      // without one. No-op for new inners (they stamp at install time) and
-      // for entries installed earlier from other refs (ref already present).
-      await stampMissingRef(wanted);
+      // (current) installer post-stamps ONLY the entries this run actually
+      // wrote (hash changed or new). No-op for new inners (they stamp at
+      // install time) and for legacy entries (unknown provenance stays unknown).
+      const after = await skillEntryHashes();
+      const changed = new Set(Object.keys(after).filter((n) => after[n] !== before[n]));
+      await stampMissingRef(wanted, changed);
       process.exit(0);
     }
   } else if (opts.source) {
