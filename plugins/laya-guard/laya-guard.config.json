@@ -1,0 +1,8 @@
+{
+  "mode": "shadow",
+  "deny": 0.8,
+  "ask": 0.3,
+  "actions": ["bash", "edit"],
+  "timeout_ms": 60000,
+  "shadow_log": ".opencode/laya-guard-shadow.jsonl"
+}

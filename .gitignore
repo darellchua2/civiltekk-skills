@@ -86,3 +86,6 @@ docs/OpenCode-Agent-Tooling-Research-2026-09-24.interactive.html
 !LEARNINGS/decisions/goal-plugin-v2-readoption.md
 
 !LEARNINGS/anti-patterns/unmaintained-version-files-unsound-for-release-routing.md
+
+# laya-guard shadow log (runtime, per-project — never commit)
+.opencode/laya-guard-shadow.jsonl

@@ -102,3 +102,25 @@ SOFTWARE.
 
 Copyright (c) poteto. Same standard MIT terms as the license text above;
 substitute the copyright line accordingly.
+
+---
+
+## laya-guard (`@receptron/laya` + Convai Innovations model weights)
+
+`plugins/opencode-laya-guard.ts` and the `plugins/laya-guard/` sidecar are
+self-authored, but the classification stack they drive is third-party:
+
+- **JS client:** [@receptron/laya](https://github.com/receptron/laya)
+  (npm `@receptron/laya@0.1.2`) — **MIT**. Not vendored: installed at
+  provision time into `~/.cache/laya-guard/node_modules` by `deploy/setup.sh`,
+  pinned to the exact version in `plugins/laya-guard/package.json`.
+- **Model weights:** [Laya](https://huggingface.co/convaiinnovations/laya) by
+  Convai Innovations — **Apache-2.0**. 421M-parameter ModernBERT-large
+  decision model. ONNX bundle from `receptron/laya-onnx`, revision `68f27df`,
+  pulled by laya's own downloader (`warm.mjs` / lazy first load).
+- **Runtime:** `onnxruntime-node` + `@huggingface/tokenizers` (transitive
+  dependencies of the client; Apache-2.0 / MIT respectively).
+
+The plugin file itself is deliberately dependency-free (house pattern,
+vibeguard-v2 precedent) — opencode never loads these packages; the Node
+sidecar does.

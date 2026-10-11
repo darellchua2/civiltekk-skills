@@ -101,30 +101,29 @@ _Every step is atomic and carries rationale. Format: N.M action — Why / Done w
     — **Consumers affected:** calibration workflow; `.gitignore` (3.4).
     — **Done:** logShadow writes ts/action/target(200-cap)/questions/would_be/mode(+capped failure detail); mkdir recursive + append inside try/catch; files: plugins/opencode-laya-guard.ts; fixes: none
 
-## Trace
-
-- GATE cd7a32c tier=light lint=n.a typecheck=n.a build=n.a unit=t (sidecar ping round-trip on Node 24.21.0, deps resolve from sidecar-local node_modules, node --check x2) e2e=n.a
-- LOG fix 1 (2.2, sidecar.mjs): stdin-close killed an in-flight model load — close now drains (inFlight counter + maybeExit); caught by Phase 2 verification smoke (init responded, systemOne never did); re-smoked green
-- LOG warm pull verified live: node warm.mjs -> "laya model ready" (~/.cache/receptron-laya, revision 68f27df); live systemOne through sidecar: destructive p=0.9437 / exfiltration p=0.2063 on rm -rf node_modules — model path proven end-to-end on this host
 
 ### Phase 3: Config + docs
 
-- [ ] **3.1** Write `plugins/laya-guard/laya-guard.config.json` — `{"mode":"shadow","deny":0.8,"ask":0.3,"actions":["bash","edit"],"timeout_ms":60000,"shadow_log":".opencode/laya-guard-shadow.jsonl"}`
+- [x] **3.1** Write `plugins/laya-guard/laya-guard.config.json` — `{"mode":"shadow","deny":0.8,"ask":0.3,"actions":["bash","edit"],"timeout_ms":60000,"shadow_log":".opencode/laya-guard-shadow.jsonl"}`
     — **Why:** thresholds live in config, never the model (locked decision); shadow ships default (locked decision).
     — **Done when:** file parses, `mode` is `shadow`.
     — **Consumers affected:** 2.1 loader, bats guard.
-- [ ] **3.2** Write `plugins/laya-guard/README.md` — what it gates, sidecar architecture one-paragraph, config reference, shadow->enforce calibration procedure (log inspection, false-deny≈0 target), `--enable-pack laya` provisioning, air-gap pre-seed via `LAYA_GUARD_MODEL_DIR`
+    — **Done:** shipped defaults written (shadow/0.8/0.3/bash+edit/60000/log path); JSON parses; "mode": "shadow" grep-verified; files: plugins/laya-guard/laya-guard.config.json; fixes: none
+- [x] **3.2** Write `plugins/laya-guard/README.md` — what it gates, sidecar architecture one-paragraph, config reference, shadow->enforce calibration procedure (log inspection, false-deny≈0 target), `--enable-pack laya` provisioning, air-gap pre-seed via `LAYA_GUARD_MODEL_DIR`
     — **Why:** AC requires usage + calibration docs; the enforce flip must be a documented decision, not a default.
     — **Done when:** README covers all six topics.
     — **Consumers affected:** users.
-- [ ] **3.3** Append ATTRIBUTION entries — `@receptron/laya` (MIT, receptron/laya) and Laya model weights (Apache-2.0, Convai Innovations, `convaiinnovations/laya`); note the sidecar vendoring posture (no plugin code vendored; deps installed at provision time)
+    — **Done:** README covers architecture diagram, gating table, deploy incl. --enable-pack laya + LAYA_GUARD_SKIP, config reference, calibration (false-deny≈0), air-gap, metadata-only note; files: plugins/laya-guard/README.md; fixes: none
+- [x] **3.3** Append ATTRIBUTION entries — `@receptron/laya` (MIT, receptron/laya) and Laya model weights (Apache-2.0, Convai Innovations, `convaiinnovations/laya`); note the sidecar vendoring posture (no plugin code vendored; deps installed at provision time)
     — **Why:** the original brief's "self-authored, no third-party" claim was wrong — the plugin consumes MIT code + Apache-2.0 weights.
     — **Done when:** both entries present with license + upstream links.
     — **Consumers affected:** license compliance readers.
-- [ ] **3.4** Append `.opencode/laya-guard-shadow.jsonl` to `.gitignore`
+    — **Done:** laya-guard section appended — @receptron/laya MIT (pinned, provision-time), Convai weights Apache-2.0 (revision 68f27df), runtime natives credited; vendoring posture stated; files: plugins/ATTRIBUTION.md; fixes: none
+- [x] **3.4** Append `.opencode/laya-guard-shadow.jsonl` to `.gitignore`
     — **Why:** per-project runtime log must never commit.
     — **Done when:** `git check-ignore .opencode/laya-guard-shadow.jsonl` exits 0.
     — **Consumers affected:** git.
+    — **Done:** .opencode/laya-guard-shadow.jsonl ignored (check-ignore exit 0); files: .gitignore; fixes: none
 
 ### Phase 4: Deploy wiring
 
@@ -200,3 +199,10 @@ None — no `blocked-by` tickets. External: Hugging Face network access once (pr
 | setup.sh regression (heavily tested script) | additive function + single call site; full bats suite in 5.2; dry-run leak and nounset guards named explicitly |
 | laya API drift (young package, 16 commits) | exact version pin in package.json; sidecar isolates the API surface to one file |
 | Model-load memory (~2 GB resident) | lazy load in sidecar on first classify; `close()` on plugin cleanup; documented in README |
+
+## Trace
+
+- GATE cd7a32c tier=light lint=n.a typecheck=n.a build=n.a unit=t (sidecar ping round-trip on Node 24.21.0, deps resolve from sidecar-local node_modules, node --check x2) e2e=n.a
+- LOG fix 1 (2.2, sidecar.mjs): stdin-close killed an in-flight model load — close now drains (inFlight counter + maybeExit); caught by Phase 2 verification smoke (init responded, systemOne never did); re-smoked green
+- LOG warm pull verified live: node warm.mjs -> "laya model ready" (~/.cache/receptron-laya, revision 68f27df); live systemOne through sidecar: destructive p=0.9437 / exfiltration p=0.2063 on rm -rf node_modules — model path proven end-to-end on this host
+- GATE b21531c tier=light lint=n.a typecheck=n.a build=n.a unit=t (air-gap / fail-closed / no-env / no-fs-reads greps green; node strip-types parse OK; live sidecar systemOne smoke green incl. init op + drain-exit) e2e=n.a
