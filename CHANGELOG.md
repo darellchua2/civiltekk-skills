@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [12.20.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.19.1...v12.20.0) (2026-10-11)
+
+### Features
+
+* betekk org split: remove org-workflow skills, versioned installer ([#669](https://github.com/darellchua2/civiltekk-skills/issues/669)) ([5c62beb](https://github.com/darellchua2/civiltekk-skills/commit/5c62beb0871d5fcc4da22f70ed854ed0eeeb5da2)), closes [#667](https://github.com/darellchua2/civiltekk-skills/issues/667) [#667](https://github.com/darellchua2/civiltekk-skills/issues/667)
+
 ## [12.19.1](https://github.com/darellchua2/civiltekk-skills/compare/v12.19.0...v12.19.1) (2026-10-08)
 
 ### Bug Fixes
