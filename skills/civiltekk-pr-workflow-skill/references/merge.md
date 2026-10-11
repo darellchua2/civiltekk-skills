@@ -49,7 +49,8 @@ Capture target-only fixes before promoting so both lanes converge:
 2. Verify state is `OPEN` and mergeable is `MERGEABLE`
 3. Classify by the PR's **head** branch before merging (the harm exists when the
    head branch survives the merge — squash duplicates content under new SHAs and
-   long-lived branches stop converging; verified in betekk-keycloak PRs #55/#72):
+   long-lived branches stop converging; verified against a real promotion-branch
+   divergence incident):
    - Long-lived head (`main`, `master`, `dev`, `develop`, `development`,
      `production`, `prod`, `uat`, `staging`, `stage`, `preprod`, `pre-dev`,
      `qa`, `test`, `integration`, `release`, `release/*`) → merge commits only:

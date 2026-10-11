@@ -39,7 +39,7 @@ Usage: `/run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>`
   variant that matches none of them is the base-branch, never silently
   dropped.
 - Bare numerics (`351`) auto-normalize to GitHub issue refs (`#351`).
-- **`repo/KEY` cross-repo refs** (`canvastekk-workflow-engine/DA-2952`) name
+- **`repo/KEY` cross-repo refs** (`acme-workflow-engine/ABC-123`) name
   a foreign repo: resolve it to the sibling checkout `../<repo>` relative to
   the main checkout; it must exist and be a git repo — missing → one batched
   user ask for the local path, still unresolved → abort with a clear error.

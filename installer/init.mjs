@@ -1800,14 +1800,15 @@ async function main() {  const opts = parseArgs(process.argv.slice(2));
   if (opts.global && opts.project)
     die("cannot combine --global with --project (user scope is already the default; drop -g)", 2);
 
-  // Version router (#667): `add` installs from the LATEST release tag by
-  // default, not the running tree. If the tree already IS that release
-  // (npx main after a release, or the tag itself), proceed locally; otherwise
-  // shallow-clone the wanted ref and re-exec THIS installer from that tree
-  // (same version as the installed content). `--ref <ref>` overrides (e.g.
-  // --ref main for the unreleased tree); `--source <dir>` dev mode installs
-  // from the running tree with no fetch. Other verbs keep local-tree semantics.
-  if (opts.rest[0] === "add" && !opts.source && !opts.dryRun) {
+  // Version router (#667): no-ref `add` installs from the LATEST release tag
+  // — for npx-fetched trees, which have no .git. Real git checkouts
+  // (maintainers) install their own tree unless the user passes an explicit
+  // --ref: VERSION lags releases here (semantic-release does not maintain
+  // it), so auto-resolving would silently install stale tag content over
+  // local edits; an explicit --ref is deliberate intent and always honored.
+  // `--source <dir>` dev mode installs from the running tree. Other verbs
+  // keep local-tree semantics.
+  if (opts.rest[0] === "add" && !opts.source && !opts.dryRun && (!existsSync(join(REPO, ".git")) || opts.ref)) {
     const url = repoUrl();
     const local = await treeVersion();
     let wanted = opts.ref || null;

@@ -34,13 +34,13 @@ def test_contrast_ratio_same_color_min():
     assert contrast_ratio("#2DD4BF", "#2DD4BF") == 1.0
 
 
-def test_contrast_ratio_betekk_text_on_dark():
-    """The BETEKK defect: white text on #09090B should be very high contrast."""
+def test_contrast_ratio_theme_text_on_dark():
+    """The theme defect: white text on #09090B should be very high contrast."""
     r = contrast_ratio("#FFFFFF", "#09090B")
     assert r > 15.0  # strong contrast
 
 
-def test_contrast_ratio_betekk_defect_dark_text_on_dark():
+def test_contrast_ratio_theme_defect_dark_text_on_dark():
     """Dark text (#09090B dk1) on dark card (#18181B) — the invisible-text case."""
     r = contrast_ratio("#09090B", "#18181B")
     assert r < 2.0  # effectively unreadable

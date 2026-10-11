@@ -46,7 +46,7 @@ npx github:darellchua2/civiltekk-opencode-claude-skills --ref main add <skill>  
 npx github:darellchua2/civiltekk-opencode-claude-skills list installed              # installed vs latest + update marker
 ```
 
-Upgrade = re-run `add` (idempotent overwrite); downgrade = same with an older `#vX.Y.Z`. Installs carry an exact ref even when the fetched release's own installer predates stamping — the current installer post-stamps provenance after the tagged install. (`--source .` installs from a local checkout for maintainers; user-scope manifest entries record `ref`/`version` alongside the hashes.)
+Upgrade = re-run `add` (idempotent overwrite); downgrade = same with an older `#vX.Y.Z`. Installs carry an exact ref even when the fetched release's own installer predates stamping — the current installer post-stamps provenance after the tagged install. (`--source .` installs from a local checkout for maintainers; in any git checkout of this repo `add` always installs that working tree — the latest-tag routing applies to npx installs, which have no `.git`.)
 
 **Other harnesses** — skills follow the [Agent Skills](https://agentskills.io) open standard; `--target` controls the destination:
 
