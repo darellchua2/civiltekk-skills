@@ -1,0 +1,90 @@
+# PLAN: civiltekk-side betekk org split — skill removals + versioned installer
+
+**Branch**: feat/667
+**Issue**: https://github.com/darellchua2/civiltekk-skills/issues/667
+**Base**: main
+
+## Acceptance Criteria
+- [ ] The three org skills (dev-uat-promotion-skill, version-bump-standard-skill, git-branch-workflow-setup-skill) and skills/civiltekk-opentofu-skill/references/ecr.md are removed; org-marker grep over skills/ returns provenance-only hits
+- [ ] registry.json, dependency-map.json, presets, README counts and setup.sh banner consistent; `node installer/build-registry.mjs` green
+- [ ] repo-ops-specialist-subagent skips with an install note when git-branch-workflow-setup-skill is absent
+- [ ] `npx github:darellchua2/civiltekk-skills add <skill>` installs from the latest vX.Y.Z tag; `#main` opt-in works
+- [ ] Every installed skill dir carries `.skill-source.json` with source/ref/version/installedAt/files
+- [ ] `list` verb prints installed vs latest per skill; contract tests updated and green
+
+## Dependency & Consumer Map
+
+| Node (file/module) | Depends on (must precede) | Consumers (who depends on this) | Change risk |
+|---------------------|---------------------------|---------------------------------|-------------|
+| `skills/dev-uat-promotion-skill/` | — | installer/registry.json, installer/presets/pack-devops.json, deploy/skill-profiles.json, deploy/opencode.json permissions (:80), README table/category | med |
+| `skills/version-bump-standard-skill/` | — | same consumer set (opencode.json :170) | med |
+| `skills/git-branch-workflow-setup-skill/` | version-bump-standard (content ref) | same consumer set (opencode.json :75) + agents/repo-ops-specialist-subagent.md delegation spec | med |
+| `skills/civiltekk-opentofu-skill/references/ecr.md` | — | civiltekk-opentofu-skill SKILL.md route+references tables, agents/opentofu-explorer-subagent.md:67, skills/aws-iac-safety-skill/SKILL.md:29, registry description | med |
+| `installer/init.mjs` | registry.json | npx users (add/remove verbs), deploy/setup.sh single-install path, contract tests | high |
+| `installer/registry.json` (generated) | skills/ dir tree | installer/init.mjs, deploy/setup.sh, README counts, registry description consumers | med |
+
+## Implementation Phases
+
+### Phase 1: Org-skill removals + route extraction (WS1, civiltekk side)
+- [ ] **1.1** `git rm -r` the three org skill dirs (dev-uat-promotion-skill, version-bump-standard-skill, git-branch-workflow-setup-skill)
+    — **Why:** these implement the betekk dev→uat→main branch model — org workflow, moving to betekk-skills (betekk/betekk-skills#9); removal is the ticket's core AC
+    — **Done when:** `ls skills/ | grep -E "dev-uat-promotion|version-bump-standard|git-branch-workflow"` is empty and `git status` shows the three deletions staged
+    — **Consumers affected:** registry.json, pack-devops.json, skill-profiles.json, opencode.json permissions, README — synced in 1.3–1.5
+- [ ] **1.2** `git rm` skills/civiltekk-opentofu-skill/references/ecr.md and strip its route row + references-table row + BETEKK description mentions from skills/civiltekk-opentofu-skill/SKILL.md
+    — **Why:** the BETEKK ECR/OIDC standard is org content; it is recreated as betekk-ecr-oidc-skill in betekk/betekk-skills#9 (content preserved in that ticket's scope)
+    — **Done when:** grep BETEKK in skills/civiltekk-opentofu-skill/ returns zero hits; `ecr-provision` absent from the skill's route table
+    — **Consumers affected:** agents/opentofu-explorer-subagent.md and aws-iac-safety-skill links — fixed in 1.4
+- [ ] **1.3** Sync machine registries: remove the three skills from installer/presets/pack-devops.json, deploy/skill-profiles.json, and the three `permissions` skill rules in deploy/opencode.json (:75, :80, :170); delete the ecr-provision references from the civiltekk-opentofu-skill registry entry source (SKILL.md frontmatter description) if present
+    — **Why:** installer/setup read these at deploy time; dangling entries fail the isolation/count guards
+    — **Done when:** grep for the three skill names across installer/ and deploy/ returns zero hits (excluding PLANS/ and LEARNINGS/)
+    — **Consumers affected:** none beyond the files themselves
+- [ ] **1.4** Update agent + skill cross-references: agents/opentofu-explorer-subagent.md (drop `ecr-provision` route row + description mention), skills/aws-iac-safety-skill/SKILL.md:29 (Related-Skills link), agents/repo-ops-specialist-subagent.md (git-branch-workflow-setup-skill delegation → org-scope marker: resolve the skill, absent → report unavailable + print the betekk install hint `npx github:betekk/betekk-skills add git-branch-workflow-setup-skill` and continue the flow with setup skipped)
+    — **Why:** cross-references must resolve (house cross-reference audit rule); the skip-with-note pattern is the decided public-repo behavior for org-scope deps
+    — **Done when:** grep git-branch-workflow-setup in agents/ shows only the org-scope skip-with-note form; grep ecr-provision in agents/ and skills/ is zero
+    — **Consumers affected:** pipeline Step 7 reviewers read these files
+- [ ] **1.5** README sync: remove the three skill rows + category mentions (Git/Workflow category line, skill table), update the civiltekk-opentofu-skill description row (drop BETEKK/ECR-route phrasing)
+    — **Why:** README is the catalog face; counts and listings must match reality (repo sync rules)
+    — **Done when:** grep for the three names + "BETEKK" in README.md returns zero hits
+    — **Consumers affected:** registry.json description (regenerated next)
+- [ ] **1.6** Regenerate and commit installer/registry.json via `node installer/build-registry.mjs`; run the contract tests (bats tests/) and fix any count/membership pins that reference removed entries
+    — **Why:** registry.json is generated and must be committed with its source changes (repo rule)
+    — **Done when:** build-registry exits 0, `git diff installer/registry.json` reflects only the removals, bats suite green
+    — **Consumers affected:** installer/init.mjs, deploy/setup.sh
+
+### Phase 2: Versioned installer (WS3, civiltekk side)
+- [ ] **2.1** Add ref resolution to installer/init.mjs: helper that resolves the latest semver tag via `git ls-remote --tags <repo-url>` (sort -V, ignore `^{}`), honors `--ref <ref>` flag (`#main` opt-in = `--ref main`), and `--source .` dev mode that installs from the running tree without fetching
+    — **Why:** AC requires latest-tag default install with main opt-in; the running npx tree may be ahead of the last release
+    — **Done when:** a unit-callable node check resolves `v12.19.1` (or newer) from the live repo and `--ref main`/`--source .` parse
+    — **Consumers affected:** 2.2, 2.3
+- [ ] **2.2** Rework the `add` verb: fetch the selected ref's tree (`git clone --depth 1 --branch <ref>` into a temp dir; `--source .` skips the fetch), copy the skill dir plus its declared dependency-map prerequisites from that tree, write `.skill-source.json` (`{source, ref, version, installedAt, files[]}`) into each installed skill dir, and record ref+version in the `.skill-manifest.json` entries
+    — **Why:** delivers pinned/provenance-stamped installs; the sidecar is the rollback/upgrade surface for `list` and users
+    — **Done when:** `node installer/init.mjs add <skill> --source .` into a scratch HOME installs the dir with a populated `.skill-source.json` and a manifest entry carrying ref
+    — **Consumers affected:** list verb (2.3), README docs (2.4), manifest consumers
+- [ ] **2.3** Add the `list` verb: enumerate installed skills (manifest entries / dirs carrying `.skill-source.json`), print each with its installed ref/version and the remote latest tag (single `git ls-remote --tags` call), flagging update-available
+    — **Why:** AC requires installed-vs-latest visibility; upgrade is then "re-run add"
+    — **Done when:** `node installer/init.mjs list` prints name, installed ref, latest tag, and an update marker in a scratch HOME with one installed skill
+    — **Consumers affected:** README docs (2.4)
+- [ ] **2.4** README: add a "Versioning & rollback" section documenting latest-tag default, `#vX.Y.Z` pinned install, `--ref main`, upgrade-by-rerun, and the sidecar; update the install section to match
+    — **Why:** the versioning capability is invisible to end users until documented (audit finding)
+    — **Done when:** README documents all four flows with copy-paste commands
+    — **Consumers affected:** none
+- [ ] **2.5** Update/extend contract tests for the new verbs + sidecar + manifest ref; run the full bats suite
+    — **Why:** behavior change without a pinned test regresses silently; ticket exit gate is full
+    — **Done when:** bats tests/ green including new installer-verb pins
+    — **Consumers affected:** CI
+
+## Technical Notes
+- The ECR route content moves to betekk/betekk-skills#9 (betekk-ecr-oidc-skill) — this ticket only removes; no content is lost (full text preserved in that ticket's work).
+- Latest-tag install clones the tag tree fresh each `add` (npx already required network; determinism over micro-optimization).
+- setup.sh/setup.ps1 skill counts are computed dynamically (count_skills) — no banner edit needed; verified by grep.
+- installer/dependency-map.json has no edges for the three skills (verified) — no dep-map edit.
+
+## Dependencies
+- Umbrella epic: betekk/canvastekk-tracker#3736
+- Sibling ticket: betekk/betekk-skills#9 (betekk-side imports — independent repo, no ordering constraint)
+- blocks: #668 (generalizer sweep)
+
+## Risks & Mitigation
+- Registry regeneration churn beyond the removals → review `git diff installer/registry.json` in 1.6; anything unrelated is a build-registry bug to fix, not to hand-patch
+- opencode.json permission-rule removal breaking gating tests → tests/ has no pins on the three names (verified); 1.6's suite run catches surprises
+- Shallow-clone install fails behind restricted network → clear error naming the ref; `--source .` remains the offline escape hatch
