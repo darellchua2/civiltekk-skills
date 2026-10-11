@@ -89,3 +89,5 @@ docs/OpenCode-Agent-Tooling-Research-2026-09-24.interactive.html
 
 # laya-guard shadow log (runtime, per-project — never commit)
 .opencode/laya-guard-shadow.jsonl
+
+!LEARNINGS/decisions/opencode-v2-plugin-runtime-embedded-bun-sidecar.md
