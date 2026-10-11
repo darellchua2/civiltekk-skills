@@ -21,6 +21,7 @@ const LAYA_REVISION = "68f27df"
 let laya = null // warm model handle
 let loading = null // in-flight load promise (dedup concurrent first calls)
 let queue = Promise.resolve() // serializes inference — one ORT session
+let modelDirOverride = null // set via the init op (plugin-side config, not env)
 
 async function getModel() {
   if (laya) return laya
@@ -28,7 +29,8 @@ async function getModel() {
     loading = (async () => {
       const { Laya } = await import("@receptron/laya")
       const opts = { executionProviders: ["cpu"], revision: LAYA_REVISION }
-      if (process.env.LAYA_GUARD_MODEL_DIR) opts.modelDir = process.env.LAYA_GUARD_MODEL_DIR
+      const dir = modelDirOverride || process.env.LAYA_GUARD_MODEL_DIR
+      if (dir) opts.modelDir = dir
       laya = await Laya.load(opts)
       return laya
     })().catch((err) => {
@@ -42,6 +44,10 @@ async function getModel() {
 function handle(msg) {
   if (msg.op === "ping") {
     return Promise.resolve({ ok: true, pong: true, model_loaded: Boolean(laya), node: process.versions.node })
+  }
+  if (msg.op === "init") {
+    modelDirOverride = typeof msg.model_dir === "string" && msg.model_dir ? msg.model_dir : null
+    return Promise.resolve({ ok: true, model_dir_set: Boolean(modelDirOverride) })
   }
   if (msg.op === "systemOne") {
     if (typeof msg.state === "undefined" || !msg.questions || typeof msg.questions !== "object") {
@@ -63,6 +69,14 @@ function write(obj) {
   }
 }
 
+let inFlight = 0
+let closing = false
+function maybeExit() {
+  // stdin close means "no more requests" — drain in-flight work first, then
+  // exit. A model load in progress finishes before we quit.
+  if (closing && inFlight === 0) process.exit(0)
+}
+
 const rl = readline.createInterface({ input: process.stdin, terminal: false })
 rl.on("line", (line) => {
   let msg
@@ -73,9 +87,21 @@ rl.on("line", (line) => {
     return
   }
   const id = typeof msg.id === "number" ? msg.id : null
+  inFlight++
   handle(msg).then(
-    (payload) => write({ id, ...payload }),
-    (err) => write({ id, ok: false, error: String((err && err.message) || err).slice(0, 300) }),
+    (payload) => {
+      write({ id, ...payload })
+      inFlight--
+      maybeExit()
+    },
+    (err) => {
+      write({ id, ok: false, error: String((err && err.message) || err).slice(0, 300) })
+      inFlight--
+      maybeExit()
+    },
   )
 })
-rl.on("close", () => process.exit(0))
+rl.on("close", () => {
+  closing = true
+  maybeExit()
+})

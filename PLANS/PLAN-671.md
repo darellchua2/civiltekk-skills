@@ -75,26 +75,37 @@ _Every step is atomic and carries rationale. Format: N.M action — Why / Done w
 
 ### Phase 2: Plugin file (`plugins/opencode-laya-guard.ts`)
 
-- [ ] **2.1** Write the config loader — first-wins candidates: `<project>/laya-guard.config.json`, `<project>/.opencode/laya-guard.config.json`, `<configDir>/plugins/laya-guard/laya-guard.config.json` (shipped default), then built-in defaults; parse failure => defaults (fail-open to safe defaults, matching vibeguard's discovery semantics); no `process.env` reads anywhere in the file
+- [x] **2.1** Write the config loader — first-wins candidates: `<project>/laya-guard.config.json`, `<project>/.opencode/laya-guard.config.json`, `<configDir>/plugins/laya-guard/laya-guard.config.json` (shipped default), then built-in defaults; parse failure => defaults (fail-open to safe defaults, matching vibeguard's discovery semantics); no `process.env` reads anywhere in the file
     — **Why:** mirrors the vibeguard config contract users already know; shipped default rides the existing `deploy_plugins()` dir copy so no new deployment mechanism is needed.
     — **Done when:** candidates array in source matches the three paths; defaults object carries `mode:"shadow"`.
     — **Consumers affected:** hook (2.3), tool (2.4), logger (2.5).
-- [ ] **2.2** Write the sidecar client — lazy spawn of `node <cache>/sidecar.mjs` on first use (never at setup), newline-delimited request/response with `id` correlation, `timeout_ms` race per request (default 60000 — cold model load dominates), `ping` health check before first real request, kill child in the setup cleanup return
+    — **Done:** three candidates + DEFAULTS with mode shadow/enabled/timeout 60000; parse failure breaks to defaults; guard-verified zero process.env; files: plugins/opencode-laya-guard.ts; fixes: none
+- [x] **2.2** Write the sidecar client — lazy spawn of `node <cache>/sidecar.mjs` on first use (never at setup), newline-delimited request/response with `id` correlation, `timeout_ms` race per request (default 60000 — cold model load dominates), `ping` health check before first real request, kill child in the setup cleanup return
     — **Why:** lazy spawn keeps opencode startup free for sessions that never classify; the cleanup return is the v2 lifecycle contract (registration disposed on unload).
     — **Done when:** a request to a non-existent sidecar binary resolves `ok:false` (typed failure), and the returned cleanup function terminates a spawned child in-process.
     — **Consumers affected:** hook (2.3), tool (2.4).
-- [ ] **2.3** Register `ctx.permission.hook("evaluate", ...)` — gate on `cfg.actions` (default `["bash","edit"]`); compute destructive/exfiltration/injection p(yes) via sidecar `systemOne` (choice-type yes/no questions — never `noul`); shadow mode: log only, never touch `event.effect`; enforce: `deny`/`ask` thresholds from config mutate `event.effect` + `event.message`; missing answers => p=1 (fail-closed); sidecar failure => enforce sets `effect="ask"` with a human-review message, shadow logs the failure; hard-configured denies upstream never reach this hook (v2 semantics, verified)
+    — **Done:** ensureChild/request/ensureReady — id-correlated pending map, per-request timeout race, node>=24 check on ping, init op for model_dir, respawn-on-death, failAllPending + kill in cleanup; live systemOne vs warm cache returned calibrated answers (destructive p=0.94 on rm -rf, exfiltration p=0.21); files: plugins/opencode-laya-guard.ts + sidecar.mjs (init op); fixes: 1 (stdin-drain — see Trace)
+- [x] **2.3** Register `ctx.permission.hook("evaluate", ...)` — gate on `cfg.actions` (default `["bash","edit"]`); compute destructive/exfiltration/injection p(yes) via sidecar `systemOne` (choice-type yes/no questions — never `noul`); shadow mode: log only, never touch `event.effect`; enforce: `deny`/`ask` thresholds from config mutate `event.effect` + `event.message`; missing answers => p=1 (fail-closed); sidecar failure => enforce sets `effect="ask"` with a human-review message, shadow logs the failure; hard-configured denies upstream never reach this hook (v2 semantics, verified)
     — **Why:** this is the brief's core gate, now on verified v2 API; choice-as-yes/no avoids the documented `noul` label-following quirk.
     — **Done when:** code path inspection shows: shadow branch has zero assignments to `event.effect`; enforce branch covers deny/ask/failure; `?? 1` fallback present.
     — **Consumers affected:** every bash/edit permission decision (posture depends on mode).
-- [ ] **2.4** Register the `laya_classify` tool via `ctx.tool.transform` — JSON Schema args: `{ state: string (required), questions: array of {name, instructions} (1–8 items) }`; returns per-question `p_yes` + a confidence label; sidecar failure returns a typed error content block, never a fabricated number
+    — **Done:** shadow branch returns before any effect write; enforce covers deny/ask and failure->ask; ?? 1 present (grep-verified); statements truncated to 200 chars pre-classification; files: plugins/opencode-laya-guard.ts; fixes: none
+- [x] **2.4** Register the `laya_classify` tool via `ctx.tool.transform` — JSON Schema args: `{ state: string (required), questions: array of {name, instructions} (1–8 items) }`; returns per-question `p_yes` + a confidence label; sidecar failure returns a typed error content block, never a fabricated number
     — **Why:** custom tool is the verified v2 mechanism for skill decision trees; the tool advises, the agent decides — no autonomous gating of skill logic.
     — **Done when:** `ctx.tool.list()` in a loaded session exposes the tool; args schema validates (additionalProperties false).
     — **Consumers affected:** the three wired skills (Phase 6), interactive users.
-- [ ] **2.5** Write the shadow logger — append-only JSONL to `<project>/.opencode/laya-guard-shadow.jsonl`: `{ts, action, target, questions:{name:p}, would_be, mode}`; target = action metadata only (resources array, truncated to 200 chars), never file contents or env values; every append wrapped in try/catch (logging must never break the agent loop)
+    — **Done:** tool registered via ctx.tool.transform, JSON Schema (additionalProperties false both levels, 1–8 questions), per-question p_yes JSON or typed error content; live ctx.tool.list() check deferred to runbook smoke; files: plugins/opencode-laya-guard.ts; fixes: none
+- [x] **2.5** Write the shadow logger — append-only JSONL to `<project>/.opencode/laya-guard-shadow.jsonl`: `{ts, action, target, questions:{name:p}, would_be, mode}`; target = action metadata only (resources array, truncated to 200 chars), never file contents or env values; every append wrapped in try/catch (logging must never break the agent loop)
     — **Why:** shadow calibration (Week 1–2) is the enforce-flip prerequisite; metadata-only keeps vibeguard exposure at zero; truncation bounds the one residual leak path (a bash command carrying an inline credential) — local gitignored log, not a new surface, but cheap to bound.
     — **Done when:** no code path writes message bodies, diffs, or env values to the log; target truncation present in source; append failure is swallowed.
     — **Consumers affected:** calibration workflow; `.gitignore` (3.4).
+    — **Done:** logShadow writes ts/action/target(200-cap)/questions/would_be/mode(+capped failure detail); mkdir recursive + append inside try/catch; files: plugins/opencode-laya-guard.ts; fixes: none
+
+## Trace
+
+- GATE cd7a32c tier=light lint=n.a typecheck=n.a build=n.a unit=t (sidecar ping round-trip on Node 24.21.0, deps resolve from sidecar-local node_modules, node --check x2) e2e=n.a
+- LOG fix 1 (2.2, sidecar.mjs): stdin-close killed an in-flight model load — close now drains (inFlight counter + maybeExit); caught by Phase 2 verification smoke (init responded, systemOne never did); re-smoked green
+- LOG warm pull verified live: node warm.mjs -> "laya model ready" (~/.cache/receptron-laya, revision 68f27df); live systemOne through sidecar: destructive p=0.9437 / exfiltration p=0.2063 on rm -rf node_modules — model path proven end-to-end on this host
 
 ### Phase 3: Config + docs
 
