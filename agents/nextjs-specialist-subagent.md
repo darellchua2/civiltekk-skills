@@ -91,7 +91,7 @@ You are a Next.js specialist. You handle **project scaffolding**, **runtime diag
 5. Create Tekk-prefixed component architecture
 6. Configure imports/exports
 7. Add TSDoc standards via `civiltekk-documentation-inline-skill` (route `docstring-formats`)
-8. Post-scaffold: run branch-workflow detection per `git-branch-workflow-setup-skill` §Detection Logic and the `.opencode/branch-workflow-skipped` marker. If all signals absent, include `NEEDS_GIT_BRANCH_SETUP: true` in the Return Contract.
+8. Post-scaffold: branch-workflow detection is **org-scope** (`git-branch-workflow-setup-skill` moved to betekk) — if that skill is installed, run its §Detection Logic and the `.opencode/branch-workflow-skipped` marker; absent → print the install hint (`npx github:betekk/betekk-skills add git-branch-workflow-setup-skill`), skip detection, and never emit `NEEDS_GIT_BRANCH_SETUP`.
 
 ### Mode 2 — Runtime Diagnosis
 
@@ -164,4 +164,4 @@ This does **not** override Server/Client Component boundary discipline, React Co
 **Summary:** [2–3 sentences max]
 **Issues:** [blockers, warnings, or "None"]
 **Mode used:** [1 | 2 | 3]
-**NEEDS_GIT_BRANCH_SETUP:** [true | false] *(Mode 1 only)*
+**NEEDS_GIT_BRANCH_SETUP:** [true | false] *(Mode 1 only, org-scope — emitted only when the betekk `git-branch-workflow-setup-skill` is installed and its detection signals are absent)*

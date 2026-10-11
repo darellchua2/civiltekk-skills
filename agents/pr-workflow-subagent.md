@@ -66,9 +66,6 @@ permissions:
     resource: search-first-skill
     effect: allow
   - action: skill
-    resource: version-bump-standard-skill
-    effect: allow
-  - action: skill
     resource: unslop-skill
     effect: allow
   - action: skill

@@ -38,9 +38,9 @@ const c=require('$1');
 console.log(c.permissions.filter(r=>r.action==='skill'&&r.effect==='allow'&&r.resource!=='*').map(r=>r.resource).filter(r=>!union.has(r)).join(' '));"
 }
 
-@test "skill-profiles: lean has exactly 70 keys" {
+@test "skill-profiles: lean has exactly 68 keys" {
     count=$(lean_keys | wc -l)
-    [ "$count" -eq 70 ]
+    [ "$count" -eq 68 ]
 }
 
 @test "skill-profiles: every lean key matches a skill dir on disk" {
@@ -75,7 +75,7 @@ fs.writeFileSync('${scratch}',JSON.stringify(c,null,2));"
     [ "$bad" = "not-a-real-skill" ] || { echo "guard missed phantom (got: '${bad}')"; return 1; }
 }
 
-@test "apply-skill-profile: lean rewrites scratch config to 70 allows + deny-all-first" {
+@test "apply-skill-profile: lean rewrites scratch config to 68 allows + deny-all-first" {
     scratch="${TEST_HOME}/opencode.json"
     cp "${PROJECT_ROOT}/deploy/opencode.json" "$scratch"
     non_skill_before=$(node -e "const c=require('$scratch');console.log(c.permissions.filter(r=>r.action!=='skill').length)")
@@ -92,7 +92,7 @@ const first=rules[0]||{};
 const nonSkill=c.permissions.filter(r=>r.action!=='skill').length;
 console.log(allows.length, first.resource==='*'&&first.effect==='deny'?'deny-ok':'no-deny', nonSkill===${non_skill_before}?'non-skill-ok':'non-skill-lost');")
     echo "result: $out"
-    [ "$out" = "70 deny-ok non-skill-ok" ]
+    [ "$out" = "68 deny-ok non-skill-ok" ]
 }
 
 @test "apply-skill-profile: full is a verified no-op on a fresh copy" {
