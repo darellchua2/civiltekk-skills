@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [12.21.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.20.1...v12.21.0) (2026-10-11)
+
+### Features
+
+* **plugins:** add laya-guard — local Laya classifier + permission gate ([#672](https://github.com/darellchua2/civiltekk-skills/issues/672)) ([02c454b](https://github.com/darellchua2/civiltekk-skills/commit/02c454b38676ebe0a66172c3411359faa098f560)), closes [#671](https://github.com/darellchua2/civiltekk-skills/issues/671) [#671](https://github.com/darellchua2/civiltekk-skills/issues/671) [#671](https://github.com/darellchua2/civiltekk-skills/issues/671)
+
 ## [12.20.1](https://github.com/darellchua2/civiltekk-skills/compare/v12.20.0...v12.20.1) (2026-10-11)
 
 ### Bug Fixes
