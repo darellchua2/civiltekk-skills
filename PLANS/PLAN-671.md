@@ -57,18 +57,21 @@ _Every step is atomic and carries rationale. Format: N.M action — Why / Done w
 
 ### Phase 1: Sidecar runtime (`plugins/laya-guard/`)
 
-- [ ] **1.1** Create `plugins/laya-guard/package.json` pinning exact deps (`@receptron/laya` at the current published version, no ranges) with `private: true`
+- [x] **1.1** Create `plugins/laya-guard/package.json` pinning exact deps (`@receptron/laya` at the current published version, no ranges) with `private: true`
     — **Why:** the sidecar's npm deps must live outside the plugin load path (opencode plugin file stays zero-dep); exact pins make `npm install` reproducible without a committed lockfile.
     — **Done when:** file exists, `npm install --omit=dev --prefix <tmp>` resolves with no range warnings on a probe.
     — **Consumers affected:** sidecar.mjs, warm.mjs, setup.sh provisioning.
-- [ ] **1.2** Write `plugins/laya-guard/sidecar.mjs` — Node >=24 stdio-JSONL RPC: reads `{id, op:"systemOne", state, questions}` lines on stdin, responds `{id, ok:true, answers}` / `{id, ok:false, error}`; `op:"ping"` returns readiness; model loads lazily on first `systemOne` via `Laya.load({ revision: <pin>, executionProviders: ["cpu"] })` (modelDir override via `LAYA_GUARD_MODEL_DIR`); choice answers missing a `probabilities.yes` are reported as `p=1` by the CALLER, but the sidecar echoes raw answers and never fabricates values; process exits on stdin close
+    — **Done:** pinned `@receptron/laya` exactly at 0.1.2 (current published; transitives onnxruntime-node ^1.22 + @huggingface/tokenizers flow); files: plugins/laya-guard/package.json; fixes: none
+- [x] **1.2** Write `plugins/laya-guard/sidecar.mjs` — Node >=24 stdio-JSONL RPC: reads `{id, op:"systemOne", state, questions}` lines on stdin, responds `{id, ok:true, answers}` / `{id, ok:false, error}`; `op:"ping"` returns readiness; model loads lazily on first `systemOne` via `Laya.load({ revision: <pin>, executionProviders: ["cpu"] })` (modelDir override via `LAYA_GUARD_MODEL_DIR`); choice answers missing a `probabilities.yes` are reported as `p=1` by the CALLER, but the sidecar echoes raw answers and never fabricates values; process exits on stdin close
     — **Why:** this is the entire bridge between opencode's Bun runtime and Node-native ONNX inference; stdin-close exit gives "dies with opencode" for free (no daemon).
     — **Done when:** `echo '{"id":1,"op":"ping"}' | node sidecar.mjs` (deps installed) responds `{"id":1,"ok":true}` and exits 0 on stdin EOF.
     — **Consumers affected:** plugin file (protocol), warm.mjs (shares load options).
-- [ ] **1.3** Write `plugins/laya-guard/warm.mjs` — one-shot script: `Laya.load()` with the pinned revision + cpu provider, then `close()`; prints the cache dir on success
+    — **Done:** sidecar implements ping/systemOne/unknown-op, lazy dedup'd model load (cpu EP, revision 68f27df, LAYA_GUARD_MODEL_DIR override), serialized inference queue, stdin-EOF exit; smoke: ping → `{"id":1,"ok":true,"pong":true,"model_loaded":false,"node":"24.21.0"}`, exit 0; files: plugins/laya-guard/sidecar.mjs; fixes: none
+- [x] **1.3** Write `plugins/laya-guard/warm.mjs` — one-shot script: `Laya.load()` with the pinned revision + cpu provider, then `close()`; prints the cache dir on success
     — **Why:** model provisioning must reuse laya's own downloader (correct `BUNDLE_FILES` paths — hand-rolled curl lists drift, the source brief's file list was already wrong about `tokenizer/` subfolder); warm pre-pulls the ~1.7 GB so the first classify is not a cold start.
     — **Done when:** `node warm.mjs` completes and the laya cache marker files exist (run during provisioning only).
     — **Consumers affected:** setup.sh `--enable-pack laya`.
+    — **Done:** warm.mjs written (same load options as sidecar, revision 68f27df); syntax-checked; the 1.7 GB pull itself is provisioning-time (Phase 4, --enable-pack laya) and a background verification pull was started — result logged at Phase 4; files: plugins/laya-guard/warm.mjs; fixes: none
 
 ### Phase 2: Plugin file (`plugins/opencode-laya-guard.ts`)
 
