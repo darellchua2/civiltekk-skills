@@ -2093,3 +2093,9 @@
 - **Scope**: project
 - **Summary**: under Git Bash, mktemp -d returns /tmp/tmp.XXX which node children resolve as C:\tmp\... → ENOENT in any test that sandboxes HOME via mktemp then runs a node CLI (pack_permissions/deploy_delegate/target suites fail locally with identical counts on untouched main — A/B before calling it a regression); fix with cygpath -w / Windows-native temp, or treat as env-INCONCLUSIVE locally and let CI arbitrate
 - **Date**: 2026-10-13
+
+- **File**: `LEARNINGS/anti-patterns/masked-exit-codes-merge-red-prs.md`
+- **Confidence**: 1.0
+- **Scope**: project
+- **Summary**: a merge watcher that pipes `gh pr checks --watch` through tail inherits tail's exit 0 and auto-merged a red PR (#674); merge gates must capture the watcher's own status (pipefail/no pipe) and define green as zero FAILURE/TIMED_OUT/CANCELLED in the rollup — and a test failure in a diff-intersecting file is unclassified until its assertion text is read, even when a per-file sweep bins it as environmental
+- **Date**: 2026-10-13

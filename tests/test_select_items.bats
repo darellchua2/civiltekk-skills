@@ -107,14 +107,17 @@ REGEN_MODULE="installer/deploy-plan-items.mjs"
 }
 
 @test "select_conflicts_with_skills_only_at_the_validator" {
-  # --select registers in validate_mode_conflicts (#473 round 1 WARN): the
-  # combination must DIE at plan validation, not silently run skills-only
-  # without the picker.
+  # --select registers in validate_mode_conflicts (#473 round 1 WARN; #673
+  # superseded): the combination was pinned to DIE so it could not silently
+  # run skills-only without the picker. #673 makes it first-class — it now
+  # must PASS validation AND the plan must run the picker (never a blanket
+  # skills-only deploy), which is the stronger form of the same guarantee.
   local d; d="$(mktemp -d)"
-  run bash -c 'export HOME="$1"; source "'"$SETUP_SH"'" >/dev/null 2>&1; SKILLS_ONLY=true; SELECT_ITEMS=true; build_plan' _ "$d"
+  run bash -c 'export HOME="$1"; source "'"$SETUP_SH"'" >/dev/null 2>&1; SKILLS_ONLY=true; SELECT_ITEMS=true; build_plan; printf "%s\n" "${PLAN_STEPS[@]}"' _ "$d"
   rm -rf "$d"
-  [ "$status" -ne 0 ]
-  [[ "$output" == *"Mutually exclusive"* ]]
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"deploy-selected-skills|Deploy selected skills"* ]]
+  [[ "$output" != *"true|agents|Deploy agents|deploy_agents"* ]]
 }
 
 @test "select_dry_run_with_preseeded_plan_writes_nothing" {
@@ -279,14 +282,15 @@ REGEN_MODULE="installer/deploy-plan-items.mjs"
 }
 
 @test "menu_option_six_routes_to_picker_path" {
-  # #537 discoverability: the interactive menu gains the picker. Direct
-  # invocation harness (source → flag → build_plan) because a pty run of the
-  # full path hangs on its interactive prompts — the fallback the arch
-  # review pre-authorized. Option 6's only logic is the flag assignment.
+  # #537 discoverability: the interactive menu gains the picker. #673 rewired
+  # the menu to multi-pick — option 6 is an add-on parsed by
+  # parse_menu_selection (MENU_ADDON_SELECT), so the flag-assignment check
+  # follows the parse path instead of a case arm.
   grep -q '6) Select items to deploy' "$SETUP_SH"
-  local arm
-  arm=$(sed -n '/^[[:space:]]*6)$/,/;;/p' "$SETUP_SH")
-  [[ "$arm" == *"SELECT_ITEMS=true"* ]]
+  grep -q 'MENU_ADDON_SELECT=true' "$SETUP_SH"
+  local d; d="$(mktemp -d)"
+  run bash -c "export HOME='$d'; source '$SETUP_SH' >/dev/null 2>&1; trap - ERR; parse_menu_selection '2,6'; echo \"sel=\$MENU_ADDON_SELECT base=\$MENU_BASE\""
+  [[ "$output" == *"sel=true base=2"* ]]
   local d; d="$(mktemp -d)"
   run bash -c "export HOME='$d'; source '$SETUP_SH' >/dev/null 2>&1; SELECT_ITEMS=true; build_plan; printf '%s\n' \"\${PLAN_STEPS[@]}\" > '$d/steps.txt'"
   grep -q 'select-items|Select items to deploy' "$d/steps.txt"

@@ -100,7 +100,7 @@ if ($Help) {
 #    Node >= 20 (#673; aligns with README and setup.sh, which never had a
 #    version gate). ──
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
-    Write-Error "node is required. Install Node.js 20+ (https://nodejs.org) or 'nvm install 20'."
+    Write-Error "node is required. Install Node.js 20+ (https://nodejs.org) or 'nvm install 26'."
     exit 1
 }
 

@@ -20,12 +20,15 @@ source_plan() {
     run source_plan "$d" "QUICK_SETUP=false"
     rm -rf "$d"
     [ "$status" -eq 0 ]
-    local first second
+    local first second third
     first=$(echo "$output" | head -1)
     second=$(echo "$output" | sed -n 2p)
-    [[ "$first" == *"true|deps|Dependency check|check_dependencies_strict"* ]]
-    # #573: detection is the new step 2 (read-only, non-critical); gh-cli moved to 3.
-    [[ "$second" == *"false|detect-agents|"* ]]
+    third=$(echo "$output" | sed -n 3p)
+    # #673: runtime context is the new step 1 (read-only, non-critical banner)
+    [[ "$first" == *"false|runtime-context|Print runtime context|detect_runtime_context"* ]]
+    [[ "$second" == *"true|deps|Dependency check|check_dependencies_strict"* ]]
+    # #573: detection is the next read-only step (non-critical); gh-cli moved to 3.
+    [[ "$third" == *"false|detect-agents|"* ]]
     echo "$output" | grep -q 'false|gh-cli|'
     # content steps exist with correct criticality
     echo "$output" | grep -q 'true|config|Deploy config|setup_config'
