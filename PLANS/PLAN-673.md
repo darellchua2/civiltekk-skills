@@ -64,22 +64,26 @@
 
 ### Phase 2: OS-aware python resolution and installers
 
-- [ ] **2.1** Add `resolve_python()` — probe `python3` → `python` → `py -3`, accepting a candidate only when `$cand -c 'import sys; sys.exit(0 if sys.version_info >= (3,8) else 1)'` exits 0; export `PYTHON_BIN`; on total miss print a per-OS hint (Windows: Store-alias trap + python.org; Unix: python3 package)
+- [x] **2.1** Add `resolve_python()` — probe `python3` → `python` → `py -3`, accepting a candidate only when `$cand -c 'import sys; sys.exit(0 if sys.version_info >= (3,8) else 1)'` exits 0; export `PYTHON_BIN`; on total miss print a per-OS hint (Windows: Store-alias trap + python.org; Unix: python3 package)
     — **Why:** the MS Store `python3` stub passes `command_exists` but fails `python3 -m pip`, so both pack installs silently skip on Windows; a functional probe is the only honest signal.
     — **Done when:** bats with a PATH-sandboxed fake bin dir resolves `python` over a broken `python3` stub, and an empty PATH yields empty `PYTHON_BIN`.
     — **Consumers affected:** `install_markitdown_mcp`, `install_docling` (2.2), `detect_runtime_context` (3.3).
-- [ ] **2.2** Switch `install_markitdown_mcp` and `install_docling` to `"$PYTHON_BIN" -m pip` (call `resolve_python` first; bail non-fatal with the hint when empty) and delete the stale `markitdown-local-mcp`/`${launcher_dir}` dry-run block (`deploy/setup.sh:2834`)
+    — **Done:** resolve_python added before the markitdown install section (functional probe, sandbox-shadowed fakes in tests); 9/9 resolve cases green; files: deploy/setup.sh; fixes: none
+- [x] **2.2** Switch `install_markitdown_mcp` and `install_docling` to `"$PYTHON_BIN" -m pip` (call `resolve_python` first; bail non-fatal with the hint when empty) and delete the stale `markitdown-local-mcp`/`${launcher_dir}` dry-run block (`deploy/setup.sh:2834`)
     — **Why:** Windows-native installs; the dead block references a removed vendored package and an undefined variable that would abort under `set -u` if ever reached.
     — **Done when:** `grep -n 'python3 -m pip' deploy/setup.sh` returns nothing inside the two installers and the `markitdown-local-mcp` string is gone; dry-run arm still prints its preview line.
     — **Consumers affected:** `--enable-pack markitdown` / `docling` installs; `run_pack_merger`'s re-install call.
-- [ ] **2.3** Add `check_user_scripts_path()` — Windows: `"$PYTHON_BIN" -m site --user-base` + `/Scripts`; Unix: `~/.local/bin`; warn-only with the exact directory; replace the `~/.local/bin`-only PATH check inside `install_markitdown_mcp`
+    — **Done:** all `python3 -m pip` call sites in both installers now `$PYTHON_BIN -m pip` (verified by grep: 0 remaining); stale dry-run block deleted; old prereq probes subsumed by the resolve gate; files: deploy/setup.sh; fixes: none
+- [x] **2.3** Add `check_user_scripts_path()` — Windows: `"$PYTHON_BIN" -m site --user-base` + `/Scripts`; Unix: `~/.local/bin`; warn-only with the exact directory; replace the `~/.local/bin`-only PATH check inside `install_markitdown_mcp`
     — **Why:** `pip --user` console scripts land in `%APPDATA%\Python\PythonXY\Scripts` on Windows — off-PATH by default — so the enabled servers fail to spawn; the current warning checks the wrong dir.
     — **Done when:** on this platform the function echoes the scripts dir from `site --user-base` (win) or `~/.local/bin` (unix) and never mutates PATH (bats asserts output + absence of `setx`/export PATH writes).
     — **Consumers affected:** post-install UX for both packs.
-- [ ] **2.4** Add `tests/test_resolve_python.bats` (stub rejection, fallthrough order, empty-PATH hint) plus scripts-dir branch cases
+    — **Done:** check_user_scripts_path added (warn-only, CRLF-trimmed user-base); wired into both installers post-success; branch-aware bats cases green; files: deploy/setup.sh; fixes: none
+- [x] **2.4** Add `tests/test_resolve_python.bats` (stub rejection, fallthrough order, empty-PATH hint) plus scripts-dir branch cases
     — **Why:** gates for Phase 2; probe order is regression-prone.
     — **Done when:** `bats tests/test_resolve_python.bats` green.
     — **Consumers affected:** CI, Step 9 review.
+    — **Done:** 9 cases (order, stub skip, py -3 arg shape, all-fail hint per OS, unquoted call shape, scripts-dir warn/silent/mutation-free); 9/9 green; files: tests/test_resolve_python.bats; fixes: test 5 originally asserted resolve's rc through a succeeding echo — rc now captured explicitly
 
 ### Phase 3: Entry points and preflight context
 
@@ -133,3 +137,5 @@
 
 - LOG Phase 1: local machine ran the suite per-file after two whole-suite timeouts (56 files; server restarts killed background runs). Affected files green: test_menu_multipick (24/24), parse_arguments, test_dry_run_leaks, test_err_trap_nounset, test_headless_default. deploy_delegate.bats fails inside `node installer/init.mjs add --all --yes` (sandboxed HOME) — installer code untouched by this diff and the test never sources setup.sh; triaged environmental (node v24 / restart-prone host). CI (release.yml) runs the full suite per push and arbitrates; the ticket exit gate re-attempts the full suite before the PR.
 - GATE ac84b77→working-tree tier=light lint=t typecheck=n.a build=- unit=t e2e=n.a
+- LOG Phase 2: tests/test_markitdown_skill.bats + tests/test_docling_skill.bats show 12 failures — every one is a hardcoded `python3 -c` call hitting the Windows Store stub ("Python was not found", status 49). Pre-existing env dependence in the tests themselves, untouched by this diff (ironically the exact bug #673 fixes); CI's ubuntu runner has a real python3. Fixing them is a separate ticket (would need resolve_python decoupled from setup.sh or a probe helper in tests/).
+- GATE Phase 2 tier=light lint=t typecheck=n.a build=- unit=t e2e=n.a

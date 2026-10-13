@@ -2851,6 +2851,70 @@ setup_config() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
+# PYTHON RESOLUTION (#673) — OS-aware interpreter pick for the pack installers
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Resolve a working Python interpreter. Probes python3 → python → py and
+# accepts a candidate only when it FUNCTIONALLY executes (`-c` version probe):
+# the Windows MS Store `python3` alias sits on PATH but is a non-functional
+# stub (it opens the Store), which made both pack installs skip with a
+# misleading "pip not available for python3" warning while real Python existed
+# as `python`/`py`. Sets PYTHON_BIN (empty when nothing works); returns 0 when
+# found, 1 with a per-OS install hint otherwise.
+# NOTE: PYTHON_BIN may be "py -3" (two words) — expand it UNQUOTED at call
+# sites; quoting would pass "-3" as part of the command name.
+resolve_python() {
+    PYTHON_BIN=""
+    local probe='import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)'
+    local c args
+    for c in python3 python py; do
+        command -v "$c" >/dev/null 2>&1 || continue
+        args=""
+        [ "$c" = "py" ] && args="-3"   # Windows launcher: force the Python 3 side
+        if $c $args -c "$probe" >/dev/null 2>&1; then
+            PYTHON_BIN="$c${args:+ $args}"
+            return 0
+        fi
+    done
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*|Windows*)
+            log_warn "No working Python found (python3/python/py all failed). On Windows 'python3' is often the Microsoft Store alias stub - disable it under Settings > Apps > Advanced app settings > App execution aliases, or install Python from python.org, then re-run."
+            ;;
+        *)
+            log_warn "No working Python found (python3/python/py all failed). Install Python 3.8+ and re-run."
+            ;;
+    esac
+    return 1
+}
+
+# Warn (never mutate PATH) when the pip --user console-scripts directory is
+# not on PATH (#673). Windows user installs land scripts in
+# <user-base>\Scripts (typically %APPDATA%\Python\PythonXY\Scripts) — off PATH
+# by default — so the spawned MCP servers would fail to start even after a
+# successful pip install; the previous check looked at the Unix-only
+# ~/.local/bin on every OS. Run resolve_python first (uses PYTHON_BIN).
+check_user_scripts_path() {
+    local scripts_dir
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*|Windows*)
+            scripts_dir="$($PYTHON_BIN -m site --user-base 2>/dev/null | tr -d '\r')/Scripts"
+            ;;
+        *)
+            scripts_dir="${HOME}/.local/bin"
+            ;;
+    esac
+    case ":${PATH}:" in
+        *":${scripts_dir}:"*)
+            return 0
+            ;;
+        *)
+            log_warn "${scripts_dir} is not on your PATH. The MCP servers spawn 'markitdown-mcp' / 'docling-mcp-server' from there - add the directory to your PATH (System environment variables on Windows, shell rc on Unix), open a NEW terminal, then run 'opencode service restart'."
+            return 1
+            ;;
+    esac
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # MARKITDOWN MCP INSTALL (#487 — upstream markitdown-mcp from PyPI)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -2888,12 +2952,19 @@ install_markitdown_mcp() {
 
     log_info "Installing markitdown-mcp (upstream, PyPI)..."
 
+    # Working-python gate (#673): functional probe replaces the old
+    # command_exists python3 + pip probes that silently skipped on
+    # Windows Store-stub installs.
+    if ! resolve_python; then
+        return 0
+    fi
+
     # Migrate old installs: the retired vendored launcher must not linger on
     # PATH beside the new entry point (best-effort — absent is fine). PEP 668
     # blocks plain uninstalls on externally-managed systems — retry once with
     # --break-system-packages (mirrors the install path below).
-    python3 -m pip uninstall -y markitdown-local-mcp >/dev/null 2>&1 \
-        || python3 -m pip uninstall -y --break-system-packages markitdown-local-mcp >/dev/null 2>&1 \
+    $PYTHON_BIN -m pip uninstall -y markitdown-local-mcp >/dev/null 2>&1 \
+        || $PYTHON_BIN -m pip uninstall -y --break-system-packages markitdown-local-mcp >/dev/null 2>&1 \
         || true
 
     # Idempotency: skip the network round-trip when the PINNED version is
@@ -2903,27 +2974,9 @@ install_markitdown_mcp() {
     # show` alone hides broken installs (e.g. the mcp SDK dependency
     # missing), which surfaces later as "MCP error -32000: Connection
     # closed" when the server crashes on import.
-    if python3 -m pip show markitdown-mcp 2>/dev/null | grep -qF "Version: 0.0.1a7" \
-        && python3 -c "from markitdown_mcp.__main__ import main" >/dev/null 2>&1; then
+    if $PYTHON_BIN -m pip show markitdown-mcp 2>/dev/null | grep -qF "Version: 0.0.1a7" \
+        && $PYTHON_BIN -c "from markitdown_mcp.__main__ import main" >/dev/null 2>&1; then
         log_success "markitdown-mcp 0.0.1a7 already installed — skipping pip install"
-        return 0
-    fi
-
-    # Prerequisite: python3 + pip
-    if ! command_exists python3; then
-        log_warn "python3 not found — cannot install markitdown-mcp. Install Python 3.10+ and re-run."
-        return 0
-    fi
-
-    if ! python3 -m pip --version >/dev/null 2>&1; then
-        log_warn "pip not available for python3 — cannot install markitdown-mcp. Install pip and re-run."
-        return 0
-    fi
-
-    # Dry-run safe (#470 class sweep): this is a real network install into the
-    # user's Python user-site — never during a preview.
-    if [ "$DRY_RUN" = true ]; then
-        log_info "[DRY-RUN] Would pip install markitdown-local-mcp from ${launcher_dir}"
         return 0
     fi
 
@@ -2934,23 +2987,14 @@ install_markitdown_mcp() {
     log_info 'pip install --user "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0"'
     local pip_err
     pip_err="$(mktemp)"
-    if python3 -m pip install --user --no-warn-script-location "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0" >/dev/null 2>"$pip_err" \
+    if $PYTHON_BIN -m pip install --user --no-warn-script-location "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0" >/dev/null 2>"$pip_err" \
         || { grep -q "externally-managed-environment" "$pip_err" \
-            && python3 -m pip install --user --break-system-packages --no-warn-script-location "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0" >/dev/null 2>>"$pip_err"; }; then
+            && $PYTHON_BIN -m pip install --user --break-system-packages --no-warn-script-location "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0" >/dev/null 2>>"$pip_err"; }; then
         rm -f "$pip_err"
         log_success "markitdown-mcp installed"
 
-        # PATH check — warn (don't fail) if ~/.local/bin not on PATH
-        local user_bin="${HOME}/.local/bin"
-        case ":${PATH}:" in
-            *":${user_bin}:"*)
-                # All good
-                ;;
-            *)
-                log_warn "${user_bin} is not on your PATH. Add it to your shell rc to use markitdown-mcp:"
-                echo "    export PATH=\"${user_bin}:\$PATH\"" >&2
-                ;;
-        esac
+        # Scripts-dir PATH check (#673) — per-OS, warn only
+        check_user_scripts_path || true
     else
         log_warn "pip install failed for markitdown-mcp (offline?). The server is opt-in (disabled: true) — OpenCode will work without it. Re-run setup when online to enable."
         log_warn "pip stderr (last 3 lines):"
@@ -2970,13 +3014,8 @@ install_docling() {
     echo ""
     log_info "Installing docling-mcp[local] (~3-4 GB with models)..."
 
-    if ! command_exists python3; then
-        log_warn "python3 not found — cannot install docling-mcp. Install Python 3.10+ and re-run."
-        return 0
-    fi
-
-    if ! python3 -m pip --version >/dev/null 2>&1; then
-        log_warn "pip not available for python3 — cannot install docling-mcp. Install pip and re-run."
+    # Working-python gate (#673): functional probe, per-OS hint on miss.
+    if ! resolve_python; then
         return 0
     fi
 
@@ -2986,11 +3025,14 @@ install_docling() {
     log_info "pip install --user docling-mcp[local]"
     local pip_err
     pip_err="$(mktemp)"
-    if python3 -m pip install --user --no-warn-script-location "docling-mcp[local]" >/dev/null 2>"$pip_err" \
+    if $PYTHON_BIN -m pip install --user --no-warn-script-location "docling-mcp[local]" >/dev/null 2>"$pip_err" \
         || { grep -q "externally-managed-environment" "$pip_err" \
-            && python3 -m pip install --user --break-system-packages --no-warn-script-location "docling-mcp[local]" >/dev/null 2>>"$pip_err"; }; then
+            && $PYTHON_BIN -m pip install --user --break-system-packages --no-warn-script-location "docling-mcp[local]" >/dev/null 2>>"$pip_err"; }; then
         rm -f "$pip_err"
         log_success "docling-mcp installed"
+
+        # Scripts-dir PATH check (#673) — per-OS, warn only
+        check_user_scripts_path || true
         log_info "NOTE: first 'docling convert' will download ~hundreds of MB of models from huggingface.co (cached thereafter)."
     else
         log_warn "pip install failed for docling-mcp (offline, OOM, or PEP 668?). The pack is opt-in — OpenCode will work without it. Re-run setup when online to enable."
