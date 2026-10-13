@@ -93,9 +93,9 @@
 
 ### Phase 4: Docs alignment
 
-- [ ] **4.1** Fix `README.md`: remove the blank line after the OpenTofu catalog row (line 300) so the Skill table renders whole; Prerequisites node line → "Node.js v20+ (`--select` dashboard wants ≥ 26.4, else linear prompts)"; quick-start adds the cmd.exe one-liner (`deploy\setup.cmd`); packs table Requires notes "python3 on PATH (resolved to python/py on Windows)"
-    — **Why:** the blank line breaks the markdown table mid-catalog (rows Git/Workflow → Media render headerless); the node line contradicted setup.ps1's old blanket gate; the new surfaces need documenting.
-    — **Done when:** no blank line between catalog rows 299-301; the four doc claims match shipped behavior (grep-verified).
+- [ ] **4.1** Fix `README.md`: remove the blank line after the OpenTofu catalog row (line 300) so the Skill table renders whole; Prerequisites node line → "Node.js v20+ (`--select` dashboard wants ≥ 26.4, else linear prompts)"; quick-start adds the cmd.exe one-liner (`deploy\setup.cmd`); packs table Requires notes "python3 on PATH (resolved to python/py on Windows)"; setup section documents the multi-pick menu syntax (`2,6`) and the newly valid flag combos (`--skills-only --select`, base+peonping)
+    — **Why:** the blank line breaks the markdown table mid-catalog (rows Git/Workflow → Media render headerless); the node line contradicted setup.ps1's old blanket gate; the new surfaces need documenting — a shipped interaction with no doc line repeats the documented-cli-behavior drift class.
+    — **Done when:** no blank line between catalog rows 299-301; the five doc claims match shipped behavior (grep-verified).
     — **Consumers affected:** README readers, catalog renderers.
 - [ ] **4.2** De-hardcode the lean count: replace the "70 primary-visible skills" figure at `deploy/setup.sh:3401` (and any other numeric lean claims surfaced by grep) with "primary-visible subset + deny-all"; align `deploy/.AGENTS.md`'s lean wording the same way
     — **Why:** the count drifted (ground truth `deploy/skill-profiles.json` = 68); prose restating a generated number is a standing drift bug.
