@@ -3557,7 +3557,7 @@ deploy_plugins() {
 # Apply the skill profile (GIT-333): rewrites ONLY the skill rules
 # (action:"skill") inside the permissions array of the DEPLOYED config
 # (never the source deploy/opencode.json).
-#   lean (default) -> 70 primary-visible skills + "*": "deny"
+#   lean (default) -> primary-visible skill subset + "*": "deny" (count lives in deploy/skill-profiles.json — never restate it here)
 #   full           -> verified no-op (shipped allowlist stays verbatim)
 # Mirrors run_pack_merger's dry-run contract (B1): in dry-run the resolver
 # stages the preview config at $DRY_RUN_PREVIEW_DIR/opencode.json — patch that.

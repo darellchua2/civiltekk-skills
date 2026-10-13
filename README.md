@@ -71,11 +71,14 @@ The catalog is also consumable via the ecosystem CLI: `npx skills add darellchua
 Copies config + agents + skills to `~/.config/opencode/` and installs two PATH commands (`opencode-setup` to re-run the deploy from anywhere, `opencode-init` for project-scoped installs).
 
 ```bash
-./deploy/setup.sh                 # interactive
+./deploy/setup.sh                 # interactive — multi-pick: one base (1-3) + add-ons (5, 6), e.g. 2,6 or 3,5,6
 ./deploy/setup.sh --quick --yes   # non-interactive: config + skills, skip dependency checks
 # Windows: powershell -ExecutionPolicy Bypass -File .\deploy\setup.ps1 -Quick -Yes
+# Windows cmd: deploy\setup.cmd -Quick -Yes   (forwards to setup.ps1)
 # No clone? npx -p github:darellchua2/civiltekk-opencode-claude-skills opencode-setup --quick --yes
 ```
+
+The interactive menu is **multi-pick** (#673): one base mode (1 quick / 2 skills-only / 3 full) plus any add-ons (5 PeonPing, 6 per-item picker) — `2,6` or `3,5,6`; `4` (CLI update) runs standalone. The same combos are first-class flags: `--skills-only --select`, `--quick --peonping`. Pack installs need a working Python (`python3`/`python`/`py` — the Windows Store `python3` alias stub is detected and skipped over); setup prints a runtime-context banner (OS, invocation route, node/python versions) before it acts.
 
 Provider swap (Z.AI default): `./deploy/setup.sh --provider anthropic|openai|openrouter|zai` — agent models are tier-based and provider-agnostic (details in the collapsed reference below). Full flag table: `./deploy/setup.sh --help`, or the [collapsed reference](#full-setup-reference) at the end.
 
@@ -139,7 +142,7 @@ Want to contribute a skill or agent? See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## Prerequisites
 
-- **Node.js v20+** and npm (setup scripts can install Node for you; nvm recommended)
+- **Node.js v20+** and npm (setup scripts can install Node for you; nvm recommended). The `--select` picker dashboard wants node ≥ 26.4 — below it the picker falls back to linear prompts; every other flow runs on 20+.
 - An API key for your provider (Z.AI default; Anthropic/OpenAI/OpenRouter via `--provider`)
 - **GitHub CLI** (`gh`) — recommended for ticket/PR flows (`gh auth login`)
 - **ripgrep** (`rg`) — recommended, faster search; falls back to `grep`
@@ -209,8 +212,8 @@ Globally: set `"disabled": false` in `~/.config/opencode/opencode.json`, or use 
 
 | Pack | Servers enabled | Requires |
 |------|----------------|----------|
-| `markitdown` | markitdown | Python server (auto-installed by setup.sh) |
-| `docling` | docling | Python + `docling-mcp[local]` (~3-4 GB) |
+| `markitdown` | markitdown | Python server (auto-installed by setup.sh) — needs a working `python3`/`python`/`py` on PATH (the Windows Store `python3` alias is detected and skipped over), and `%APPDATA%\Python\PythonXY\Scripts` on PATH for the console script |
+| `docling` | docling | Python + `docling-mcp[local]` (~3-4 GB) — same PATH needs as markitdown |
 | `nextjs` | next-devtools | A running Next.js dev server |
 | `chrome-devtools` | chrome-devtools | Chrome stable (telemetry + CrUX pre-disabled) |
 | `playwright` | playwright | npx (self-installs on first spawn) — logged-in web work via accessibility snapshots |
@@ -297,7 +300,6 @@ Current count: **122** (history: 123 after the BT-142 pptx migration → consoli
 | **OpenCode Meta** (7) | civiltekk-opencode-creation, opencode-skills-maintainer, opencode-repo-setup, civiltekk-documentation-sync, opencode-v2-migration, skill-generalizer, browser-fallback-skill | Agent and skill creation/maintenance (one consolidated creation skill), documentation sync + drift auditing (one consolidated doc-sync skill), per-repo MCP/project-config setup, v1→v2 migration detect/triage, skill generalization auditing, managed-browser toolset fallback routing |
 | **Harness Setup** (1) | civiltekk-coding-harness-setup-skill | Cross-harness project parity — detects OpenCode v1/v2, pi, Claude Code, Codex and provisions the neutral `.agents/skills/` dir, canonical AGENTS.md with per-harness shims, per-harness config deltas, MCP only where supported |
 | **OpenTofu** (1) | civiltekk-opentofu-skill | Infrastructure as Code — provider setup + auth + state backends, plan→apply workflow and lifecycle/state discipline, AWS/Kubernetes/Neon/Keycloak exploration, and shared-module organization (one consolidated skill) |
-
 | **Git/Workflow** (9) | civiltekk-diagram, ticketing-skill, plan-execution-skill, plan-execution-inline-skill, worktree-pipeline-skill, wayfinder-skill, gh-cli-setup-skill, civiltekk-git-commits, semantic-release-convention | Diagrams (ASCII-to-image and Mermaid fenced blocks, one consolidated diagram skill), git operations, release conventions, version bumping, commit discipline — conventional format plus compact budgets (one consolidated commits skill), the full ticket lifecycle (create/classify/start/update/close on GitHub Issues or JIRA) via `/create-ticket`, fully-automated per-phase plan execution via `/run-plan` (inline workers by default; subagent workers on explicit request), the tracker-ticket-to-merged-PR worktree pipeline via `/run-worktree-pipeline`, and oversized-work planning as decision-ticket maps |
 | **Documentation** (4) | coverage-readme-workflow, unslop-skill, technical-writing-skill, civiltekk-documentation-inline-skill | Documentation generation — per-language docstrings (PEP 257, Javadoc, JSDoc, XML) and the in-session docs delegate (one consolidated skill) |
 | **Communication** (1) | email-drafter-skill | Business-email drafting — process, tone frames, slop checklist |

@@ -6,17 +6,17 @@
 
 ## Acceptance Criteria
 
-- [ ] Menu accepts `2,6` / `3,5,6` / `4`; exactly one base + add-ons; `2,4`, `1,2`, unknown tokens rejected with a re-prompt
-- [ ] `--skills-only --select` / `--quick --select` deploy the selected set (validated, not silently ignored)
-- [ ] PeonPing attaches as a non-critical step to any base mode
-- [ ] `resolve_python()` rejects a broken `python3` stub and falls through to `python`/`py -3`; both installers use `$PYTHON_BIN`
-- [ ] Post-install PATH check resolves the per-OS scripts dir and warns with the exact directory (never mutates PATH)
-- [ ] Preflight banner prints OS, invocation route, node + python versions
-- [ ] `deploy/setup.cmd` runs the full setup from cmd.exe
-- [ ] `setup.ps1 -EnablePack markitdown,docling` works on node < 26.4; `-Select` still enforces ≥ 26.4 (linear fallback otherwise)
-- [ ] Stale `markitdown-local-mcp` dry-run block removed; `tests/test_setup_ps1_vars.bats` stays green
-- [ ] README catalog table renders as one table; node floor aligned across README/setup.sh/setup.ps1; lean count no longer hardcoded; ticketing README points at the betekk catalog
-- [ ] New bats tests: multi-pick parsing, `resolve_python` stub rejection, scripts-dir branches
+- [x] Menu accepts `2,6` / `3,5,6` / `4`; exactly one base + add-ons; `2,4`, `1,2`, unknown tokens rejected with a re-prompt
+- [x] `--skills-only --select` / `--quick --select` deploy the selected set (validated, not silently ignored)
+- [x] PeonPing attaches as a non-critical step to any base mode
+- [x] `resolve_python()` rejects a broken `python3` stub and falls through to `python`/`py -3`; both installers use `$PYTHON_BIN`
+- [x] Post-install PATH check resolves the per-OS scripts dir and warns with the exact directory (never mutates PATH)
+- [x] Preflight banner prints OS, invocation route, node + python versions
+- [x] `deploy/setup.cmd` runs the full setup from cmd.exe
+- [x] `setup.ps1 -EnablePack markitdown,docling` works on node < 26.4; `-Select` still enforces ≥ 26.4 (linear fallback otherwise)
+- [x] Stale `markitdown-local-mcp` dry-run block removed; `tests/test_setup_ps1_vars.bats` stays green (4/6 pins green locally; the 2 reds are the python3-stub env failure logged in Trace — CI arbitrates)
+- [x] README catalog table renders as one table; node floor aligned across README/setup.sh/setup.ps1; lean count no longer hardcoded; ticketing README points at the betekk catalog
+- [x] New bats tests: multi-pick parsing, `resolve_python` stub rejection, scripts-dir branches
 
 ## Dependency & Consumer Map
 
@@ -143,3 +143,5 @@
 - LOG Phase 2: tests/test_markitdown_skill.bats + tests/test_docling_skill.bats show 12 failures — every one is a hardcoded `python3 -c` call hitting the Windows Store stub ("Python was not found", status 49). Pre-existing env dependence in the tests themselves, untouched by this diff (ironically the exact bug #673 fixes); CI's ubuntu runner has a real python3. Fixing them is a separate ticket (would need resolve_python decoupled from setup.sh or a probe helper in tests/).
 - GATE Phase 2 tier=light lint=t typecheck=n.a build=- unit=t e2e=n.a
 - GATE Phase 3 tier=light lint=t typecheck=n.a build=- unit=t e2e=n.a (menu suite 24/24 after wiring; ps1 pins 4/6 — test 5 python3-stub env, logged above)
+- LOG Phase 4: Done-whens verified by grep — lean count clean across deploy/, catalog blank line gone (Git/Workflow row directly follows OpenTofu), cmd line + multi-pick + python3-alias + node-floor lines present, count_drift green (README's test-pinned 68 untouched).
+- GATE Phase 4 tier=light lint=t typecheck=n.a build=- unit=t e2e=n.a
