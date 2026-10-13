@@ -89,11 +89,14 @@ snip() {
 
 @test "scripts-path: warns with the exact dir when it is off PATH" {
     fake_pythons 1 0 1
+    # Hermetic HOME: the unix branch tests $HOME/.local/bin, and GitHub
+    # runners pre-add ~/.local/bin to PATH — a fresh fake HOME keeps the
+    # expected dir off PATH on every host.
     case "$(uname -s)" in
         MINGW*|MSYS*|CYGWIN*|Windows*) EXPECT="$FAKE_USER_BASE/Scripts" ;;
-        *) EXPECT="$HOME/.local/bin" ;;
+        *) EXPECT="$FAKE_USER_BASE/.local/bin" ;;
     esac
-    run snip 'resolve_python >/dev/null 2>&1; check_user_scripts_path'
+    run snip "HOME='$FAKE_USER_BASE'; export HOME; resolve_python >/dev/null 2>&1; check_user_scripts_path"
     [ "$status" -eq 1 ]
     [[ "$output" == *"$EXPECT is not on your PATH"* ]]
 }
@@ -102,9 +105,9 @@ snip() {
     fake_pythons 1 0 1
     case "$(uname -s)" in
         MINGW*|MSYS*|CYGWIN*|Windows*) ADD="$FAKE_USER_BASE/Scripts" ;;
-        *) ADD="$HOME/.local/bin" ;;
+        *) ADD="$FAKE_USER_BASE/.local/bin" ;;
     esac
-    run snip "resolve_python >/dev/null 2>&1; PATH=\"\$PATH:$ADD\"; check_user_scripts_path"
+    run snip "HOME='$FAKE_USER_BASE'; export HOME; resolve_python >/dev/null 2>&1; PATH=\"\$PATH:$ADD\"; check_user_scripts_path"
     [ "$status" -eq 0 ]
 }
 
