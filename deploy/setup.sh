@@ -340,6 +340,7 @@ VERBOSE=false
 SKIP_CONFIG_COPY=false
 UPDATE_ONLY=false
 PEONPING_ONLY=false       # --peonping (sound-notification installer only)
+PEONPING_ADDON=false      # peonping as an add-on step on a config-deploy base (#673)
 ENABLE_AUTO_UPDATE=false
 UPDATE_SCHEDULE="manual"
 CHECK_UPDATE_ONLY=false
@@ -1003,13 +1004,86 @@ parse_arguments() {
     done
 }
 
+# Menu multi-pick (#673): the interactive menu accepts ONE base mode
+# (1 quick | 2 skills-only | 3 full | 4 update-cli-standalone) plus any
+# add-ons (5 peonping, 6 select-items) in a single comma/space-separated
+# pick — "2,6", "3,5,6", bare "4". Sets MENU_BASE + MENU_ADDON_* globals;
+# blank input defaults to base 2 (the historical menu default). Returns 1
+# with a named error on an unknown token, a second base, or anything
+# combined with 4 — the caller re-prompts.
+parse_menu_selection() {
+    local pick="${1:-}"
+    MENU_BASE=""
+    MENU_ADDON_PEONPING=false
+    MENU_ADDON_SELECT=false
+    local token
+    # Unquoted expansion is intentional: commas normalize to spaces, so
+    # "2,6", "2 6", and "2, 6" all word-split into menu digits.
+    for token in ${pick//,/ }; do
+        case "$token" in
+            1|2|3)
+                if [ -n "$MENU_BASE" ]; then
+                    log_error "Menu pick '$pick': more than one base (${MENU_BASE}, ${token}). Pick one base (1-3) plus add-ons (5, 6)."
+                    return 1
+                fi
+                MENU_BASE="$token"
+                ;;
+            4)
+                if [ -n "$MENU_BASE" ]; then
+                    log_error "Menu pick '$pick': option 4 (update CLI) runs alone - combine nothing with it."
+                    return 1
+                fi
+                MENU_BASE="4"
+                ;;
+            5) MENU_ADDON_PEONPING=true ;;
+            6) MENU_ADDON_SELECT=true ;;
+            *)
+                log_error "Menu pick '$pick': unknown option '${token}'. Bases: 1 quick, 2 skills-only, 3 full, 4 update. Add-ons: 5 peonping, 6 select-items."
+                return 1
+                ;;
+        esac
+    done
+    [ -z "$MENU_BASE" ] && MENU_BASE="2"
+    return 0
+}
+
+# Select-branch plan steps (#473): selection replaces the blanket content
+# deploy. Steps APPEND here (never interleave — deploy_delegate line-order
+# pin); consumption gates on THIS RUN's flag + the plan file (a stale plan
+# from a prior run must never alter this one). Shared by the full and
+# skills-only plan branches (#673).
+append_select_plan_steps() {
+    PLAN_STEPS+=("false|provision-tui|Provision picker dependencies|provision_picker_deps")
+    PLAN_STEPS+=("true|select-items|Select items to deploy|run_item_picker")
+    PLAN_STEPS+=("true|deploy-selected-skills|Deploy selected skills|deploy_selected_skills")
+    PLAN_STEPS+=("true|deploy-selected-agents|Deploy selected agents|deploy_selected_agents")
+    PLAN_STEPS+=("true|prune-registry-removed|Prune registry-removed entries|deploy_selected_prune")
+    PLAN_STEPS+=("false|apply-selected-extras|Apply selected packs|apply_selected_packs_extras")
+}
+
 # Mode exclusivity (#466): the early-exit modes are mutually exclusive, and
 # --enable-pack only makes sense for modes that deploy config content (the
 # pack merger runs from deploy_agents). Previously contradictory flags were
 # silently ignored, e.g. `--update --enable-pack markitdown` deployed no pack.
+# Add-on whitelist (#673): --select and peonping ride any config-deploy base
+# (quick / skills-only / plain full); every other combination stays a hard
+# error — validated first-class, never silently ignored.
 # NOTE: per-flag semantic validation (e.g. --provider with --update) lands
 # with the plan model (#470), not here.
 validate_mode_conflicts() {
+    # Peonping dual-role normalization (#673): with a config-deploy base the
+    # standalone flag demotes to the add-on flag; alone it stays its own mode.
+    # build_plan branches on PEONPING_ONLY BEFORE skills-only, so the add-on
+    # form MUST be a separate flag or the base deploy would be silently
+    # swallowed by the elif order.
+    if [ "$PEONPING_ONLY" = true ] && { [ "$QUICK_SETUP" = true ] || [ "$SKILLS_ONLY" = true ]; }; then
+        PEONPING_ADDON=true
+        PEONPING_ONLY=false
+    fi
+    if [ "$PEONPING_ADDON" = true ] && [ "$PEONPING_ONLY" = true ]; then
+        log_error "peonping passed both as a standalone mode and an add-on; pass one."
+        exit 1
+    fi
     local modes=()
     [ "$QUICK_SETUP" = true ] && modes+=("--quick")
     [ "$SKILLS_ONLY" = true ] && modes+=("--skills-only")
@@ -1020,12 +1094,30 @@ validate_mode_conflicts() {
     [ "$CHECK_UPDATE_ONLY" = true ] && modes+=("--check-update")
     [ "$CHECK_CATALOG_ONLY" = true ] && modes+=("--check-catalog")
     [ "$PEONPING_ONLY" = true ] && modes+=("--peonping")
-    [ "$SELECT_ITEMS" = true ] && modes+=("--select")
     [ "$LIST_ITEMS" = true ] && modes+=("--list-items")
     [ -n "$SAVE_PRESET_NAME" ] && modes+=("--save-preset")
-    if [ "${#modes[@]}" -gt 1 ]; then
-        log_error "Mutually exclusive modes combined: ${modes[*]}. Choose one."
+    # SELECT_ITEMS is whitelisted (#673) and never enters the exclusivity
+    # count; it is validated against the surviving modes below instead.
+    local count=0 m
+    for m in "${modes[@]:-}"; do
+        [ -n "$m" ] && count=$((count + 1))
+    done
+    if [ "$count" -gt 1 ]; then
+        log_error "Mutually exclusive modes combined: ${modes[*]:-}. Choose one."
         exit 1
+    fi
+    if [ "$SELECT_ITEMS" = true ] || [ "$PEONPING_ADDON" = true ]; then
+        for m in "${modes[@]:-}"; do
+            case "$m" in
+                ""|--quick|--skills-only)
+                    # No mode flag (plain full) or a config-deploy base: allowed.
+                    ;;
+                *)
+                    log_error "Add-ons (--select, peonping) combine only with quick, skills-only, or full - not with ${m}."
+                    exit 1
+                    ;;
+            esac
+        done
     fi
     if [ -n "$ENABLE_PACK" ]; then
         local packless=()
@@ -3647,8 +3739,14 @@ build_plan() {
             PLAN_STEPS+=("true|load-preset|Load preset ${LOAD_PRESET_NAME}|load_user_preset")
         fi
         PLAN_STEPS+=("true|config|Deploy config|setup_config")
-        PLAN_STEPS+=("true|agents|Deploy agents|deploy_agents")
-        PLAN_STEPS+=("true|plugins|Deploy plugins|deploy_plugins")
+        if [ "$SELECT_ITEMS" = true ]; then
+            # Per-item picker (#473, #673): selection replaces the blanket
+            # content deploy here too, mirroring the full-mode branch below.
+            append_select_plan_steps
+        else
+            PLAN_STEPS+=("true|agents|Deploy agents|deploy_agents")
+            PLAN_STEPS+=("true|plugins|Deploy plugins|deploy_plugins")
+        fi
         PLAN_STEPS+=("false|init-symlink|Install opencode-init shim|setup_opencode_init_symlink")
         PLAN_STEPS+=("false|setup-symlink|Install opencode-setup shim|setup_opencode_setup_symlink")
         PLAN_STEPS+=("false|learnings|Set up learnings directory|setup_learnings_dir")
@@ -3672,15 +3770,8 @@ build_plan() {
         PLAN_STEPS+=("false|seed-agent-keys|Seed Z.AI key into detected agents|seed_agent_keys")
         if [ "$SELECT_ITEMS" = true ]; then
             # Per-item picker (#473): selection replaces the blanket content
-            # deploy. Steps APPEND here (never interleave — deploy_delegate
-            # line-order pin); consumption gates on THIS RUN's flag + the plan
-            # file (a stale plan from a prior run must never alter this one).
-            PLAN_STEPS+=("false|provision-tui|Provision picker dependencies|provision_picker_deps")
-            PLAN_STEPS+=("true|select-items|Select items to deploy|run_item_picker")
-            PLAN_STEPS+=("true|deploy-selected-skills|Deploy selected skills|deploy_selected_skills")
-            PLAN_STEPS+=("true|deploy-selected-agents|Deploy selected agents|deploy_selected_agents")
-            PLAN_STEPS+=("true|prune-registry-removed|Prune registry-removed entries|deploy_selected_prune")
-            PLAN_STEPS+=("false|apply-selected-extras|Apply selected packs|apply_selected_packs_extras")
+            # deploy (shared helper — same steps as the skills-only branch).
+            append_select_plan_steps
         else
             PLAN_STEPS+=("true|agents|Deploy agents|deploy_agents")
             PLAN_STEPS+=("true|plugins|Deploy plugins|deploy_plugins")
@@ -3689,6 +3780,14 @@ build_plan() {
         PLAN_STEPS+=("false|setup-symlink|Install opencode-setup shim|setup_opencode_setup_symlink")
         PLAN_STEPS+=("false|learnings|Set up learnings directory|setup_learnings_dir")
         PLAN_STEPS+=("false|shell-vars|Set up shell variables|setup_shell_vars")
+    fi
+
+    # Peonping add-on (#673): rides any config-deploy base as a non-critical
+    # trailing step. Standalone --peonping keeps its own plan branch above;
+    # validate_mode_conflicts guarantees the add-on flag never co-occurs with
+    # an exclusive mode, so this append is unreachable on those paths.
+    if [ "$PEONPING_ADDON" = true ]; then
+        PLAN_STEPS+=("false|peonping-addon|Install PeonPing sound notifications|setup_peonping")
     fi
 }
 
@@ -4967,14 +5066,23 @@ main() {
             echo "  2) Skills-only setup"
             echo "  3) Full setup (API keys, Node.js, OpenCode)"
             echo "  4) Update OpenCode CLI only"
-            echo "  5) Install PeonPing (sound notifications)"
-            echo "  6) Select items to deploy (skills / agents / packs / plugins)"
+            echo "  5) Install PeonPing (sound notifications)            [add-on]"
+            echo "  6) Select items to deploy (skills/agents/packs/plugins) [add-on]"
+            echo ""
+            echo "  Pick ONE base (1-4, or standalone 4) plus any add-ons, e.g. 2,6 or 3,5,6"
             echo ""
 
+            # Multi-pick menu (#673): parse_menu_selection validates the pick
+            # and re-prompts on a named error; blank takes the default (2).
             local setup_option
-            setup_option=$(prompt_user "Select option [default: 2]" "2")
+            while true; do
+                setup_option=$(prompt_user "Select [default: 2; combos like 2,6]" "2")
+                if parse_menu_selection "$setup_option"; then
+                    break
+                fi
+            done
 
-            case "$setup_option" in
+            case "$MENU_BASE" in
                 1)
                     echo ""
                     log_info "Quick Setup: Copy opencode.json and skills only"
@@ -4993,20 +5101,17 @@ main() {
                     log_info "Update OpenCode CLI only"
                     UPDATE_ONLY=true
                     ;;
-                5)
-                    echo ""
-                    log_info "PeonPing Sound Notifications"
-                    PEONPING_ONLY=true
-                    ;;
-                6)
-                    echo ""
-                    log_info "Select items to deploy (skills / agents / packs / plugins)"
-                    SELECT_ITEMS=true
-                    ;;
-                *)
-                    log_warn "Invalid option. Running full setup..."
-                    ;;
             esac
+            if [ "$MENU_ADDON_PEONPING" = true ]; then
+                echo ""
+                log_info "Add-on: PeonPing Sound Notifications"
+                PEONPING_ADDON=true
+            fi
+            if [ "$MENU_ADDON_SELECT" = true ]; then
+                echo ""
+                log_info "Add-on: Select items to deploy (skills / agents / packs / plugins)"
+                SELECT_ITEMS=true
+            fi
             echo ""
         fi
         build_plan   # rebuild: the menu may have changed the mode (#470)

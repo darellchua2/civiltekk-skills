@@ -36,26 +36,31 @@
 
 ### Phase 1: Menu multi-pick
 
-- [ ] **1.1** Add `parse_menu_selection()` to `deploy/setup.sh` — split the pick line on commas/whitespace, require exactly one base (1|2|3, or standalone 4), accept add-ons 5/6 in any order, reject unknown tokens or a second base with a named error
+- [x] **1.1** Add `parse_menu_selection()` to `deploy/setup.sh` — split the pick line on commas/whitespace, require exactly one base (1|2|3, or standalone 4), accept add-ons 5/6 in any order, reject unknown tokens or a second base with a named error
     — **Why:** the menu is single-select, so base+add-on combos (e.g. skills-only + item picker) are impossible today; parsing is the shared entry for menu and validation.
     — **Done when:** new bats cases pass for `2,6` / `3,5,6` / `4` / blank-default-2 and reject `2,4` / `1,2` / `9`.
     — **Consumers affected:** `main()` menu branch (1.2), `validate_mode_conflicts` (1.3).
-- [ ] **1.2** Rewire the interactive menu prompt in `main()` to loop on `parse_menu_selection()` and set `QUICK_SETUP`/`SKILLS_ONLY`/`SELECT_ITEMS`/`PEONPING_ADDON` accordingly (blank → default 2)
+    — **Done:** parser added before validate_mode_conflicts; comma+space separators, blank→2, named errors on 9/1,2/2,4; files: deploy/setup.sh; fixes: none
+- [x] **1.2** Rewire the interactive menu prompt in `main()` to loop on `parse_menu_selection()` and set `QUICK_SETUP`/`SKILLS_ONLY`/`SELECT_ITEMS`/`PEONPING_ADDON` accordingly (blank → default 2)
     — **Why:** this is the only surface where multi-pick is entered; flags stay the single source the plan model consumes.
     — **Done when:** sourcing setup.sh and invoking the parser-driven flag setter with `2,6` yields `SKILLS_ONLY=true` + `SELECT_ITEMS=true` (bats via function-level test).
     — **Consumers affected:** `run_plan` (via 1.4).
-- [ ] **1.3** Relax `validate_mode_conflicts` with a compatible-pairs whitelist — `{quick, skills-only, full} × {select-items, peonping}` allowed; every other pair (update/rollback/models-only/migrate/check-*/list-items/save-preset with anything) stays exclusive
+    — **Done:** menu block rewired to a re-prompt loop; case on MENU_BASE; addons map to PEONPING_ADDON/SELECT_ITEMS; files: deploy/setup.sh; fixes: removed orphaned `*)`/`esac` from the old case block
+- [x] **1.3** Relax `validate_mode_conflicts` with a compatible-pairs whitelist — `{quick, skills-only, full} × {select-items, peonping}` allowed; every other pair (update/rollback/models-only/migrate/check-*/list-items/save-preset with anything) stays exclusive
     — **Why:** keeps the #466 contract honest — new combos are validated first-class instead of silently ignored, while genuinely exclusive modes stay rejected.
     — **Done when:** bats asserts `--skills-only --select` and `--quick --peonping` pass validation and `--update --select` still exits 1.
     — **Consumers affected:** every scripted invocation (flags and menu share this gate).
-- [ ] **1.4** Extend `build_plan`: when `SELECT_ITEMS` accompanies quick/skills-only, inject the select-branch steps (provision-tui → select-items → deploy-selected-skills/agents → prune → apply-selected-extras) in place of the blanket `agents` step; when `PEONPING_ADDON`, append `setup_peonping` as a non-critical step to any base
+    — **Done:** SELECT_ITEMS stripped from the exclusivity count and pair-checked; peonping dual-role normalization (base present → PEONPING_ADDON) avoids the build_plan elif-order swallow (evidence: PEONPING branch precedes skills-only at :3638-3643); files: deploy/setup.sh; fixes: none
+- [x] **1.4** Extend `build_plan`: when `SELECT_ITEMS` accompanies quick/skills-only, inject the select-branch steps (provision-tui → select-items → deploy-selected-skills/agents → prune → apply-selected-extras) in place of the blanket `agents` step; when `PEONPING_ADDON`, append `setup_peonping` as a non-critical step to any base
     — **Why:** the plan executor consumes only `PLAN_STEPS` — without injection the picker never runs outside full mode.
     — **Done when:** bats asserts the `2,6` plan contains `deploy_selected_skills` and no standalone `deploy_agents` step, and `1,5` contains `setup_peonping`.
     — **Consumers affected:** `run_plan`, epilogue summary (base PLAN_MODE unchanged).
-- [ ] **1.5** Add `tests/test_menu_multipick.bats` covering 1.1–1.4 (function-level: source setup.sh with guarded main, sandboxed flags)
+    — **Done:** select block extracted to shared `append_select_plan_steps()` (full branch refactored onto it — behavior-identical); skills-only branch mirrors full semantics (agents+plugins both defer to the picker); peonping add-on appends after the mode branches; files: deploy/setup.sh; fixes: none
+- [x] **1.5** Add `tests/test_menu_multipick.bats` covering 1.1–1.4 (function-level: source setup.sh with guarded main, sandboxed flags)
     — **Why:** the verification gate needs runnable checks per phase; parsing/validation are pure functions and cheap to test.
     — **Done when:** `bats tests/test_menu_multipick.bats` green.
     — **Consumers affected:** CI, Step 9 review.
+    — **Done:** 24 cases, all green (parse shapes/rejections, whitelist accept/reject incl. dual-role demotion, build_plan injection + #473 parity + blanket-deploy preservation); files: tests/test_menu_multipick.bats; fixes: none
 
 ### Phase 2: OS-aware python resolution and installers
 
@@ -123,3 +128,8 @@
 - **Whitelist loosens #466 too far**: the whitelist covers exactly two add-ons; every previously-exclusive pair still exits 1 — pinned by bats.
 - **`py -3` probe on Git Bash**: `py` is a `.exe` launcher; probe via `py -3 -c` which resolves through PATH on Windows; absent on Unix → skipped naturally by probe order.
 - **ps1 gate move breaks `test_setup_ps1_vars.bats` pins**: run that suite per phase (3.2) and adjust only assertions that name the gate's location, never the pin-absence contract.
+
+## Trace
+
+- LOG Phase 1: local machine ran the suite per-file after two whole-suite timeouts (56 files; server restarts killed background runs). Affected files green: test_menu_multipick (24/24), parse_arguments, test_dry_run_leaks, test_err_trap_nounset, test_headless_default. deploy_delegate.bats fails inside `node installer/init.mjs add --all --yes` (sandboxed HOME) — installer code untouched by this diff and the test never sources setup.sh; triaged environmental (node v24 / restart-prone host). CI (release.yml) runs the full suite per push and arbitrates; the ticket exit gate re-attempts the full suite before the PR.
+- GATE ac84b77→working-tree tier=light lint=t typecheck=n.a build=- unit=t e2e=n.a
