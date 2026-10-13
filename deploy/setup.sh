@@ -2914,6 +2914,31 @@ check_user_scripts_path() {
     esac
 }
 
+# Preflight runtime context (#673): print what the installer detected BEFORE
+# it acts — OS, invocation route, node, resolved python. Read-only; a failed
+# probe is informational (the banner says so), never a deploy blocker.
+# Invocation route: setup.ps1 exports OPENCODE_SETUP_VIA_PS1=1 before
+# forwarding, so support triage sees ps1-forwarded vs bash-direct.
+detect_runtime_context() {
+    local route="bash-direct"
+    [ -n "${OPENCODE_SETUP_VIA_PS1:-}" ] && route="ps1-forwarded"
+    echo "Runtime context:"
+    echo "  OS:               ${DETECTED_OS} (package manager: ${PACKAGE_MANAGER})"
+    echo "  Invocation route: ${route}"
+    if command_exists node; then
+        echo "  node:             $(node --version 2>/dev/null || echo "installed (version unknown)")"
+    else
+        echo "  node:             not found"
+    fi
+    resolve_python >/dev/null 2>&1
+    if [ -n "$PYTHON_BIN" ]; then
+        echo "  python:           $PYTHON_BIN ($($PYTHON_BIN --version 2>&1))"
+    else
+        echo "  python:           none working (pack installs will skip - see resolve hint above)"
+    fi
+    return 0
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
 # MARKITDOWN MCP INSTALL (#487 — upstream markitdown-mcp from PyPI)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -3775,6 +3800,7 @@ build_plan() {
         PLAN_STEPS+=("false|peonping|Install PeonPing sound notifications|setup_peonping")
     elif [ "$SKILLS_ONLY" = true ]; then
         PLAN_MODE="skills-only"
+        PLAN_STEPS+=("false|runtime-context|Print runtime context|detect_runtime_context")
         PLAN_STEPS+=("true|opencode-check|Validate opencode install|validate_opencode_install")
         PLAN_STEPS+=("true|deps|Dependency check|check_dependencies_strict")
         if [ -n "$LOAD_PRESET_NAME" ]; then
@@ -3794,6 +3820,7 @@ build_plan() {
         PLAN_STEPS+=("false|learnings|Set up learnings directory|setup_learnings_dir")
     else
         PLAN_MODE="full"
+        PLAN_STEPS+=("false|runtime-context|Print runtime context|detect_runtime_context")
         PLAN_STEPS+=("true|deps|Dependency check|check_dependencies_strict")
         PLAN_STEPS+=("false|detect-agents|Detect installed coding agents|detect_installed_agents")
         if [ -n "$LOAD_PRESET_NAME" ]; then

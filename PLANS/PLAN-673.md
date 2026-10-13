@@ -87,18 +87,21 @@
 
 ### Phase 3: Entry points and preflight context
 
-- [ ] **3.1** Add `deploy/setup.cmd` (~5 lines): forward `%*` to `powershell -ExecutionPolicy Bypass -File "%~dp0setup.ps1" %*`
+- [x] **3.1** Add `deploy/setup.cmd` (~5 lines): forward `%*` to `powershell -ExecutionPolicy Bypass -File "%~dp0setup.ps1" %*`
     — **Why:** cmd.exe cannot run bash or ps1 directly by default; the shim makes cmd a first-class entry (cmd → ps1 → bash).
     — **Done when:** `cmd //c deploy\\setup.cmd -Help` prints setup help from Git Bash on Windows (test guarded to skip when `cmd.exe` is absent, e.g. Linux CI).
     — **Consumers affected:** README quick-start (4.1).
-- [ ] **3.2** Scope `setup.ps1`'s node ≥ 26.4 gate to the `-Select` branch (keep a node-presence check global; dashboard's own linear fallback at `deploy/tui.mjs:121` covers below-26.4), and export `OPENCODE_SETUP_VIA_PS1=1` before invoking bash
+    — **Done:** 4-line shim with -NoProfile; verified `cmd //c deploy\setup.cmd -Help` prints the setup banner through ps1→bash; files: deploy/setup.cmd; fixes: none
+- [x] **3.2** Scope `setup.ps1`'s node ≥ 26.4 gate to the `-Select` branch (keep a node-presence check global; dashboard's own linear fallback at `deploy/tui.mjs:121` covers below-26.4), and export `OPENCODE_SETUP_VIA_PS1=1` before invoking bash
     — **Why:** the 26.4 floor is the picker dashboard's requirement, not setup's — the blanket gate blocks non-picker runs on node 20-24 contrary to README; the env marker drives the preflight banner's invocation-route line.
     — **Done when:** `bats tests/test_setup_ps1_vars.bats` stays green plus a new assertion that the 26.4 comparison sits inside the `-Select` branch; a manual `-EnablePack markitdown -Help` path passes the bootstrap on node 24.
     — **Consumers affected:** every `setup.ps1` invocation; `deploy/setup.cmd` (3.1).
-- [ ] **3.3** Add `detect_runtime_context()` as a non-critical plan step (full/quick/skills-only modes, first step): print `DETECTED_OS`, invocation route (`OPENCODE_SETUP_VIA_PS1` → "ps1-forwarded" else "bash-direct"), `node --version`, resolved `PYTHON_BIN` + version
+    — **Done:** gate moved inside `if ($Select)`; node-presence check now says 20+; route marker exported before the bash handoff; ps1 pins 4/6 green (test 5 is the python3-stub env failure, pre-existing; the static undefined-var audit whitelists `$env:`); files: deploy/setup.ps1; fixes: none
+- [x] **3.3** Add `detect_runtime_context()` as a non-critical plan step (full/quick/skills-only modes, first step): print `DETECTED_OS`, invocation route (`OPENCODE_SETUP_VIA_PS1` → "ps1-forwarded" else "bash-direct"), `node --version`, resolved `PYTHON_BIN` + version
     — **Why:** users (and support triage) should see what the installer detected before it acts; this machine's python3-stub trap was invisible in the output.
     — **Done when:** `./deploy/setup.sh --quick --dry-run` prints the context block with node and python versions filled.
     — **Consumers affected:** banner output only (read-only step).
+    — **Done:** function added beside the python section; prepended to skills-only and full plans; live dry-run verified — OS=Windows/winget, route=bash-direct, node v24.14.0, python=python 3.12.10 (probe correctly skipped the Store stub); files: deploy/setup.sh; fixes: none
 
 ### Phase 4: Docs alignment
 
@@ -139,3 +142,4 @@
 - GATE ac84b77→working-tree tier=light lint=t typecheck=n.a build=- unit=t e2e=n.a
 - LOG Phase 2: tests/test_markitdown_skill.bats + tests/test_docling_skill.bats show 12 failures — every one is a hardcoded `python3 -c` call hitting the Windows Store stub ("Python was not found", status 49). Pre-existing env dependence in the tests themselves, untouched by this diff (ironically the exact bug #673 fixes); CI's ubuntu runner has a real python3. Fixing them is a separate ticket (would need resolve_python decoupled from setup.sh or a probe helper in tests/).
 - GATE Phase 2 tier=light lint=t typecheck=n.a build=- unit=t e2e=n.a
+- GATE Phase 3 tier=light lint=t typecheck=n.a build=- unit=t e2e=n.a (menu suite 24/24 after wiring; ps1 pins 4/6 — test 5 python3-stub env, logged above)
