@@ -22,3 +22,11 @@ Two compounding mistakes let a red PR auto-merge:
    in a file that intersects the diff is unclassified until its assertion text
    is read; a blanket env-classification needs an A/B on base AND a sampled
    failure reason, not just a not-ok count.
+
+Third leg of the same incident: the per-file sweep enumerated files with
+`ls tests/*.bats | head -40` — 57 exist, so ~16 files (test_select_items.bats
+among them) got zero local gate evidence, and three of those held pins on
+behavior the branch deliberately changed (select+skills-only exclusivity, the
+menu option-6 arm shape, the nvm install recommendation). Inventory for a
+gate sweep must be the complete file set; a truncated list is a silent
+coverage hole that CI then finds after merge.
