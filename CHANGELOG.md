@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [12.22.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.21.1...v12.22.0) (2026-10-13)
+
+### Features
+
+* **setup:** multi-pick setup menu and OS-aware pack installs ([#673](https://github.com/darellchua2/civiltekk-skills/issues/673)) ([#674](https://github.com/darellchua2/civiltekk-skills/issues/674)) ([ca0ccad](https://github.com/darellchua2/civiltekk-skills/commit/ca0ccadf15df373fed95aa9d027a495ba762f4c5))
+
+### Bug Fixes
+
+* **test:** plan_full_mode_shape pins runtime-context prepend ([#674](https://github.com/darellchua2/civiltekk-skills/issues/674)) ([#675](https://github.com/darellchua2/civiltekk-skills/issues/675)) ([3c68a34](https://github.com/darellchua2/civiltekk-skills/commit/3c68a34b5f893e1dadce9fb6889f86bae285bb05)), closes [#673](https://github.com/darellchua2/civiltekk-skills/issues/673)
+
 ## [12.21.1](https://github.com/darellchua2/civiltekk-skills/compare/v12.21.0...v12.21.1) (2026-10-11)
 
 ### Bug Fixes
