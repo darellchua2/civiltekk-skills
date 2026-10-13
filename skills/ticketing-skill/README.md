@@ -49,7 +49,7 @@ flowchart TD
 |---|---|
 | Branches, PLANs, execution, PR pipeline | `worktree-pipeline-skill` |
 | Oversized-work planning as decision tickets | `wayfinder-skill` |
-| Batch dev→uat promotion | `dev-uat-promotion-skill` |
+| Batch dev→uat promotion | `dev-uat-promotion-skill` — moved to the betekk org catalog in #667: `npx github:betekk/betekk-skills add dev-uat-promotion-skill` |
 | Semver definitions, version bump, tagging, releases | `semantic-release-convention-skill` + release tooling |
 
 This skill labels; it never versions. PRs get exactly one semver label

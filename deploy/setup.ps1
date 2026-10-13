@@ -10,8 +10,9 @@
 # (this resolves the parity-bug class: #465, #466, #469, and the #490
 # disclosure items).
 #
-# Requires: Git-Bash (Git for Windows) or WSL, plus node >= 26.4 for non-help
-#           invocations (-Help prints via bash alone — no node needed).
+# Requires: Git-Bash (Git for Windows) or WSL, plus node >= 20 for setup
+#           (node >= 26.4 only for -Select's dashboard; below it the picker
+#           falls back to linear prompts).
 #           OpenCode CLI v2 — install with: npm install -g @opencode/cli
 #           (the legacy opencode-ai npm package is the frozen v1 line; #499).
 #           Coding-agent detection + pi/codex Z.AI key seeding (#573) are
@@ -92,14 +93,14 @@ if ($Help) {
     exit $LASTEXITCODE
 }
 
-# ── Bootstrap: node >= 26.4 (picker dependency; opencode tolerates it) ──
+# ── Bootstrap: node is required (setup.sh's resolver + installer CLI run on
+#    node). The node >= 26.4 floor is the --select PICKER DASHBOARD's only
+#    (#473; deploy/tui.mjs falls back to linear prompts below it) — that gate
+#    runs after flag translation below, so non-picker runs work on any
+#    Node >= 20 (#673; aligns with README and setup.sh, which never had a
+#    version gate). ──
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
-    Write-Error "node is required. Install Node.js 26+ (https://nodejs.org) or 'nvm install 26'."
-    exit 1
-}
-$nodeVersion = [version]((node --version) -replace '^v', '')
-if ($nodeVersion -lt [version]"26.4") {
-    Write-Error "node >= 26.4 is required for --select (found $nodeVersion). Install Node.js 26.4+ and re-run."
+    Write-Error "node is required. Install Node.js 20+ (https://nodejs.org) or 'nvm install 20'."
     exit 1
 }
 
@@ -144,6 +145,23 @@ if ($Rollback -or $RollbackTarget) {
 # they were silently dropped and `.\setup.ps1 rollback latest` fell through
 # to the interactive-menu default instead of rolling back (#571).
 $forward += $args
+
+# ── -Select dashboard gate (#673): node >= 26.4 is the picker dashboard's
+#    floor only (deploy/tui.mjs falls back to linear prompts below it); every
+#    other invocation runs on any Node >= 20. Placed AFTER flag translation so
+#    the $Select forwarding arm stays the first `if ($Select)` match in the
+#    file (pinned by test_help_parity's same-line arm check).
+if ($Select) {
+    $nodeVersion = [version]((node --version) -replace '^v', '')
+    if ($nodeVersion -lt [version]"26.4") {
+        Write-Error "node >= 26.4 is required for --select (found $nodeVersion). Install Node.js 26.4+ or re-run without -Select (the linear-prompt picker runs on any node)."
+        exit 1
+    }
+}
+
+# Route marker for setup.sh's preflight context banner (#673): the banner
+# prints "ps1-forwarded" when set, so support triage sees the invocation path.
+$env:OPENCODE_SETUP_VIA_PS1 = "1"
 
 # ── Forward everything to the bash implementation ──
 if ($useWsl) {

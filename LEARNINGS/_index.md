@@ -2081,3 +2081,15 @@
 - **Confidence**: 0.95
 - **Scope**: project
 - **Summary**: opencode v2 ships a bun-compile binary ($bunfs strings, Bun v1.4.2; npm @opencode/cli is a launcher; the Node SEA channel exists but is not shipped), so in-process native modules target embedded Bun — laya-guard keeps the plugin file zero-dep and runs ONNX in a provisioned Node >= 24 stdio sidecar; v2 API truth lives at /v2/docs (the /docs pages are V1).
+
+- **File**: `LEARNINGS/solutions/windows-python3-stub-and-user-scripts-path.md`
+- **Confidence**: 0.95
+- **Scope**: project
+- **Summary**: Windows python3 may be the MS Store alias stub — command_exists succeeds but every invocation fails (exit 49) while real Python lives as python/py; probe functionally (python3→python→py, -c version check, py keeps -3, expand unquoted) and warn with the pip --user scripts dir (`python -m site --user-base`+\Scripts, off PATH by default — never ~/.local/bin on Windows); never mutate PATH (setx truncation). Implemented in deploy/setup.sh #673
+- **Date**: 2026-10-13
+
+- **File**: `LEARNINGS/anti-patterns/msys-mktemp-paths-break-node-children.md`
+- **Confidence**: 0.9
+- **Scope**: project
+- **Summary**: under Git Bash, mktemp -d returns /tmp/tmp.XXX which node children resolve as C:\tmp\... → ENOENT in any test that sandboxes HOME via mktemp then runs a node CLI (pack_permissions/deploy_delegate/target suites fail locally with identical counts on untouched main — A/B before calling it a regression); fix with cygpath -w / Windows-native temp, or treat as env-INCONCLUSIVE locally and let CI arbitrate
+- **Date**: 2026-10-13

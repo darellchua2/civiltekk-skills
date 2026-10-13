@@ -340,6 +340,7 @@ VERBOSE=false
 SKIP_CONFIG_COPY=false
 UPDATE_ONLY=false
 PEONPING_ONLY=false       # --peonping (sound-notification installer only)
+PEONPING_ADDON=false      # peonping as an add-on step on a config-deploy base (#673)
 ENABLE_AUTO_UPDATE=false
 UPDATE_SCHEDULE="manual"
 CHECK_UPDATE_ONLY=false
@@ -1003,13 +1004,86 @@ parse_arguments() {
     done
 }
 
+# Menu multi-pick (#673): the interactive menu accepts ONE base mode
+# (1 quick | 2 skills-only | 3 full | 4 update-cli-standalone) plus any
+# add-ons (5 peonping, 6 select-items) in a single comma/space-separated
+# pick — "2,6", "3,5,6", bare "4". Sets MENU_BASE + MENU_ADDON_* globals;
+# blank input defaults to base 2 (the historical menu default). Returns 1
+# with a named error on an unknown token, a second base, or anything
+# combined with 4 — the caller re-prompts.
+parse_menu_selection() {
+    local pick="${1:-}"
+    MENU_BASE=""
+    MENU_ADDON_PEONPING=false
+    MENU_ADDON_SELECT=false
+    local token
+    # Unquoted expansion is intentional: commas normalize to spaces, so
+    # "2,6", "2 6", and "2, 6" all word-split into menu digits.
+    for token in ${pick//,/ }; do
+        case "$token" in
+            1|2|3)
+                if [ -n "$MENU_BASE" ]; then
+                    log_error "Menu pick '$pick': more than one base (${MENU_BASE}, ${token}). Pick one base (1-3) plus add-ons (5, 6)."
+                    return 1
+                fi
+                MENU_BASE="$token"
+                ;;
+            4)
+                if [ -n "$MENU_BASE" ]; then
+                    log_error "Menu pick '$pick': option 4 (update CLI) runs alone - combine nothing with it."
+                    return 1
+                fi
+                MENU_BASE="4"
+                ;;
+            5) MENU_ADDON_PEONPING=true ;;
+            6) MENU_ADDON_SELECT=true ;;
+            *)
+                log_error "Menu pick '$pick': unknown option '${token}'. Bases: 1 quick, 2 skills-only, 3 full, 4 update. Add-ons: 5 peonping, 6 select-items."
+                return 1
+                ;;
+        esac
+    done
+    [ -z "$MENU_BASE" ] && MENU_BASE="2"
+    return 0
+}
+
+# Select-branch plan steps (#473): selection replaces the blanket content
+# deploy. Steps APPEND here (never interleave — deploy_delegate line-order
+# pin); consumption gates on THIS RUN's flag + the plan file (a stale plan
+# from a prior run must never alter this one). Shared by the full and
+# skills-only plan branches (#673).
+append_select_plan_steps() {
+    PLAN_STEPS+=("false|provision-tui|Provision picker dependencies|provision_picker_deps")
+    PLAN_STEPS+=("true|select-items|Select items to deploy|run_item_picker")
+    PLAN_STEPS+=("true|deploy-selected-skills|Deploy selected skills|deploy_selected_skills")
+    PLAN_STEPS+=("true|deploy-selected-agents|Deploy selected agents|deploy_selected_agents")
+    PLAN_STEPS+=("true|prune-registry-removed|Prune registry-removed entries|deploy_selected_prune")
+    PLAN_STEPS+=("false|apply-selected-extras|Apply selected packs|apply_selected_packs_extras")
+}
+
 # Mode exclusivity (#466): the early-exit modes are mutually exclusive, and
 # --enable-pack only makes sense for modes that deploy config content (the
 # pack merger runs from deploy_agents). Previously contradictory flags were
 # silently ignored, e.g. `--update --enable-pack markitdown` deployed no pack.
+# Add-on whitelist (#673): --select and peonping ride any config-deploy base
+# (quick / skills-only / plain full); every other combination stays a hard
+# error — validated first-class, never silently ignored.
 # NOTE: per-flag semantic validation (e.g. --provider with --update) lands
 # with the plan model (#470), not here.
 validate_mode_conflicts() {
+    # Peonping dual-role normalization (#673): with a config-deploy base the
+    # standalone flag demotes to the add-on flag; alone it stays its own mode.
+    # build_plan branches on PEONPING_ONLY BEFORE skills-only, so the add-on
+    # form MUST be a separate flag or the base deploy would be silently
+    # swallowed by the elif order.
+    if [ "$PEONPING_ONLY" = true ] && { [ "$QUICK_SETUP" = true ] || [ "$SKILLS_ONLY" = true ]; }; then
+        PEONPING_ADDON=true
+        PEONPING_ONLY=false
+    fi
+    if [ "$PEONPING_ADDON" = true ] && [ "$PEONPING_ONLY" = true ]; then
+        log_error "peonping passed both as a standalone mode and an add-on; pass one."
+        exit 1
+    fi
     local modes=()
     [ "$QUICK_SETUP" = true ] && modes+=("--quick")
     [ "$SKILLS_ONLY" = true ] && modes+=("--skills-only")
@@ -1020,12 +1094,30 @@ validate_mode_conflicts() {
     [ "$CHECK_UPDATE_ONLY" = true ] && modes+=("--check-update")
     [ "$CHECK_CATALOG_ONLY" = true ] && modes+=("--check-catalog")
     [ "$PEONPING_ONLY" = true ] && modes+=("--peonping")
-    [ "$SELECT_ITEMS" = true ] && modes+=("--select")
     [ "$LIST_ITEMS" = true ] && modes+=("--list-items")
     [ -n "$SAVE_PRESET_NAME" ] && modes+=("--save-preset")
-    if [ "${#modes[@]}" -gt 1 ]; then
-        log_error "Mutually exclusive modes combined: ${modes[*]}. Choose one."
+    # SELECT_ITEMS is whitelisted (#673) and never enters the exclusivity
+    # count; it is validated against the surviving modes below instead.
+    local count=0 m
+    for m in "${modes[@]:-}"; do
+        [ -n "$m" ] && count=$((count + 1))
+    done
+    if [ "$count" -gt 1 ]; then
+        log_error "Mutually exclusive modes combined: ${modes[*]:-}. Choose one."
         exit 1
+    fi
+    if [ "$SELECT_ITEMS" = true ] || [ "$PEONPING_ADDON" = true ]; then
+        for m in "${modes[@]:-}"; do
+            case "$m" in
+                ""|--quick|--skills-only)
+                    # No mode flag (plain full) or a config-deploy base: allowed.
+                    ;;
+                *)
+                    log_error "Add-ons (--select, peonping) combine only with quick, skills-only, or full - not with ${m}."
+                    exit 1
+                    ;;
+            esac
+        done
     fi
     if [ -n "$ENABLE_PACK" ]; then
         local packless=()
@@ -2759,6 +2851,95 @@ setup_config() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
+# PYTHON RESOLUTION (#673) — OS-aware interpreter pick for the pack installers
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Resolve a working Python interpreter. Probes python3 → python → py and
+# accepts a candidate only when it FUNCTIONALLY executes (`-c` version probe):
+# the Windows MS Store `python3` alias sits on PATH but is a non-functional
+# stub (it opens the Store), which made both pack installs skip with a
+# misleading "pip not available for python3" warning while real Python existed
+# as `python`/`py`. Sets PYTHON_BIN (empty when nothing works); returns 0 when
+# found, 1 with a per-OS install hint otherwise.
+# NOTE: PYTHON_BIN may be "py -3" (two words) — expand it UNQUOTED at call
+# sites; quoting would pass "-3" as part of the command name.
+resolve_python() {
+    PYTHON_BIN=""
+    local probe='import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)'
+    local c args
+    for c in python3 python py; do
+        command -v "$c" >/dev/null 2>&1 || continue
+        args=""
+        [ "$c" = "py" ] && args="-3"   # Windows launcher: force the Python 3 side
+        if $c $args -c "$probe" >/dev/null 2>&1; then
+            PYTHON_BIN="$c${args:+ $args}"
+            return 0
+        fi
+    done
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*|Windows*)
+            log_warn "No working Python found (python3/python/py all failed). On Windows 'python3' is often the Microsoft Store alias stub - disable it under Settings > Apps > Advanced app settings > App execution aliases, or install Python from python.org, then re-run."
+            ;;
+        *)
+            log_warn "No working Python found (python3/python/py all failed). Install Python 3.8+ and re-run."
+            ;;
+    esac
+    return 1
+}
+
+# Warn (never mutate PATH) when the pip --user console-scripts directory is
+# not on PATH (#673). Windows user installs land scripts in
+# <user-base>\Scripts (typically %APPDATA%\Python\PythonXY\Scripts) — off PATH
+# by default — so the spawned MCP servers would fail to start even after a
+# successful pip install; the previous check looked at the Unix-only
+# ~/.local/bin on every OS. Run resolve_python first (uses PYTHON_BIN).
+check_user_scripts_path() {
+    local scripts_dir
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*|Windows*)
+            scripts_dir="$($PYTHON_BIN -m site --user-base 2>/dev/null | tr -d '\r')/Scripts"
+            ;;
+        *)
+            scripts_dir="${HOME}/.local/bin"
+            ;;
+    esac
+    case ":${PATH}:" in
+        *":${scripts_dir}:"*)
+            return 0
+            ;;
+        *)
+            log_warn "${scripts_dir} is not on your PATH. The MCP servers spawn 'markitdown-mcp' / 'docling-mcp-server' from there - add the directory to your PATH (System environment variables on Windows, shell rc on Unix), open a NEW terminal, then run 'opencode service restart'."
+            return 1
+            ;;
+    esac
+}
+
+# Preflight runtime context (#673): print what the installer detected BEFORE
+# it acts — OS, invocation route, node, resolved python. Read-only; a failed
+# probe is informational (the banner says so), never a deploy blocker.
+# Invocation route: setup.ps1 exports OPENCODE_SETUP_VIA_PS1=1 before
+# forwarding, so support triage sees ps1-forwarded vs bash-direct.
+detect_runtime_context() {
+    local route="bash-direct"
+    [ -n "${OPENCODE_SETUP_VIA_PS1:-}" ] && route="ps1-forwarded"
+    echo "Runtime context:"
+    echo "  OS:               ${DETECTED_OS} (package manager: ${PACKAGE_MANAGER})"
+    echo "  Invocation route: ${route}"
+    if command_exists node; then
+        echo "  node:             $(node --version 2>/dev/null || echo "installed (version unknown)")"
+    else
+        echo "  node:             not found"
+    fi
+    resolve_python >/dev/null 2>&1
+    if [ -n "$PYTHON_BIN" ]; then
+        echo "  python:           $PYTHON_BIN ($($PYTHON_BIN --version 2>&1))"
+    else
+        echo "  python:           none working (pack installs will skip - see resolve hint above)"
+    fi
+    return 0
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # MARKITDOWN MCP INSTALL (#487 — upstream markitdown-mcp from PyPI)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -2796,12 +2977,19 @@ install_markitdown_mcp() {
 
     log_info "Installing markitdown-mcp (upstream, PyPI)..."
 
+    # Working-python gate (#673): functional probe replaces the old
+    # command_exists python3 + pip probes that silently skipped on
+    # Windows Store-stub installs.
+    if ! resolve_python; then
+        return 0
+    fi
+
     # Migrate old installs: the retired vendored launcher must not linger on
     # PATH beside the new entry point (best-effort — absent is fine). PEP 668
     # blocks plain uninstalls on externally-managed systems — retry once with
     # --break-system-packages (mirrors the install path below).
-    python3 -m pip uninstall -y markitdown-local-mcp >/dev/null 2>&1 \
-        || python3 -m pip uninstall -y --break-system-packages markitdown-local-mcp >/dev/null 2>&1 \
+    $PYTHON_BIN -m pip uninstall -y markitdown-local-mcp >/dev/null 2>&1 \
+        || $PYTHON_BIN -m pip uninstall -y --break-system-packages markitdown-local-mcp >/dev/null 2>&1 \
         || true
 
     # Idempotency: skip the network round-trip when the PINNED version is
@@ -2811,27 +2999,9 @@ install_markitdown_mcp() {
     # show` alone hides broken installs (e.g. the mcp SDK dependency
     # missing), which surfaces later as "MCP error -32000: Connection
     # closed" when the server crashes on import.
-    if python3 -m pip show markitdown-mcp 2>/dev/null | grep -qF "Version: 0.0.1a7" \
-        && python3 -c "from markitdown_mcp.__main__ import main" >/dev/null 2>&1; then
+    if $PYTHON_BIN -m pip show markitdown-mcp 2>/dev/null | grep -qF "Version: 0.0.1a7" \
+        && $PYTHON_BIN -c "from markitdown_mcp.__main__ import main" >/dev/null 2>&1; then
         log_success "markitdown-mcp 0.0.1a7 already installed — skipping pip install"
-        return 0
-    fi
-
-    # Prerequisite: python3 + pip
-    if ! command_exists python3; then
-        log_warn "python3 not found — cannot install markitdown-mcp. Install Python 3.10+ and re-run."
-        return 0
-    fi
-
-    if ! python3 -m pip --version >/dev/null 2>&1; then
-        log_warn "pip not available for python3 — cannot install markitdown-mcp. Install pip and re-run."
-        return 0
-    fi
-
-    # Dry-run safe (#470 class sweep): this is a real network install into the
-    # user's Python user-site — never during a preview.
-    if [ "$DRY_RUN" = true ]; then
-        log_info "[DRY-RUN] Would pip install markitdown-local-mcp from ${launcher_dir}"
         return 0
     fi
 
@@ -2842,23 +3012,14 @@ install_markitdown_mcp() {
     log_info 'pip install --user "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0"'
     local pip_err
     pip_err="$(mktemp)"
-    if python3 -m pip install --user --no-warn-script-location "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0" >/dev/null 2>"$pip_err" \
+    if $PYTHON_BIN -m pip install --user --no-warn-script-location "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0" >/dev/null 2>"$pip_err" \
         || { grep -q "externally-managed-environment" "$pip_err" \
-            && python3 -m pip install --user --break-system-packages --no-warn-script-location "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0" >/dev/null 2>>"$pip_err"; }; then
+            && $PYTHON_BIN -m pip install --user --break-system-packages --no-warn-script-location "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0" >/dev/null 2>>"$pip_err"; }; then
         rm -f "$pip_err"
         log_success "markitdown-mcp installed"
 
-        # PATH check — warn (don't fail) if ~/.local/bin not on PATH
-        local user_bin="${HOME}/.local/bin"
-        case ":${PATH}:" in
-            *":${user_bin}:"*)
-                # All good
-                ;;
-            *)
-                log_warn "${user_bin} is not on your PATH. Add it to your shell rc to use markitdown-mcp:"
-                echo "    export PATH=\"${user_bin}:\$PATH\"" >&2
-                ;;
-        esac
+        # Scripts-dir PATH check (#673) — per-OS, warn only
+        check_user_scripts_path || true
     else
         log_warn "pip install failed for markitdown-mcp (offline?). The server is opt-in (disabled: true) — OpenCode will work without it. Re-run setup when online to enable."
         log_warn "pip stderr (last 3 lines):"
@@ -2878,13 +3039,8 @@ install_docling() {
     echo ""
     log_info "Installing docling-mcp[local] (~3-4 GB with models)..."
 
-    if ! command_exists python3; then
-        log_warn "python3 not found — cannot install docling-mcp. Install Python 3.10+ and re-run."
-        return 0
-    fi
-
-    if ! python3 -m pip --version >/dev/null 2>&1; then
-        log_warn "pip not available for python3 — cannot install docling-mcp. Install pip and re-run."
+    # Working-python gate (#673): functional probe, per-OS hint on miss.
+    if ! resolve_python; then
         return 0
     fi
 
@@ -2894,11 +3050,14 @@ install_docling() {
     log_info "pip install --user docling-mcp[local]"
     local pip_err
     pip_err="$(mktemp)"
-    if python3 -m pip install --user --no-warn-script-location "docling-mcp[local]" >/dev/null 2>"$pip_err" \
+    if $PYTHON_BIN -m pip install --user --no-warn-script-location "docling-mcp[local]" >/dev/null 2>"$pip_err" \
         || { grep -q "externally-managed-environment" "$pip_err" \
-            && python3 -m pip install --user --break-system-packages --no-warn-script-location "docling-mcp[local]" >/dev/null 2>>"$pip_err"; }; then
+            && $PYTHON_BIN -m pip install --user --break-system-packages --no-warn-script-location "docling-mcp[local]" >/dev/null 2>>"$pip_err"; }; then
         rm -f "$pip_err"
         log_success "docling-mcp installed"
+
+        # Scripts-dir PATH check (#673) — per-OS, warn only
+        check_user_scripts_path || true
         log_info "NOTE: first 'docling convert' will download ~hundreds of MB of models from huggingface.co (cached thereafter)."
     else
         log_warn "pip install failed for docling-mcp (offline, OOM, or PEP 668?). The pack is opt-in — OpenCode will work without it. Re-run setup when online to enable."
@@ -3398,7 +3557,7 @@ deploy_plugins() {
 # Apply the skill profile (GIT-333): rewrites ONLY the skill rules
 # (action:"skill") inside the permissions array of the DEPLOYED config
 # (never the source deploy/opencode.json).
-#   lean (default) -> 70 primary-visible skills + "*": "deny"
+#   lean (default) -> primary-visible skill subset + "*": "deny" (count lives in deploy/skill-profiles.json — never restate it here)
 #   full           -> verified no-op (shipped allowlist stays verbatim)
 # Mirrors run_pack_merger's dry-run contract (B1): in dry-run the resolver
 # stages the preview config at $DRY_RUN_PREVIEW_DIR/opencode.json — patch that.
@@ -3641,19 +3800,27 @@ build_plan() {
         PLAN_STEPS+=("false|peonping|Install PeonPing sound notifications|setup_peonping")
     elif [ "$SKILLS_ONLY" = true ]; then
         PLAN_MODE="skills-only"
+        PLAN_STEPS+=("false|runtime-context|Print runtime context|detect_runtime_context")
         PLAN_STEPS+=("true|opencode-check|Validate opencode install|validate_opencode_install")
         PLAN_STEPS+=("true|deps|Dependency check|check_dependencies_strict")
         if [ -n "$LOAD_PRESET_NAME" ]; then
             PLAN_STEPS+=("true|load-preset|Load preset ${LOAD_PRESET_NAME}|load_user_preset")
         fi
         PLAN_STEPS+=("true|config|Deploy config|setup_config")
-        PLAN_STEPS+=("true|agents|Deploy agents|deploy_agents")
-        PLAN_STEPS+=("true|plugins|Deploy plugins|deploy_plugins")
+        if [ "$SELECT_ITEMS" = true ]; then
+            # Per-item picker (#473, #673): selection replaces the blanket
+            # content deploy here too, mirroring the full-mode branch below.
+            append_select_plan_steps
+        else
+            PLAN_STEPS+=("true|agents|Deploy agents|deploy_agents")
+            PLAN_STEPS+=("true|plugins|Deploy plugins|deploy_plugins")
+        fi
         PLAN_STEPS+=("false|init-symlink|Install opencode-init shim|setup_opencode_init_symlink")
         PLAN_STEPS+=("false|setup-symlink|Install opencode-setup shim|setup_opencode_setup_symlink")
         PLAN_STEPS+=("false|learnings|Set up learnings directory|setup_learnings_dir")
     else
         PLAN_MODE="full"
+        PLAN_STEPS+=("false|runtime-context|Print runtime context|detect_runtime_context")
         PLAN_STEPS+=("true|deps|Dependency check|check_dependencies_strict")
         PLAN_STEPS+=("false|detect-agents|Detect installed coding agents|detect_installed_agents")
         if [ -n "$LOAD_PRESET_NAME" ]; then
@@ -3672,15 +3839,8 @@ build_plan() {
         PLAN_STEPS+=("false|seed-agent-keys|Seed Z.AI key into detected agents|seed_agent_keys")
         if [ "$SELECT_ITEMS" = true ]; then
             # Per-item picker (#473): selection replaces the blanket content
-            # deploy. Steps APPEND here (never interleave — deploy_delegate
-            # line-order pin); consumption gates on THIS RUN's flag + the plan
-            # file (a stale plan from a prior run must never alter this one).
-            PLAN_STEPS+=("false|provision-tui|Provision picker dependencies|provision_picker_deps")
-            PLAN_STEPS+=("true|select-items|Select items to deploy|run_item_picker")
-            PLAN_STEPS+=("true|deploy-selected-skills|Deploy selected skills|deploy_selected_skills")
-            PLAN_STEPS+=("true|deploy-selected-agents|Deploy selected agents|deploy_selected_agents")
-            PLAN_STEPS+=("true|prune-registry-removed|Prune registry-removed entries|deploy_selected_prune")
-            PLAN_STEPS+=("false|apply-selected-extras|Apply selected packs|apply_selected_packs_extras")
+            # deploy (shared helper — same steps as the skills-only branch).
+            append_select_plan_steps
         else
             PLAN_STEPS+=("true|agents|Deploy agents|deploy_agents")
             PLAN_STEPS+=("true|plugins|Deploy plugins|deploy_plugins")
@@ -3689,6 +3849,14 @@ build_plan() {
         PLAN_STEPS+=("false|setup-symlink|Install opencode-setup shim|setup_opencode_setup_symlink")
         PLAN_STEPS+=("false|learnings|Set up learnings directory|setup_learnings_dir")
         PLAN_STEPS+=("false|shell-vars|Set up shell variables|setup_shell_vars")
+    fi
+
+    # Peonping add-on (#673): rides any config-deploy base as a non-critical
+    # trailing step. Standalone --peonping keeps its own plan branch above;
+    # validate_mode_conflicts guarantees the add-on flag never co-occurs with
+    # an exclusive mode, so this append is unreachable on those paths.
+    if [ "$PEONPING_ADDON" = true ]; then
+        PLAN_STEPS+=("false|peonping-addon|Install PeonPing sound notifications|setup_peonping")
     fi
 }
 
@@ -4967,14 +5135,23 @@ main() {
             echo "  2) Skills-only setup"
             echo "  3) Full setup (API keys, Node.js, OpenCode)"
             echo "  4) Update OpenCode CLI only"
-            echo "  5) Install PeonPing (sound notifications)"
-            echo "  6) Select items to deploy (skills / agents / packs / plugins)"
+            echo "  5) Install PeonPing (sound notifications)            [add-on]"
+            echo "  6) Select items to deploy (skills/agents/packs/plugins) [add-on]"
+            echo ""
+            echo "  Pick ONE base (1-4, or standalone 4) plus any add-ons, e.g. 2,6 or 3,5,6"
             echo ""
 
+            # Multi-pick menu (#673): parse_menu_selection validates the pick
+            # and re-prompts on a named error; blank takes the default (2).
             local setup_option
-            setup_option=$(prompt_user "Select option [default: 2]" "2")
+            while true; do
+                setup_option=$(prompt_user "Select [default: 2; combos like 2,6]" "2")
+                if parse_menu_selection "$setup_option"; then
+                    break
+                fi
+            done
 
-            case "$setup_option" in
+            case "$MENU_BASE" in
                 1)
                     echo ""
                     log_info "Quick Setup: Copy opencode.json and skills only"
@@ -4993,20 +5170,17 @@ main() {
                     log_info "Update OpenCode CLI only"
                     UPDATE_ONLY=true
                     ;;
-                5)
-                    echo ""
-                    log_info "PeonPing Sound Notifications"
-                    PEONPING_ONLY=true
-                    ;;
-                6)
-                    echo ""
-                    log_info "Select items to deploy (skills / agents / packs / plugins)"
-                    SELECT_ITEMS=true
-                    ;;
-                *)
-                    log_warn "Invalid option. Running full setup..."
-                    ;;
             esac
+            if [ "$MENU_ADDON_PEONPING" = true ]; then
+                echo ""
+                log_info "Add-on: PeonPing Sound Notifications"
+                PEONPING_ADDON=true
+            fi
+            if [ "$MENU_ADDON_SELECT" = true ]; then
+                echo ""
+                log_info "Add-on: Select items to deploy (skills / agents / packs / plugins)"
+                SELECT_ITEMS=true
+            fi
             echo ""
         fi
         build_plan   # rebuild: the menu may have changed the mode (#470)

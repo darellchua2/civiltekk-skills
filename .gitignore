@@ -91,3 +91,5 @@ docs/OpenCode-Agent-Tooling-Research-2026-09-24.interactive.html
 .opencode/laya-guard-shadow.jsonl
 
 !LEARNINGS/decisions/opencode-v2-plugin-runtime-embedded-bun-sidecar.md
+!LEARNINGS/solutions/windows-python3-stub-and-user-scripts-path.md
+!LEARNINGS/anti-patterns/msys-mktemp-paths-break-node-children.md
