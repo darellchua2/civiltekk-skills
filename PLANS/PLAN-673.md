@@ -105,18 +105,21 @@
 
 ### Phase 4: Docs alignment
 
-- [ ] **4.1** Fix `README.md`: remove the blank line after the OpenTofu catalog row (line 300) so the Skill table renders whole; Prerequisites node line → "Node.js v20+ (`--select` dashboard wants ≥ 26.4, else linear prompts)"; quick-start adds the cmd.exe one-liner (`deploy\setup.cmd`); packs table Requires notes "python3 on PATH (resolved to python/py on Windows)"; setup section documents the multi-pick menu syntax (`2,6`) and the newly valid flag combos (`--skills-only --select`, base+peonping)
+- [x] **4.1** Fix `README.md`: remove the blank line after the OpenTofu catalog row (line 300) so the Skill table renders whole; Prerequisites node line → "Node.js v20+ (`--select` dashboard wants ≥ 26.4, else linear prompts)"; quick-start adds the cmd.exe one-liner (`deploy\setup.cmd`); packs table Requires notes "python3 on PATH (resolved to python/py on Windows)"; setup section documents the multi-pick menu syntax (`2,6`) and the newly valid flag combos (`--skills-only --select`, base+peonping)
     — **Why:** the blank line breaks the markdown table mid-catalog (rows Git/Workflow → Media render headerless); the node line contradicted setup.ps1's old blanket gate; the new surfaces need documenting — a shipped interaction with no doc line repeats the documented-cli-behavior drift class.
     — **Done when:** no blank line between catalog rows 299-301; the five doc claims match shipped behavior (grep-verified).
     — **Consumers affected:** README readers, catalog renderers.
-- [ ] **4.2** De-hardcode the lean count: replace the "70 primary-visible skills" figure at `deploy/setup.sh:3401` (and any other numeric lean claims surfaced by grep) with "primary-visible subset + deny-all"; align `deploy/.AGENTS.md`'s lean wording the same way
+    — **Done:** blank line removed (Git/Workflow row directly follows OpenTofu); node-floor line, cmd one-liner, multi-pick paragraph, packs python3-alias note all present and grep-verified; files: README.md; fixes: none
+- [x] **4.2** De-hardcode the lean count: replace the "70 primary-visible skills" figure at `deploy/setup.sh:3401` (and any other numeric lean claims surfaced by grep) with "primary-visible subset + deny-all"; align `deploy/.AGENTS.md`'s lean wording the same way
     — **Why:** the count drifted (ground truth `deploy/skill-profiles.json` = 68); prose restating a generated number is a standing drift bug.
     — **Done when:** `grep -rn "70 primary\|70 skills" deploy/` returns nothing; README's accurate "68" prose untouched.
     — **Consumers affected:** deployed AGENTS.md, setup help text.
-- [ ] **4.3** Fix `skills/ticketing-skill/README.md:52` — point `dev-uat-promotion-skill` at the betekk catalog (`npx github:betekk/betekk-skills add dev-uat-promotion-skill`)
+    — **Done:** setup.sh comment now points at deploy/skill-profiles.json instead of restating the count; grep sweep clean across deploy/ (deploy/.AGENTS.md never carried a number — nothing to change); count_drift test stays green (README's test-pinned 68 untouched); files: deploy/setup.sh; fixes: none
+- [x] **4.3** Fix `skills/ticketing-skill/README.md:52` — point `dev-uat-promotion-skill` at the betekk catalog (`npx github:betekk/betekk-skills add dev-uat-promotion-skill`)
     — **Why:** the skill left this catalog in #667; the local pointer is stale.
     — **Done when:** the README row names the betekk source.
     — **Consumers affected:** ticketing-skill readers.
+    — **Done:** row now names the betekk catalog + install command; files: skills/ticketing-skill/README.md; fixes: none
 
 ## Technical Notes
 
@@ -145,3 +148,5 @@
 - GATE Phase 3 tier=light lint=t typecheck=n.a build=- unit=t e2e=n.a (menu suite 24/24 after wiring; ps1 pins 4/6 — test 5 python3-stub env, logged above)
 - LOG Phase 4: Done-whens verified by grep — lean count clean across deploy/, catalog blank line gone (Git/Workflow row directly follows OpenTofu), cmd line + multi-pick + python3-alias + node-floor lines present, count_drift green (README's test-pinned 68 untouched).
 - GATE Phase 4 tier=light lint=t typecheck=n.a build=- unit=t e2e=n.a
+- LOG Exit gate: full suite run per-file (whole-suite invocations exceed this machine's stability window — repeated host restarts). Tally: all diff-affected files green (test_menu_multipick 24/24, test_resolve_python 9/9, test_help_parity 7/7 after fix, count_drift, parse_arguments, dry_run_leaks, err_trap_nounset, headless_default, cleanup_old_backups, backup_rollback, default_behavior, plugin_activation, portability, init, code_review_inline, issue_template, jsonc_sibling, laya_guard, test_setup_ps1_vars 4/6). Environmental failures (each class A/B-proven identical on untouched main, or python3-stub status 49): target/installer files (agents/claude/kilo/kimi/copilot_target, deploy_delegate, installer_versions, pack_permissions — mktemp→node `C:\tmp` ENOENT path gap), ponytail_plugin (same), markitdown/docling skills + skill_profiles + agent_detection_seed + autoresearch_skills + ps1_vars 2 (hardcoded `python3`). Not locally run (restarts): pr_conflict_labeler, provider_credentials/pins/regen, prune_verb, update.bats — all outside the diff (resolver/CLI/workflow content); CI (release.yml) runs the complete suite on this push as the unconditional arbiter.
+- GATE Exit tier=full lint=t typecheck=n.a build=- (no build target in this configurator repo) unit=t (affected files green; env-class failures A/B-classified above; full verdict via CI on push) e2e=n.a
