@@ -113,7 +113,7 @@ REGEN_MODULE="installer/deploy-plan-items.mjs"
   # must PASS validation AND the plan must run the picker (never a blanket
   # skills-only deploy), which is the stronger form of the same guarantee.
   local d; d="$(mktemp -d)"
-  run bash -c 'export HOME="$1"; source "'"$SETUP_SH"'" >/dev/null 2>&1; SKILLS_ONLY=true; SELECT_ITEMS=true; build_plan' _ "$d"
+  run bash -c 'export HOME="$1"; source "'"$SETUP_SH"'" >/dev/null 2>&1; SKILLS_ONLY=true; SELECT_ITEMS=true; build_plan; printf "%s\n" "${PLAN_STEPS[@]}"' _ "$d"
   rm -rf "$d"
   [ "$status" -eq 0 ]
   [[ "$output" == *"deploy-selected-skills|Deploy selected skills"* ]]
