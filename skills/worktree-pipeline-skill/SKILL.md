@@ -30,14 +30,18 @@ Usage: `/run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>`
 - Leading `--`-flags are stripped before the first-token test (`--dry-run`
   is the only flag).
 - First token is a **base-branch** iff it fails the ticket regex
-  `^(#\d+|[\w.-]+/[\w.-]+#\d+|[A-Z][A-Z0-9]+-\d+|[\w.-]+/[A-Z][A-Z0-9]+-\d+)$`
+  `^(tracker#\d+|[\w.-]+/tracker#\d+|#\d+|[\w.-]+/[\w.-]+#\d+|[A-Z][A-Z0-9]+-\d+|[\w.-]+/[A-Z][A-Z0-9]+-\d+)$`
   **and is not purely numeric**. Full first-token taxonomy, in test order:
   `--`flags → ticket forms (`#N` GitHub · `owner/repo#N` cross-repo GitHub ·
   bare numeric `N` (auto-`#N`) · `KEY` tracker · `repo/KEY` cross-repo
-  tracker) →
+  tracker · `tracker#N` tracker-repo GitHub · `repo/tracker#N` cross-repo
+  work + tracker-repo ticket) →
   base-branch fallthrough. Every accepted token shape is listed here — a
   variant that matches none of them is the base-branch, never silently
-  dropped.
+  dropped. The `tracker#…` alternatives sit **before** the generic
+  `owner/repo#N` in the regex — `tracker` is a reserved repo-segment word in
+  this position; a GitHub repo actually named `tracker` must be referenced
+  by an explicit full-`owner/repo#N` form that does not collide.
 - Bare numerics (`351`) auto-normalize to GitHub issue refs (`#351`).
 - **`repo/KEY` cross-repo refs** (`acme-workflow-engine/ABC-123`) name
   a foreign repo: resolve it to the sibling checkout `../<repo>` relative to
@@ -48,6 +52,19 @@ Usage: `/run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>`
   validation, the worktree root, and the gh context — resolves **per
   ticket's repo** (Steps 2–4 run `git -C <repo>` and `gh ... -R
   <owner/name>` for foreign repos; the session repo is unchanged).
+- **`tracker#N` / `repo/tracker#N` tracker-repo refs**: the ticket lives in
+  the org's issue-tracker GitHub repo — `$TRACKER_REPO`, resolved from the
+  `WORKTREE_PIPELINE_TRACKER_REPO` env override (`owner/name`), default
+  `betekk/canvastekk-tracker`. `tracker#N` works the **session repo**
+  (branch `feat/N`, KEY `N`); `repo/tracker#N` works the sibling
+  `../<repo>` checkout (same resolution and abort rules as `repo/KEY`).
+  Ticket fetch/transition/close run against `$TRACKER_REPO`
+  (`gh issue view -R <TRACKER_REPO> N`); everything work-scoped — base
+  branch, validation, worktree root, PR gh context, merged-ticket check —
+  resolves per the **work repo**, exactly as `#N`/`repo/KEY` do. The
+  normalized `$TICKET_ID` is the fully-qualified `<owner/name>#N`
+  (e.g. `betekk/canvastekk-tracker#3982`) so the PR body's
+  `Closes <TICKET_ID>` resolves cross-repo in the work repo.
 - Zero ticket refs → print usage and stop.
 - The base-branch sets **both** where feat branches are cut from AND the PR
   target. Default (omitted): repo default branch via
@@ -132,7 +149,8 @@ Usage: `/run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>`
    `feat/<KEY>` onto the updated `origin/<base>` (push `--force-with-lease`
    after the rebase) and re-enter at the first unexecuted step.
 3. **Ticket fetch/create**: existing ref → fetch its description (`gh issue
-   view [-R <owner/name>]`; tracker tickets per `ticketing-skill`
+   view [-R <owner/name>]`; `tracker#N`/`repo/tracker#N` →
+   `gh issue view -R <TRACKER_REPO> N`; tracker tickets per `ticketing-skill`
    §MCP Availability Guard — degrade with a clear report when the tracker is
    unavailable). New work → create the
    ticket first via `ticketing-skill` (`/create-ticket`), then
@@ -296,7 +314,9 @@ Usage: `/run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>`
     coverage signal), and the PLAN is ticked and committed; the CI gate
     below is the merge decision. The Task
     prompt MUST instruct it to include `Closes <TICKET_ID>`
-    in the PR body (keep the `#` — `Closes #366`, not `Closes 366`; must
+    in the PR body (keep the `#` — `Closes #366`, not `Closes 366`; for
+    `tracker#N` tickets `<TICKET_ID>` is already the fully-qualified
+    `owner/name#N` form — use it verbatim; must
     predate the merge). On PR creation the orchestrator **advances to the
     next implementable ticket** — it does NOT wait for CI (Step 1 execution
     model).
@@ -375,8 +395,9 @@ Usage: `/run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>`
 ## PLAN Authoring (Step 6 detail)
 
 All commands run **in the worktree** (`worktrees/<KEY>`), on `feat/<KEY>`.
-`$TICKET_ID` is the normalized ref (`#123` or `PROJ-123`); `$KEY` is its
-alphanumeric form (`123` or `PROJ-123`).
+`$TICKET_ID` is the normalized ref (`#123` or `PROJ-123`; `<owner/name>#N`
+for `tracker#N` forms — the close-keyword-safe fully-qualified form);
+`$KEY` is its alphanumeric form (`123` or `PROJ-123`).
 
 ### 6a. Adopt or rename an existing PLAN draft
 
