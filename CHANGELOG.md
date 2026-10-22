@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [12.23.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.22.0...v12.23.0) (2026-10-22)
+
+### Features
+
+* **worktree-pipeline:** accept tracker#N and repo/tracker#N ticket refs ([#676](https://github.com/darellchua2/civiltekk-skills/issues/676)) ([59514e8](https://github.com/darellchua2/civiltekk-skills/commit/59514e80f2b1b18ec4a045557ba86214f876ac82)), closes [tracker#N](https://github.com/darellchua2/tracker/issues/N) [repo/tracker#N](https://github.com/repo/tracker/issues/N) [tracker#3982](https://github.com/darellchua2/tracker/issues/3982) [repo/tracker#3982](https://github.com/repo/tracker/issues/3982) [owner/repo#N](https://github.com/owner/repo/issues/N) [owner/name#N](https://github.com/owner/name/issues/N) [betekk/canvastekk-tracker#4000](https://github.com/betekk/canvastekk-tracker/issues/4000)
+
 ## [12.22.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.21.1...v12.22.0) (2026-10-13)
 
 ### Features
