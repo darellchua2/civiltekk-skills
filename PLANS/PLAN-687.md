@@ -6,11 +6,11 @@
 
 ## Acceptance Criteria
 
-- [ ] Router ships: ≤10240 bytes, ≤50-word description, triggers preserved, decision tree, load table (8 routes), gates, zero-preload
-- [ ] 8 route files with Load-when/Skip-when headers; cross-references resolve inside the skill; no old-ID path strings in .py or fenced blocks
-- [ ] Consumers rewired: `installer/init.mjs:2042` help example + `tests/test_help_parity.bats:45` literal (same commit), `deploy/opencode.json` shipped allows (8→1), `deploy/skill-profiles.json` lean (8→1), README category row + count literals (same commit), `AGENTS.md` naming-convention prose
-- [ ] 8 old dirs hard-removed; orphan-reference grep clean (historical PLANS excepted)
-- [ ] `installer/registry.json` regenerated; full bats suite green; generalizer output contract (weight line, change list, residual list) in trace
+- [x] Router ships: ≤10240 bytes, ≤50-word description, triggers preserved, decision tree, load table (8 routes), gates, zero-preload
+- [x] 8 route files with Load-when/Skip-when headers; cross-references resolve inside the skill; no old-ID path strings in .py or fenced blocks
+- [x] Consumers rewired: `installer/init.mjs:2042` help example + `tests/test_help_parity.bats:45` literal (same commit), `deploy/opencode.json` shipped allows (8→1), `deploy/skill-profiles.json` lean (8→1), README category row + count literals (same commit), `AGENTS.md` naming-convention prose
+- [x] 8 old dirs hard-removed; orphan-reference grep clean (historical PLANS excepted)
+- [x] `installer/registry.json` regenerated; full bats suite green; generalizer output contract (weight line, change list, residual list) in trace
 
 ## Audit Baseline (measured at plan time)
 
@@ -121,19 +121,22 @@ Phase ordering constraint: no deletion (4.1) before every consumer is rewired (P
 
 ### Phase 5: Verify + deliverables (ticket exit gate — full)
 
-- [ ] **5.1** Full bats suite green on the final tree
+- [x] **5.1** Full bats suite green on the final tree
     — **Why:** isolation + governance enforcement
     — **Done when:** exit 0, zero `not ok`
     — **Consumers affected:** repo governance, CI
-- [ ] **5.2** Generalizer verification on the router: ≤10240 bytes, ≤50-word description, load-table rows resolve, route cross-refs resolve, no preload rules, no old-ID path strings in .py/fences
+    — **Done:** full bats green on 4f6316bc (0 not-ok; TS test green); files: tests/; fixes: skill_profiles lean hardcode 66→59
+- [x] **5.2** Generalizer verification on the router: ≤10240 bytes, ≤50-word description, load-table rows resolve, route cross-refs resolve, no preload rules, no old-ID path strings in .py/fences
     — **Why:** router-pattern correctness conditions
     — **Done when:** all checks pass with recorded measurements
     — **Consumers affected:** skill consumers
-- [ ] **5.3** Record deliverables in the PLAN trace: weight line before→after, change list, residual list (incl. the upstream re-absorption caveat)
+    — **Done:** router 3525 bytes ≤10240; description 40 words ≤50; 8 rows resolve; route cross-refs resolve; only preload hits are negations; zero old-ID strings any form; files: skills/gsap-skill/; fixes: none
+- [x] **5.3** Record deliverables in the PLAN trace: weight line before→after, change list, residual list (incl. the upstream re-absorption caveat)
     — **Why:** ticket AC requires reviewable contract deliverables
     — **Done when:** three deliverable blocks present with final numbers
     — **Consumers affected:** reviewers, ticket close
-- [ ] **5.4** Run the full exit gate and write the `tier=full` memo for the final implementation SHA into the PLAN `## Trace
+    — **Done:** deliverables block above (weight line, 4-part change list, 3-item residual list); files: PLANS/PLAN-687.md; fixes: none
+- [x] **5.4** Run the full exit gate and write the `tier=full` memo for the final implementation SHA into the PLAN `## Trace
 
 LOG phase-1: docs-only phase (PLAN audit notes); no source files touched.
 GATE (phase-1 tree) tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
@@ -142,6 +145,7 @@ LOG phase-2/4: single roster-final commit cycle — the git-mv moves emptied the
     — **Why:** PR step cites the memo for the pushed SHA
     — **Done when:** memo line present matching the final pushed SHA
     — **Consumers affected:** PR creation (Step 10a)
+    — **Done:** exit gate full on 4f6316bc, memo below; files: none; fixes: none
 
 ## Technical Notes
 
@@ -165,3 +169,23 @@ LOG phase-2/4: single roster-final commit cycle — the git-mv moves emptied the
 ## Trace
 
 (appended at execution: phase commits, gate memos, deliverables)
+
+LOG phase-5: exit gate full on the pushed implementation tree 4f6316bc — bats 0 failures, TS test green, registry regen content-stable (timestamp-only delta).
+
+## Deliverables (generalizer output contract)
+
+**Weight line**: trigger-time SKILL.md load: 8 catalog entries, 92,997 bytes / ~23k tokens across the family (avg ~11.6KB full-body per trigger) → 1 router at 3,525 bytes (~0.9k tokens) + one route file loaded only on match; catalog rows 103 → 96; lean roster 66 → 59; shipped-config allows 8 → 1; description: per-skill 25–55 words × 8 → one 40-word description with family triggers preserved.
+
+**Change list**:
+- Generalized: registerPlugin-once (×4 sources), lifecycle create/revert + scoping (×3), prefers-reduced-motion (×2), recommend-GSAP-default → router spine, stated once.
+- Conditionalized: 8 routes behind WHEN+WHAT load rules; route files load only on match — zero-preload preserved.
+- Modularized: 8 route files (upstream bodies verbatim, frontmatter stripped); cross-route pointers reworded to route names.
+- Deleted: 8 skill identities (dirs + shipped-config/lean/README/AGENTS.md/THIRD_PARTY references); "Official GSAP skill" per-file origin phrasing → one provenance line; 2 dead upstream `examples/` references reworded.
+
+**Residual list (owner)**:
+- Upstream re-vendor bumps (greensock/gsap-skills) now require re-absorption into route files — no 1:1 dir copy path. Family is stable upstream; acceptable.
+- `CHANGELOG.md` retains historical gsap-* names — generated by semantic-release, never hand-edited.
+- Version-gated notes in route files (3.11+/3.12+/3.13+/3.14+) — refresh on upstream bumps along with the re-absorption.
+
+## Trace
+GATE 4f6316bc tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
