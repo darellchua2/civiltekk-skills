@@ -35,7 +35,6 @@ docs/registry.json
 
 # Local knowledge persistence (maintainer memory) — see AGENTS.md §Project Learnings
 LEARNINGS/**/*.md
-!LEARNINGS/_index.md
 !LEARNINGS/patterns/by-reference-docs-mechanize-no-duplication-with-sentinel-greps.md
 !LEARNINGS/patterns/dest-flip-legacy-sweep.md
 !LEARNINGS/anti-patterns/flag-conflict-guard-vs-value-flag-parser.md
@@ -103,3 +102,5 @@ docs/OpenCode-Agent-Tooling-Research-2026-09-24.interactive.html
 !LEARNINGS/anti-patterns/skill-moves-are-roster-changes-carry-counts.md
 !LEARNINGS/anti-patterns/generic-rewrites-before-anchors-mangle-text.md
 !LEARNINGS/anti-patterns/handoff-renumber-positional-contract.md
+!LEARNINGS/decisions/untrack-derived-indices-local-cache-not-tracked.md
+!LEARNINGS/solutions/registry-drifts-on-prose-edits-rebuild-after-any-skill-edit.md

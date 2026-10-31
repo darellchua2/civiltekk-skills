@@ -76,7 +76,7 @@ cwd may be the session checkout (base branch), so any write would land on the wr
 qualifying finding in your report's `LEARNINGS candidates:` block instead — one entry per finding:
 Category / File (suggested `LEARNINGS/<category>/<slug>.md`) / Confidence / Scope / Summary
 (title + 2–6 line body with `file:line` evidence) / Date. The orchestrator writes the files,
-appends the `_index.md` entries, and commits them.
+writes the body files, appends the end-of-file `.gitignore` negations, and commits them.
 
 ### Step 5 — Report
 
