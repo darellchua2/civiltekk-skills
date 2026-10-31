@@ -26,6 +26,8 @@
 | `tests/test_skill_isolation.bats` rule 4 (pptx _common byte-identity) + HANDOFF1 blocks (`test_requires_skills.bats`, isolation HANDOFF vars) | single _common tree landed; HANDOFF1 pair retired | repo governance, CI | med |
 | 11 old skill dirs (delete) | ALL consumer rewires landed (Phase 3) | registry build, counts, README, AGENTS.md routing section | high |
 | `AGENTS.md` Office Document Extraction Routing section | router exists | docs readers | low |
+| 7 surviving skills referencing office IDs (civiltekk-diagram, civiltekk-requirements-specs ×3 files, civiltekk-startup-docs, horseshoe-paper-writing, research-paper-generation, technical-design-creation, vision-creation) + `THIRD_PARTY_LICENSES.md:251` | router exists | users of those skills/docs; Phase 4 deletion must not orphan them | med |
+| `installer/init.mjs:2040` help example + `tests/test_help_parity.bats:43` assertion | router named | installer help parity | low |
 | `installer/registry.json` | all frontmatter final; producer `installer/build-registry.mjs` run per roster change (not edited by hand) | installer/init.mjs, npx installer | med |
 | `README.md`, `deploy/setup.sh`, `deploy/setup.ps1` | final roster post-deletion | deploy users, docs readers | low |
 
@@ -67,16 +69,21 @@ Phase ordering constraint: no deletion (4.1) before every consumer is rewired (P
     — **Consumers affected:** OpenCode runtime, registry (4.2)
 - [ ] **3.2** Update `deploy/skill-profiles.json` lean array (docling/markitdown/pdf entries → `office-document-router-skill`), `installer/presets/pack-business.json` + `pack-docs.json` rosters, and `installer/dependency-map.json` (remove impliesMcp markitdown/docling entries — on-demand MCP enablement moves into the routes per install-assistant conventions; remove the HANDOFF1 requiresSkills pptx pair)
     — **Why:** installer surfaces must match the post-merge installable set or presets/edges dangle
-    — **Done when:** JSON parses; zero removed IDs in the three files; dependency-map comment updated
+    — **Done when:** JSON parses; zero removed IDs in the three files; dependency-map comment updated; `installer/init.mjs:2040` example + `tests/test_help_parity.bats:43` assertion updated to the router in the same commit
     — **Consumers affected:** installer users, init.mjs
 - [ ] **3.3** Update the guard tests: retire the pptx `_common` byte-identity rule (test_skill_isolation.bats rule 4 block) and the HANDOFF1 pair (isolation test vars + test_requires_skills.bats HANDOFF1 assertions) — retired BY CONSTRUCTION (single tree, no handoff left)
     — **Why:** guards enforcing the pre-merge topology would fail on the correct post-merge tree
-    — **Done when:** bats skill_isolation + requires_skills tests pass on the merged tree
+    — **Done when:** bats skill_isolation + requires_skills tests pass on the merged tree; `test_help_parity.bats` and `test_pack_permissions.bats` verified: the former updated per 3.2, the latter is MCP-infra-only and untouched
     — **Consumers affected:** repo governance, CI
 - [ ] **3.4** Repoint `AGENTS.md` Office Document Extraction Routing section at the router routes; update README count literals (incl. primary-visible) IN THE SAME COMMITS as roster changes per project anti-pattern; regenerate `installer/registry.json`
     — **Why:** docs routing and generated artifacts must track the tree
     — **Done when:** AGENTS.md section references router routes; count literals equal disk; registry contains the router, zero removed IDs
     — **Consumers affected:** docs readers, installer
+
+- [ ] **3.5** Rewire surviving-sibling references (arch-review finding, #679 class): `skills/civiltekk-diagram-skill/SKILL.md`, `skills/civiltekk-requirements-specs-skill/` (SKILL.md + references/brd.md + references/srs.md), `skills/civiltekk-startup-docs-skill/references/pitch-deck.md`, `skills/horseshoe-paper-writing-skill/SKILL.md`, `skills/research-paper-generation-skill/SKILL.md`, `skills/technical-design-creation-skill/SKILL.md`, `skills/vision-creation-skill/SKILL.md`, and `THIRD_PARTY_LICENSES.md:251` — repoint at `office-document-router-skill` and its matching route
+    — **Why:** all referenced skills are deleted in 4.1; unrewired references dangle at first use
+    — **Done when:** grep of the surviving tree (excluding PLANS history and the deleted dirs) finds zero references to the 11 removed IDs
+    — **Consumers affected:** users of those skills/docs; 4.3 orphan grep
 
 ### Phase 4: Delete, final regen, recount
 
@@ -90,7 +97,7 @@ Phase ordering constraint: no deletion (4.1) before every consumer is rewired (P
     — **Consumers affected:** installer/init.mjs, npx installer
 - [ ] **4.3** Final count sweep: README + deploy scripts counts equal `ls skills/ | wc -l`; case-insensitive orphan grep for the 11 removed IDs (historical PLANS excepted)
     — **Why:** count drift and dangling references are the documented failure modes
-    — **Done when:** greps clean; counts match disk
+    — **Done when:** greps clean; counts match disk; `docs/opencode-agent-tooling-research-2026-09-24.md` residual justified as dated history
     — **Consumers affected:** deploy users, docs readers
 
 ### Phase 5: Verify + deliverables (ticket exit gate — full)
