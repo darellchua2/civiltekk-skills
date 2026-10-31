@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # benchmark.py.template
 #
-# Evaluator template for autoresearch-code-skill.
+# Evaluator template for the code route.
 # Adapted from the {"pass":bool,"score":N} contract (wjgoarxiv/autoresearch-skill, MIT).
 # Full notice: THIRD_PARTY_LICENSES.md.
 #
@@ -13,7 +13,7 @@
 #   {{DIRECTION}}     — "higher_is_better" or "lower_is_better"
 #
 # The last line of stdout MUST be exactly: {"pass":bool,"score":N}
-# See autoresearch-core-skill/references/evaluator-contract.md.
+# See references/evaluator-contract.md.
 
 import json
 import re

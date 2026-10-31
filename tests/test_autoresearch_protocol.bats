@@ -11,7 +11,7 @@
 # (7 + 8 + 15) × 3 assertions + 1 reference-existence test = 91 cases.
 
 SKILLS_DIR="skills"
-CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
+CORE_REFS_DIR="$SKILLS_DIR/autoresearch-skill/references"
 
 # =============================================================================
 # Tier 1: full loop pattern — 7 skills × 3 assertions = 21 tests
@@ -33,7 +33,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/verification-loop-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in evaluator-contract stuck-detection audit-trail crash-recovery iteration-safety; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -52,7 +52,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/tdd-workflow-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in evaluator-contract stuck-detection audit-trail crash-recovery iteration-safety; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -71,7 +71,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/eval-harness-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in evaluator-contract stuck-detection audit-trail crash-recovery iteration-safety; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -90,7 +90,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/continuous-learning-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in evaluator-contract stuck-detection audit-trail crash-recovery iteration-safety; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -109,7 +109,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/deprecated-code-cleanup-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in evaluator-contract stuck-detection audit-trail crash-recovery iteration-safety; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -128,7 +128,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/linting-workflow-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in evaluator-contract stuck-detection audit-trail crash-recovery iteration-safety; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -147,7 +147,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/coverage-readme-workflow-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in evaluator-contract stuck-detection audit-trail crash-recovery iteration-safety; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -171,7 +171,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/civiltekk-documentation-sync-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in audit-trail crash-recovery; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -190,7 +190,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/error-resolver-workflow-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in evaluator-contract; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -209,7 +209,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/opencode-skills-maintainer-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in evaluator-contract stuck-detection; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -228,7 +228,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/plan-execution-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in stuck-detection; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -247,7 +247,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/civiltekk-pr-workflow-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in evaluator-contract crash-recovery; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -268,7 +268,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
   skill_md="$SKILLS_DIR/playwright-responsive-audit-skill/SKILL.md"
   [ -f "$skill_md" ]
   for ref in audit-trail evaluator-contract; do
-    grep -q "autoresearch-core-skill/references/${ref}.md" "$skill_md"
+    grep -q "autoresearch-skill/references/${ref}.md" "$skill_md"
   done
 }
 
@@ -291,7 +291,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
 @test "tier3_search-first_cites_iteration_safety" {
   skill_md="$SKILLS_DIR/search-first-skill/SKILL.md"
   [ -f "$skill_md" ]
-  grep -q 'autoresearch-core-skill/references/iteration-safety.md' "$skill_md"
+  grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # --- civiltekk-api-spec ---
@@ -308,7 +308,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
 @test "tier3_civiltekk-api-spec_cites_iteration_safety" {
   skill_md="$SKILLS_DIR/civiltekk-api-spec-skill/SKILL.md"
   [ -f "$skill_md" ]
-  grep -q 'autoresearch-core-skill/references/iteration-safety.md' "$skill_md"
+  grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # --- security-audit ---
@@ -325,7 +325,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
 @test "tier3_security-audit_cites_iteration_safety" {
   skill_md="$SKILLS_DIR/security-audit-skill/SKILL.md"
   [ -f "$skill_md" ]
-  grep -q 'autoresearch-core-skill/references/iteration-safety.md' "$skill_md"
+  grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # --- code-smells ---
@@ -342,7 +342,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
 @test "tier3_code-smells_cites_iteration_safety" {
   skill_md="$SKILLS_DIR/code-smells-skill/SKILL.md"
   [ -f "$skill_md" ]
-  grep -q 'autoresearch-core-skill/references/iteration-safety.md' "$skill_md"
+  grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # --- performance-optimization ---
@@ -359,7 +359,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
 @test "tier3_performance-optimization_cites_iteration_safety" {
   skill_md="$SKILLS_DIR/performance-optimization-skill/SKILL.md"
   [ -f "$skill_md" ]
-  grep -q 'autoresearch-core-skill/references/iteration-safety.md' "$skill_md"
+  grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # --- civiltekk-react-quality ---
@@ -376,7 +376,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
 @test "tier3_civiltekk-react-quality_cites_iteration_safety" {
   skill_md="$SKILLS_DIR/civiltekk-react-quality-skill/SKILL.md"
   [ -f "$skill_md" ]
-  grep -q 'autoresearch-core-skill/references/iteration-safety.md' "$skill_md"
+  grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # --- solid-principles ---
@@ -393,7 +393,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
 @test "tier3_solid-principles_cites_iteration_safety" {
   skill_md="$SKILLS_DIR/solid-principles-skill/SKILL.md"
   [ -f "$skill_md" ]
-  grep -q 'autoresearch-core-skill/references/iteration-safety.md' "$skill_md"
+  grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # --- clean-code ---
@@ -410,7 +410,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
 @test "tier3_clean-code_cites_iteration_safety" {
   skill_md="$SKILLS_DIR/clean-code-skill/SKILL.md"
   [ -f "$skill_md" ]
-  grep -q 'autoresearch-core-skill/references/iteration-safety.md' "$skill_md"
+  grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # --- test-generation (all three former member skills' protocol obligations now in the host, #604) ---
@@ -427,7 +427,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
 @test "tier3_test-generation_cites_iteration_safety" {
   skill_md="$SKILLS_DIR/civiltekk-test-generation-skill/SKILL.md"
   [ -f "$skill_md" ]
-  grep -q 'autoresearch-core-skill/references/iteration-safety.md' "$skill_md"
+  grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # --- civiltekk-diagram ---
@@ -444,7 +444,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
 @test "tier3_civiltekk-diagram_cites_iteration_safety" {
   skill_md="$SKILLS_DIR/civiltekk-diagram-skill/SKILL.md"
   [ -f "$skill_md" ]
-  grep -q 'autoresearch-core-skill/references/iteration-safety.md' "$skill_md"
+  grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # --- wireframer ---
@@ -461,7 +461,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
 @test "tier3_wireframer_cites_iteration_safety" {
   skill_md="$SKILLS_DIR/wireframer-skill/SKILL.md"
   [ -f "$skill_md" ]
-  grep -q 'autoresearch-core-skill/references/iteration-safety.md' "$skill_md"
+  grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # --- frontend-design ---
@@ -478,7 +478,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-core-skill/references"
 @test "tier3_frontend-design_cites_iteration_safety" {
   skill_md="$SKILLS_DIR/frontend-design-skill/SKILL.md"
   [ -f "$skill_md" ]
-  grep -q 'autoresearch-core-skill/references/iteration-safety.md' "$skill_md"
+  grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # =============================================================================

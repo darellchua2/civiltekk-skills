@@ -17,6 +17,8 @@ contained `pptx-generate-slide-skill`; the generic swap turned it into
 mangled text (`export SKILL_DIR=...skills/Route: MODIFIER`) shipped until the
 residual grep caught it. Same class in #679's srdf moveit2 reword.
 
+**Cross-step form (#688):** the interference also happens ACROSS steps — a Phase-N blanket `sed` over a file list mutated anchor text that Phase-M (later) exact-match deletions depended on, silently defeating them (discovered 2 gate cycles later via a stacked duplicate var). A blanket sweep's file list must EXCLUDE files whose later steps carry exact-match anchors — or later steps must re-derive anchors from the post-sweep file state.
+
 ## Fix / Rule
 
 In any multi-pass text transform: run ANCHOR-SPECIFIC rewrites first, generic

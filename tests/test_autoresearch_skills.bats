@@ -15,27 +15,33 @@ AGENTS_DIR="agents"
 # =============================================================================
 
 @test "new_skill_autoresearch-core_yaml_validates" {
-  skill_md="$SKILLS_DIR/autoresearch-core-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/autoresearch-skill/SKILL.md"
   [ -f "$skill_md" ]
   python3 -c "import yaml; d=open('$skill_md').read(); yaml.safe_load(d.split('---')[1])"
 }
 
-@test "new_skill_autoresearch-ml_yaml_validates" {
-  skill_md="$SKILLS_DIR/autoresearch-ml-skill/SKILL.md"
-  [ -f "$skill_md" ]
-  python3 -c "import yaml; d=open('$skill_md').read(); yaml.safe_load(d.split('---')[1])"
+@test "route_autoresearch-ml_file_validates" {
+  # #688: loop skills absorbed as router routes — header check replaces frontmatter
+  route_md="$SKILLS_DIR/autoresearch-skill/references/routes/ml.md"
+  [ -f "$route_md" ]
+  grep -qF '**Load when:**' "$route_md"
+  grep -qF '**Skip when:**' "$route_md"
 }
 
-@test "new_skill_autoresearch-code_yaml_validates" {
-  skill_md="$SKILLS_DIR/autoresearch-code-skill/SKILL.md"
-  [ -f "$skill_md" ]
-  python3 -c "import yaml; d=open('$skill_md').read(); yaml.safe_load(d.split('---')[1])"
+@test "route_autoresearch-code_file_validates" {
+  # #688: loop skills absorbed as router routes — header check replaces frontmatter
+  route_md="$SKILLS_DIR/autoresearch-skill/references/routes/code.md"
+  [ -f "$route_md" ]
+  grep -qF '**Load when:**' "$route_md"
+  grep -qF '**Skip when:**' "$route_md"
 }
 
-@test "new_skill_autoresearch-research_yaml_validates" {
-  skill_md="$SKILLS_DIR/autoresearch-research-skill/SKILL.md"
-  [ -f "$skill_md" ]
-  python3 -c "import yaml; d=open('$skill_md').read(); yaml.safe_load(d.split('---')[1])"
+@test "route_autoresearch-research_file_validates" {
+  # #688: loop skills absorbed as router routes — header check replaces frontmatter
+  route_md="$SKILLS_DIR/autoresearch-skill/references/routes/research.md"
+  [ -f "$route_md" ]
+  grep -qF '**Load when:**' "$route_md"
+  grep -qF '**Skip when:**' "$route_md"
 }
 
 # =============================================================================
@@ -134,27 +140,27 @@ assert has('websearch','*','allow'), 'websearch must be allow'
 # Permission.skill allows respective domain skill
 # =============================================================================
 
-@test "subagent_autoresearch_ml_allows_ml_skill" {
+@test "subagent_autoresearch_ml_allows_router_skill" {
   python3 -c "
 import yaml
 fm=yaml.safe_load(open('$AGENTS_DIR/autoresearch-ml-subagent.md').read().split('---')[1])
-assert any(r['action']=='skill' and r['resource']=='autoresearch-ml-skill' and r['effect']=='allow' for r in fm['permissions']), 'ml skill rule missing'
+assert any(r['action']=='skill' and r['resource']=='autoresearch-skill' and r['effect']=='allow' for r in fm['permissions']), 'router skill rule missing'
 "
 }
 
-@test "subagent_autoresearch_code_allows_code_skill" {
+@test "subagent_autoresearch_code_allows_router_skill" {
   python3 -c "
 import yaml
 fm=yaml.safe_load(open('$AGENTS_DIR/autoresearch-code-subagent.md').read().split('---')[1])
-assert any(r['action']=='skill' and r['resource']=='autoresearch-code-skill' and r['effect']=='allow' for r in fm['permissions']), 'code skill rule missing'
+assert any(r['action']=='skill' and r['resource']=='autoresearch-skill' and r['effect']=='allow' for r in fm['permissions']), 'router skill rule missing'
 "
 }
 
-@test "subagent_autoresearch_research_allows_research_skill" {
+@test "subagent_autoresearch_research_allows_router_skill" {
   python3 -c "
 import yaml
 fm=yaml.safe_load(open('$AGENTS_DIR/autoresearch-research-subagent.md').read().split('---')[1])
-assert any(r['action']=='skill' and r['resource']=='autoresearch-research-skill' and r['effect']=='allow' for r in fm['permissions']), 'research skill rule missing'
+assert any(r['action']=='skill' and r['resource']=='autoresearch-skill' and r['effect']=='allow' for r in fm['permissions']), 'router skill rule missing'
 "
 }
 

@@ -11,28 +11,23 @@
 #   4. (retired #680 — the pptx vendored trees merged into one
 #      office-document-router-skill/scripts/_common; nothing left to compare)
 
-# Declared cross-skill dependencies. #437: the modifier extends templates,
-# the slide engine fills. #597: the inline plan executor routes its delegate
-# matrix to the four inline worker skills. #602: the autoresearch loop skills
-# cite the core protocol host's references at runtime (multi-owner pair —
-# every owner in HANDOFF2_OWNERS maps to every target in HANDOFF2_TARGETS).
-# #635: the inline code-review wrapper loads the reviewer baseline + language
-# checklists at runtime (declared closure, HANDOFF4).
+# Declared cross-skill dependencies (uniform owner->targets guard pairs).
+# #597: the inline plan executor routes its delegate matrix to the four
+# inline worker skills (HANDOFF1). #635: the inline code-review wrapper
+# loads the reviewer baseline + language checklists at runtime (HANDOFF2).
 # #650: the architecture-review-skill decision-tree reviewer loads the
-# reviewer baseline at runtime (declared closure, HANDOFF5).
-# #641: the inline requirements wrapper loads grilling + the specs skill at
-# runtime (declared closure, HANDOFF6).
+# reviewer baseline (HANDOFF3). #641: the inline requirements wrapper loads
+# grilling + the specs skill (HANDOFF4). (The #437 pptx and #602 autoresearch
+# pairs retired by consolidation — #680 and #688.)
 # Any other edge must be declared the same way or duplicated.
 HANDOFF1_OWNER="plan-execution-inline-skill"
 HANDOFF1_TARGETS="testing-inline-skill linting-inline-skill civiltekk-documentation-inline-skill responsive-audit-inline-skill"
-HANDOFF2_OWNERS="autoresearch-code-skill autoresearch-ml-skill autoresearch-research-skill"
-HANDOFF2_TARGETS="autoresearch-core-skill"
-HANDOFF3_OWNER="code-review-inline-skill"
-HANDOFF3_TARGETS="reviewer-baseline-skill language-review-checklists-skill"
-HANDOFF4_OWNER="architecture-review-skill"
-HANDOFF4_TARGETS="reviewer-baseline-skill"
-HANDOFF5_OWNER="requirements-inline-skill"
-HANDOFF5_TARGETS="grilling-skill civiltekk-requirements-specs-skill"
+HANDOFF2_OWNER="code-review-inline-skill"
+HANDOFF2_TARGETS="reviewer-baseline-skill language-review-checklists-skill"
+HANDOFF3_OWNER="architecture-review-skill"
+HANDOFF3_TARGETS="reviewer-baseline-skill"
+HANDOFF4_OWNER="requirements-inline-skill"
+HANDOFF4_TARGETS="grilling-skill civiltekk-requirements-specs-skill"
 
 @test "skill_isolation_no_shared_common_references" {
   # Catches both repo paths (skills/_common/...) and deploy strings
@@ -108,19 +103,17 @@ PYEOF
 }
 
 @test "skill_isolation_no_sibling_skill_paths_outside_declared_handoff" {
-  run python3 - "$HANDOFF1_OWNER" "$HANDOFF1_TARGETS" "$HANDOFF2_OWNERS" "$HANDOFF2_TARGETS" "$HANDOFF3_OWNER" "$HANDOFF3_TARGETS" "$HANDOFF4_OWNER" "$HANDOFF4_TARGETS" "$HANDOFF5_OWNER" "$HANDOFF5_TARGETS" <<'PYEOF'
+  run python3 - "$HANDOFF1_OWNER" "$HANDOFF1_TARGETS" "$HANDOFF2_OWNER" "$HANDOFF2_TARGETS" "$HANDOFF3_OWNER" "$HANDOFF3_TARGETS" "$HANDOFF4_OWNER" "$HANDOFF4_TARGETS" <<'PYEOF'
 import re, sys
 from pathlib import Path
 
-owner1, targets1, owners3, targets3, owner4, targets4, owner5, targets5, owner6, targets6 = sys.argv[1:11]
+owner1, targets1, owner2, targets2, owner3, targets3, owner4, targets4 = sys.argv[1:9]
 allowed = {
     owner1: set(targets1.split()),
+    owner2: set(targets2.split()),
+    owner3: set(targets3.split()),
+    owner4: set(targets4.split()),
 }
-for o in owners3.split():
-    allowed[o] = set(targets3.split())
-allowed[owner4] = set(targets4.split())
-allowed[owner5] = set(targets5.split())
-allowed[owner6] = set(targets6.split())
 root = Path("skills")
 catalog = {d.name for d in root.iterdir()
            if d.is_dir() and not d.name.startswith("_")}

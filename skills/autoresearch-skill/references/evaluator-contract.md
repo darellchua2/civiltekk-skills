@@ -34,7 +34,7 @@ The evaluator is the **sole** source of keep/revert truth in the autoresearch lo
 | 2 | Agent-as-evaluator (LLM judge with rubric) | Literature review quality, prose clarity |
 | 3 | Human-in-the-loop (manual sign-off) | Shipping, deploy (out of scope for autonomous loop) |
 
-Tier 2 is an explicit fallback declared in the skill body when no mechanical evaluator applies (`autoresearch-research-skill`). Tier 3 never runs autonomously.
+Tier 2 is an explicit fallback declared in the skill body when no mechanical evaluator applies (`the research route`). Tier 3 never runs autonomously.
 
 ## Example evaluators
 

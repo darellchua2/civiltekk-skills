@@ -164,7 +164,7 @@ If invoked on an iterative task, prompt ONCE per session: "This looks iterative.
 **Falsifiable-hypothesis protocol** (port from uditgoenka's `/autoresearch:debug`): each debugging iteration MUST state a falsifiable hypothesis, predict the observable outcome, run the experiment, then emit `{"pass":bool,"score":N}` where pass = hypothesis confirmed, score = confidence (0-100) based on reproducibility. Revert experimental changes on pass:false. See `evaluator-contract.md`.
 
 ### Citations
-- `autoresearch-core-skill/references/evaluator-contract.md`
+- `autoresearch-skill/references/evaluator-contract.md`
 
 ### Imperative gating
 When `AUTORESEARCH_PROTOCOL` is unset, this section is descriptive only. Default behavior is documented in all sections above.

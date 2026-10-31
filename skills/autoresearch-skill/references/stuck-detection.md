@@ -32,15 +32,15 @@ The counter resets to 0 on **any** improving iteration. One good result after a 
 
 ## Per-domain pivot examples
 
-### ML (`autoresearch-ml-skill`)
+### ML (`the ml route`)
 - 3-strike pivot: switch optimizer family (AdamW  Muon), change LR schedule, swap activation.
 - 5-strike pivot: change model width/depth, try a different attention variant, re-examine `train.py` constants.
 
-### Code (`autoresearch-code-skill`)
+### Code (`the code route`)
 - 3-strike pivot: switch from micro-optimization to algorithmic change, target a different hotspot.
 - 5-strike pivot: reconsider the benchmark itself (is it measuring the right thing?), profile before continuing.
 
-### Research (`autoresearch-research-skill`)
+### Research (`the research route`)
 - 3-strike pivot: switch search query family, change corpus (arXiv → Semantic Scholar).
 - 5-strike pivot: re-scope the research question with the human (Tier 2 escalation).
 

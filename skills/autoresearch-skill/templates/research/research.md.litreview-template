@@ -1,12 +1,12 @@
 # research.md.litreview-template
 #
-# Living-state format for autoresearch-research-skill.
+# Living-state format for the research route.
 # Copy into your project, substitute {{RESEARCH_QUESTION}}, then hand the
 # directory to autoresearch-research-subagent. Unlike code/ML research.md,
 # THIS FILE IS EDITED AS THE LOOP RUNS — categories, paper count, and gaps
 # all grow over iterations.
 #
-# See autoresearch-core-skill/references/audit-trail.md for the TSV format.
+# See references/audit-trail.md for the TSV format.
 
 # Literature Review: {{RESEARCH_QUESTION}}
 

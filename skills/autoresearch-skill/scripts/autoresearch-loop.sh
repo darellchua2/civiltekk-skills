@@ -111,7 +111,7 @@ LOOP FOREVER (up to $iter_label iterations):
 4. Parse {"pass":bool,"score":N} from the evaluator's last stdout line.
 5. Keep if pass:true; revert (git reset --hard HEAD~1) if pass:false.
 6. Append a row to $TSV (8 columns, tab-separated) and a section to $PROJECT/research_log.md.
-7. Pivot strategy after 3 consecutive non-improving iterations (see autoresearch-core-skill/references/stuck-detection.md).
+7. Pivot strategy after 3 consecutive non-improving iterations (see references/stuck-detection.md).
 8. Stop when: predicate met, plateau + ceiling both tripped, or max iterations reached.
 
 NEVER STOP to ask whether to continue. NEVER ASK "should I keep going?".

@@ -63,11 +63,11 @@ The evaluator must emit `{{"pass":bool,"score":N}}` on its last stdout line.
 {iterations}
 
 ## Protocol references
-- `autoresearch-core-skill/references/evaluator-contract.md`
-- `autoresearch-core-skill/references/stuck-detection.md`
-- `autoresearch-core-skill/references/iteration-safety.md`
-- `autoresearch-core-skill/references/audit-trail.md`
-- `autoresearch-core-skill/references/crash-recovery.md`
+- `references/evaluator-contract.md`
+- `references/stuck-detection.md`
+- `references/iteration-safety.md`
+- `references/audit-trail.md`
+- `references/crash-recovery.md`
 """
 
 

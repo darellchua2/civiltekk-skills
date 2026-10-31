@@ -1,10 +1,10 @@
 # research.md.code-template
 #
-# Inline Goal / Scope / Metric / Verify / Guard format for autoresearch-code-skill.
+# Inline Goal / Scope / Metric / Verify / Guard format for the code route.
 # Copy this file into your project, substitute the {{PLACEHOLDERS}}, then run
 # `init_research.py` (or hand the dir to autoresearch-code-subagent).
 #
-# See autoresearch-core-skill/references/audit-trail.md for the TSV format.
+# See references/audit-trail.md for the TSV format.
 
 # Autoresearch Run: {{GOAL}}
 

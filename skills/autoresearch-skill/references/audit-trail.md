@@ -29,7 +29,7 @@ Header line (comment-prefixed):
 
 ```
 # metric_direction: higher_is_better
-# skill: autoresearch-ml-skill
+# skill: the ml route
 iteration	commit	metric	delta	status	description	timestamp	evaluator_output
 ```
 

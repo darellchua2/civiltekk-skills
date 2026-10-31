@@ -34,7 +34,7 @@ Every loop is bounded by default. The default is `Iterations: 25`. Unbounded ope
 Iterations: unlimited
 ```
 
-Unbounded mode is appropriate for overnight ML research (`autoresearch-ml-skill`) where the human expects to wake up to a log of experiments. It is inappropriate for code optimization on a shared branch.
+Unbounded mode is appropriate for overnight ML research (`the ml route`) where the human expects to wake up to a log of experiments. It is inappropriate for code optimization on a shared branch.
 
 Time budgets may also bound a run: `autoresearch-loop.sh` accepts `--max-time` and kills the loop when exceeded.
 
