@@ -114,24 +114,28 @@ Phase order: P1 → P2 (listings read pack data); P3, P4 independent; P5 after P
     — **Consumers affected:** none
     — **Done:** python auth.json heredoc + codex TOML heredoc deleted — PYEOF count in setup.sh = 0, no model_providers.zai TOML in shell; pi seed already delegated (seed-pi-provider.mjs untouched); files: deploy/setup.sh; fixes: none
 
-### Phase 5: TUI install wizard
+### Phase 5: TUI install wizard ✅
 
-- [ ] **5.1** Add `install-wizard` flow to `deploy/tui.mjs`: numbered-step singleSelect screen (mode / provider / MCP packs / skill profile / plugins / per-item / Review & Install) reusing `tui-primitives.mjs`; pack step lists `deploy/packs/*.json` names + `$comment`-derived descriptions + `install`-block runtime preview; review screen prints the exact planned actions (config deploy, pack list, pip/npm commands from install blocks, profile) then `confirm`; emits `install-plan.json` (`{mode, provider, packs, skillProfile, items}`) to `--out`; `q`/ctrl-c writes nothing; non-TTY → `{aborted, nonTty}` usage error per existing flow convention
+- [x] **5.1** Add `install-wizard` flow to `deploy/tui.mjs`: numbered-step singleSelect screen (mode / provider / MCP packs / skill profile / plugins / per-item / Review & Install) reusing `tui-primitives.mjs`; pack step lists `deploy/packs/*.json` names + `$comment`-derived descriptions + `install`-block runtime preview; review screen prints the exact planned actions (config deploy, pack list, pip/npm commands from install blocks, profile) then `confirm`; emits `install-plan.json` (`{mode, provider, packs, skillProfile, items}`) to `--out`; `q`/ctrl-c writes nothing; non-TTY → `{aborted, nonTty}` usage error per existing flow convention
     — **Why:** guided interactive session with an OpenCode-style review step; TUI-only-decides keeps one executor
     — **Done when:** `node deploy/tui.mjs install-wizard --print-plan --defaults` (headless escape hatch) emits valid plan JSON ≡ existing defaults; interactive run against a pty writes the plan file; cancel path writes nothing
     — **Consumers affected:** setup.sh `--from-plan` (5.2), `tests/test_install_wizard.bats`
-- [ ] **5.2** Add `--from-plan <file>` to `deploy/setup.sh` `parse_arguments` + `build_plan`: mode → QUICK/SKILLS/UPDATE flags, `provider` → PROVIDER, `packs` → ENABLE_PACK (through existing `validate_enable_pack`), `skillProfile` → SKILL_PROFILE, `items` → SELECT_PLAN_FILE consumption path; then the normal plan executor runs untouched
+    — **Done:** flowInstallWizard in tui.mjs — mode/provider/packs/profile steps + review-confirm (OpenCode-style), pack descriptions from $comment + install-runtime preview, emits civiltekk-install-plan/1 JSON to --out/stdout; --print-plan --defaults headless escape hatch; non-TTY exit 2; cancelled wizard writes nothing; files: deploy/tui.mjs; fixes: shared parseArgs bool-flag swallow (#473 class, local parse), TDZ on bottom consts (section relocated above dispatcher), duplicate path imports
+- [x] **5.2** Add `--from-plan <file>` to `deploy/setup.sh` `parse_arguments` + `build_plan`: mode → QUICK/SKILLS/UPDATE flags, `provider` → PROVIDER, `packs` → ENABLE_PACK (through existing `validate_enable_pack`), `skillProfile` → SKILL_PROFILE, `items` → SELECT_PLAN_FILE consumption path; then the normal plan executor runs untouched
     — **Why:** wizard and CLI converge on one execution surface — no TUI/CLI drift possible
     — **Done when:** `build_plan` output for `--from-plan <fixture>` is byte-identical to the equivalent explicit-flag invocation (test-pinned); unknown/invalid plan → named error exit 1 before any mutation
     — **Consumers affected:** `tests/parse_arguments.bats`, `tests/test_install_wizard.bats`
-- [ ] **5.3** Interactive menu gains option `1) Guided setup (TUI)` (wizard launch); legacy 1–6 menu becomes the `--no-tui`/TUI-failure fallback (same degrade pattern as select-items dashboard → linear); headless default unchanged (skills-only, no TTY → never launches wizard)
+    — **Done:** --from-plan + apply_install_plan: one mapping point (MODE/PROVIDER/PACKS/PROFILE) applied inside build_plan so plan-derived flags pass validate_enable_pack + validate_mode_conflicts unchanged; plan+explicit-mode conflict is a named error; unknown packs die at the existing gate; files: deploy/setup.sh; fixes: none
+- [x] **5.3** Interactive menu gains option `1) Guided setup (TUI)` (wizard launch); legacy 1–6 menu becomes the `--no-tui`/TUI-failure fallback (same degrade pattern as select-items dashboard → linear); headless default unchanged (skills-only, no TTY → never launches wizard)
     — **Why:** wizard is the front door when a TTY exists; every existing headless contract stays bit-identical
     — **Done when:** `bats tests/test_menu_multipick.bats tests/test_headless_default.bats` green unchanged; TTY menu shows the new option and `--no-tui` restores the legacy menu
     — **Consumers affected:** `tests/test_menu_multipick.bats` (new option case), README (P7)
-- [ ] **5.4** Add `tests/test_install_wizard.bats`: plan JSON schema, `--from-plan` ≡ flags equivalence (wizard plan vs explicit flags → identical `build_plan`), non-TTY abort, cancel-writes-nothing, headless `--print-plan` path
+    — **Done:** menu option 0 = Guided setup (TUI wizard) — additive (1-6 untouched, 45 menu/headless/parse tests green unchanged); cancelled wizard re-prompts; --no-tui hides the option; files: deploy/setup.sh; fixes: none
+- [x] **5.4** Add `tests/test_install_wizard.bats`: plan JSON schema, `--from-plan` ≡ flags equivalence (wizard plan vs explicit flags → identical `build_plan`), non-TTY abort, cancel-writes-nothing, headless `--print-plan` path
     — **Why:** the equivalence pin is the drift guard for the whole TUI layer
     — **Done when:** `bats tests/test_install_wizard.bats` green; `bats tests/parse_arguments.bats` green
     — **Consumers affected:** none
+    — **Done:** tests/test_install_wizard.bats 8/8 (shape, defaults≡deploy defaults, non-TTY abort+no-write, THE equivalence pin plan≡flags incl. step count, unknown-pack gate, schema/mode rejection, packs-dir-derived catalog) + parse_arguments 4 new + menu_multipick 3 new; files: tests/test_install_wizard.bats, tests/parse_arguments.bats, tests/test_menu_multipick.bats; fixes: bats set -e vs expected-nonzero exits → run+status
 
 ### Phase 6: CivilTekk Skills Setup branding + shim rename
 
@@ -174,6 +178,9 @@ GATE phase2 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — test_mcp_c
 GATE phase3 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — test_laya_guard 14/14, dry_run_leaks + deploy_delegate no regression; deploy_plugins hook verified in sandbox
 
 GATE phase4 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — test_agent_detection_seed 12/12 unchanged; dry_run_leaks/deploy_delegate/help_parity/ps1_vars no regressions; python3 dependency for auth.json dropped
+
+GATE phase5 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — wizard 8/8, parse 23, menu 27, headless+dry-run+help+deploy_delegate all green
+LOG deviation 5.1: per-item picker step deferred — `--select` remains the per-item surface (wizard composes with it via CLI flags); plan JSON schema omits `items` (v1 scope trim, YAGNI)
 
 ## Technical Notes
 

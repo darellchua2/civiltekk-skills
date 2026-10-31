@@ -135,3 +135,25 @@ teardown() {
     run bash -c "source '$SETUP_SH' >/dev/null 2>&1; ENABLE_PACK=markitdown; validate_mode_conflicts"
     [ "$status" -eq 0 ]
 }
+
+@test "--from-plan sets FROM_PLAN; --no-tui sets NO_TUI (#677)" {
+    run bash -c "source '$SETUP_SH' >/dev/null 2>&1; parse_arguments --from-plan /tmp/p.json --no-tui; echo \"\$FROM_PLAN|\$NO_TUI\""
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"/tmp/p.json|true"* ]]
+}
+
+@test "--from-plan with no argument errors (#677)" {
+    run bash -c "source '$SETUP_SH' >/dev/null 2>&1; parse_arguments --from-plan"
+    [ "$status" -ne 0 ]
+}
+
+@test "--from-plan conflicts with explicit mode flags (#677)" {
+    run bash -c "source '$SETUP_SH' >/dev/null 2>&1; FROM_PLAN=/tmp/p.json; SKILLS_ONLY=true; validate_mode_conflicts"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"combines with no explicit mode flag"* ]]
+}
+
+@test "--from-plan alone passes mode validation (#677)" {
+    run bash -c "source '$SETUP_SH' >/dev/null 2>&1; FROM_PLAN=/tmp/p.json; validate_mode_conflicts"
+    [ "$status" -eq 0 ]
+}

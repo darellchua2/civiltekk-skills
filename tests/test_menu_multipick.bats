@@ -156,3 +156,21 @@ snip() {
     [[ "$output" == *"true|agents|Deploy agents|deploy_agents"* ]]
     [[ "$output" != *"deploy_selected_skills"* ]]
 }
+
+@test "parse: base 0 = guided wizard (#677)" {
+    run snip 'parse_menu_selection "0"; echo "base=$MENU_BASE"'
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"base=0"* ]]
+}
+
+@test "parse: 0,6 = guided + select addon (#677)" {
+    run snip 'parse_menu_selection "0,6"; echo "base=$MENU_BASE sel=$MENU_ADDON_SELECT"'
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"base=0 sel=true"* ]]
+}
+
+@test "parse: two bases including 0 rejected (#677)" {
+    run snip 'parse_menu_selection "0,2"; echo "rc=$?"'
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"more than one base"* ]]
+}

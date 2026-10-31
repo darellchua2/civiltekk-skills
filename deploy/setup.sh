@@ -350,6 +350,8 @@ LIST_ITEMS=false            # --list-items (registry catalog dump)
 SAVE_PRESET_NAME=""         # --save-preset <name>
 LOAD_PRESET_NAME=""         # --preset <name>
 KEEP_BACKUPS=5
+FROM_PLAN=""               # --from-plan <file> (install-plan.json from the TUI wizard, #677)
+NO_TUI=false               # --no-tui (hide the guided-setup wizard option in the classic menu)
 
 # Rollback mode (set by --rollback)
 ROLLBACK_MODE=false
@@ -963,6 +965,18 @@ parse_arguments() {
                 ZIP_BACKUP=false
                 shift
                 ;;
+            --from-plan)
+                if [ $# -lt 2 ] || [ -z "$2" ]; then
+                    log_error "--from-plan requires a plan file (install-plan.json from the TUI wizard)"
+                    exit 1
+                fi
+                FROM_PLAN="$2"
+                shift 2
+                ;;
+            --no-tui)
+                NO_TUI=true
+                shift
+                ;;
             --provider)
                 if [ -n "$2" ]; then
                     PROVIDER="$2"
@@ -1080,6 +1094,13 @@ parse_menu_selection() {
     # "2,6", "2 6", and "2, 6" all word-split into menu digits.
     for token in ${pick//,/ }; do
         case "$token" in
+            0)
+                if [ -n "$MENU_BASE" ]; then
+                    log_error "Menu pick '$pick': more than one base (${MENU_BASE}, ${token}). Pick one base (0-4) plus add-ons (5, 6)."
+                    return 1
+                fi
+                MENU_BASE="0"
+                ;;
             1|2|3)
                 if [ -n "$MENU_BASE" ]; then
                     log_error "Menu pick '$pick': more than one base (${MENU_BASE}, ${token}). Pick one base (1-3) plus add-ons (5, 6)."
@@ -1097,7 +1118,7 @@ parse_menu_selection() {
             5) MENU_ADDON_PEONPING=true ;;
             6) MENU_ADDON_SELECT=true ;;
             *)
-                log_error "Menu pick '$pick': unknown option '${token}'. Bases: 1 quick, 2 skills-only, 3 full, 4 update. Add-ons: 5 peonping, 6 select-items."
+                log_error "Menu pick '$pick': unknown option '${token}'. Bases: 0 guided (TUI), 1 quick, 2 skills-only, 3 full, 4 update. Add-ons: 5 peonping, 6 select-items."
                 return 1
                 ;;
         esac
@@ -1118,6 +1139,53 @@ append_select_plan_steps() {
     PLAN_STEPS+=("true|deploy-selected-agents|Deploy selected agents|deploy_selected_agents")
     PLAN_STEPS+=("true|prune-registry-removed|Prune registry-removed entries|deploy_selected_prune")
     PLAN_STEPS+=("false|apply-selected-extras|Apply selected packs|apply_selected_packs_extras")
+}
+
+# Apply a wizard-emitted install plan (#677) to the mode flags. The TUI only
+# collects decisions — this is the ONLY place plan fields touch flags, and it
+# runs before validate_enable_pack/build_plan so downstream gating (unknown
+# packs, mode conflicts) applies unchanged. One owner for the mapping = the
+# wizard and the CLI cannot drift (test_install_wizard pins the equivalence).
+apply_install_plan() {
+    local plan_file="$FROM_PLAN"
+    if [ ! -f "$plan_file" ]; then
+        log_error "--from-plan: plan file not found: ${plan_file}"
+        exit 1
+    fi
+    local out
+    out="$(node -e '
+        const p = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+        if (p.schema !== "civiltekk-install-plan/1") { console.error("bad schema: " + p.schema); process.exit(1); }
+        const modes = ["skills-only", "quick", "full", "update"];
+        if (!modes.includes(p.mode)) { console.error("bad mode: " + p.mode); process.exit(1); }
+        if (p.skillProfile && !["lean", "full"].includes(p.skillProfile)) { console.error("bad skillProfile: " + p.skillProfile); process.exit(1); }
+        if (p.packs !== undefined && !Array.isArray(p.packs)) { console.error("bad packs: not an array"); process.exit(1); }
+        console.log("MODE=" + p.mode);
+        console.log("PROVIDER=" + (p.provider || ""));
+        console.log("PACKS=" + (p.packs || []).join(","));
+        console.log("PROFILE=" + (p.skillProfile || "lean"));
+    ' "$plan_file")" || { log_error "--from-plan: unreadable or invalid plan: ${plan_file}"; exit 1; }
+
+    local line plan_mode="" plan_packs="" plan_profile="" plan_provider=""
+    while IFS= read -r line; do
+        case "$line" in
+            MODE=*)     plan_mode="${line#MODE=}" ;;
+            PROVIDER=*) plan_provider="${line#PROVIDER=}" ;;
+            PACKS=*)    plan_packs="${line#PACKS=}" ;;
+            PROFILE=*)  plan_profile="${line#PROFILE=}" ;;
+        esac
+    done <<< "$out"
+
+    case "$plan_mode" in
+        skills-only) SKILLS_ONLY=true ;;
+        quick)       QUICK_SETUP=true ;;
+        update)      UPDATE_ONLY=true ;;
+        full)        : ;; # the plain-full base — no flag
+    esac
+    [ -n "$plan_provider" ] && PROVIDER="$plan_provider"
+    [ -n "$plan_packs" ] && ENABLE_PACK="$plan_packs"
+    [ -n "$plan_profile" ] && SKILL_PROFILE="$plan_profile"
+    log_info "Install plan applied from ${plan_file} (mode: ${plan_mode}, provider: ${plan_provider:-default}, packs: ${plan_packs:-none}, profile: ${plan_profile})"
 }
 
 # Mode exclusivity (#466): the early-exit modes are mutually exclusive, and
@@ -1155,6 +1223,12 @@ validate_mode_conflicts() {
     [ "$PEONPING_ONLY" = true ] && modes+=("--peonping")
     [ "$LIST_ITEMS" = true ] && modes+=("--list-items")
     [ -n "$SAVE_PRESET_NAME" ] && modes+=("--save-preset")
+    # FROM_PLAN (#677) is a flag SOURCE, not a mode — it must not combine with
+    # an explicit mode flag (ambiguous which wins).
+    if [ -n "$FROM_PLAN" ] && [ "${#modes[@]}" -gt 0 ]; then
+        log_error "--from-plan combines with no explicit mode flag (the plan sets the mode): ${modes[*]:-}. Drop the mode flag or the plan."
+        exit 1
+    fi
     # SELECT_ITEMS is whitelisted (#673) and never enters the exclusivity
     # count; it is validated against the surviving modes below instead.
     local count=0 m
@@ -3768,6 +3842,12 @@ PLAN_FAILED_COUNT=0
 # init.mjs update exits 2 on pre-#379 installs and #379 decided that is a
 # warning (one full re-run adopts the manifest), not a failure.
 build_plan() {
+    # Wizard plan (#677): apply before validation so plan-derived flags pass
+    # through the same gates as CLI flags. Applied once (cleared after).
+    if [ -n "$FROM_PLAN" ]; then
+        apply_install_plan
+        FROM_PLAN=""
+    fi
     validate_mode_conflicts
     PLAN_STEPS=()
     if [ "$ROLLBACK_MODE" = true ]; then
@@ -5051,6 +5131,9 @@ main() {
             echo "                      Setup Mode Selection"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo ""
+            if [ "$NO_TUI" != true ]; then
+                echo "  0) Guided setup (TUI wizard — recommended first time)"
+            fi
             echo "  1) Quick setup (config + skills only)"
             echo "  2) Skills-only setup"
             echo "  3) Full setup (API keys, Node.js, OpenCode)"
@@ -5058,15 +5141,32 @@ main() {
             echo "  5) Install PeonPing (sound notifications)            [add-on]"
             echo "  6) Select items to deploy (skills/agents/packs/plugins) [add-on]"
             echo ""
-            echo "  Pick ONE base (1-4, or standalone 4) plus any add-ons, e.g. 2,6 or 3,5,6"
+            if [ "$NO_TUI" = true ]; then
+                echo "  Pick ONE base (1-4, or standalone 4) plus any add-ons, e.g. 2,6 or 3,5,6"
+            else
+                echo "  Pick ONE base (0-4, or standalone 4) plus any add-ons, e.g. 2,6 or 3,5,6"
+            fi
             echo ""
 
             # Multi-pick menu (#673): parse_menu_selection validates the pick
             # and re-prompts on a named error; blank takes the default (2).
-            local setup_option
+            # Base 0 (#677) launches the TUI wizard inline — a cancelled wizard
+            # re-prompts instead of deploying anything.
+            local setup_option plan_tmp
             while true; do
                 setup_option=$(prompt_user "Select [default: 2; combos like 2,6]" "2")
                 if parse_menu_selection "$setup_option"; then
+                    if [ "$MENU_BASE" = "0" ]; then
+                        plan_tmp="$(mktemp "${TMPDIR:-/tmp}/opencode-install-plan.XXXXXX")"
+                        echo ""
+                        log_info "Guided setup: launching the install wizard..."
+                        if node "$TUI_SCRIPT" install-wizard --out "$plan_tmp"; then
+                            FROM_PLAN="$plan_tmp"
+                        else
+                            log_warn "Wizard cancelled - back to the mode menu"
+                            continue
+                        fi
+                    fi
                     break
                 fi
             done
