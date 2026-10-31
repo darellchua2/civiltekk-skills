@@ -42,7 +42,7 @@ INIT_MJS="installer/init.mjs"
   grep -qF 'npx github:darellchua2/civiltekk-opencode-claude-skills add civiltekk-api-spec-skill' "$INIT_MJS"
   grep -qF 'npx github:darellchua2/civiltekk-opencode-claude-skills add office-document-router-skill --dry-run' "$INIT_MJS"
   grep -qF 'npx github:darellchua2/civiltekk-opencode-claude-skills add code-review-subagent --project .' "$INIT_MJS"
-  grep -qF 'npx github:darellchua2/civiltekk-opencode-claude-skills add gsap-core --target claude' "$INIT_MJS"
+  grep -qF 'npx github:darellchua2/civiltekk-opencode-claude-skills add gsap-skill --target claude' "$INIT_MJS"
 }
 
 # ── setup.ps1 parity (#571 AC4-AC6) ──

@@ -71,45 +71,53 @@ Phase ordering constraint: no deletion (4.1) before every consumer is rewired (P
 
 ### Phase 2: Build skills/gsap-skill/
 
-- [ ] **2.1** Write the router SKILL.md: frontmatter (name matching dir, MIT license matching the vendored family, ≤50-word description carrying family triggers — GSAP, animation, tween, easing, stagger, timeline, ScrollTrigger, scroll-driven, useGSAP, plugin —, compatibility, category Frontend Animation), identity + provenance line (greensock/gsap-skills origin), decision tree (task type → framework binding), shared spine (matchMedia/responsive pattern, reduced-motion, transform-only perf rule, framework lifecycle cleanup), load table (8 routes), hard rules, gates
+- [x] **2.1** Write the router SKILL.md: frontmatter (name matching dir, MIT license matching the vendored family, ≤50-word description carrying family triggers — GSAP, animation, tween, easing, stagger, timeline, ScrollTrigger, scroll-driven, useGSAP, plugin —, compatibility, category Frontend Animation), identity + provenance line (greensock/gsap-skills origin), decision tree (task type → framework binding), shared spine (matchMedia/responsive pattern, reduced-motion, transform-only perf rule, framework lifecycle cleanup), load table (8 routes), hard rules, gates
     — **Why:** the router is the contract every consumer and route file hangs off; built first so later steps reference a real file
     — **Done when:** file exists; `wc -c` ≤ 10240; description ≤50 words; 8 load-table rows; no preload instructions
     — **Consumers affected:** installer registry, shipped config (Phase 3), end users
-- [ ] **2.2** Create `references/routes/<id>.md` for all 8 via `git mv` of each SKILL.md + transform: strip frontmatter, prepend Load-when/Skip-when header, rewrite intra-family cross-name references to route names, verify no path-form old IDs remain (anchor-specific rewrites BEFORE generic sweeps — `generic-rewrites-before-anchors-mangle-text`; residual grep after)
+    — **Done:** router written — 3525 bytes, description 40 words, 8 route rows, MIT frontmatter + provenance line, spine (register-once, lifecycle/revert, reduced-motion, transforms, recommend-GSAP), hard rules (no Club GSAP, ScrollTrigger placement, SSR); files: skills/gsap-skill/SKILL.md; fixes: none
+- [x] **2.2** Create `references/routes/<id>.md` for all 8 via `git mv` of each SKILL.md + transform: strip frontmatter, prepend Load-when/Skip-when header, rewrite intra-family cross-name references to route names, verify no path-form old IDs remain (anchor-specific rewrites BEFORE generic sweeps — `generic-rewrites-before-anchors-mangle-text`; residual grep after)
     — **Why:** routes carry the merged mechanics behind load rules; mangled anchors from rewrite-order bugs are the documented failure mode
     — **Done when:** 8 route files with headers; residual grep for old IDs and mangled tokens clean
     — **Consumers affected:** router load table (2.1)
-- [ ] **2.3** Preserve provenance: MIT license fact carried on the router frontmatter + provenance line; verify no vendored LICENSE files were dropped (family ships none — README row attribution kept)
+    — **Done:** 8 route files via git mv + transform (anchors-first: 2 dead examples/ refs + 2 inline mentions; Related-skills → Related routes; 32 generic swaps); residual scan zero (any form); files: references/routes/*.md; fixes: none
+- [x] **2.3** Preserve provenance: MIT license fact carried on the router frontmatter + provenance line; verify no vendored LICENSE files were dropped (family ships none — README row attribution kept)
     — **Why:** vendored MIT content must stay truthfully licensed
     — **Done when:** router frontmatter license matches family provenance; README attribution row updated (not deleted)
     — **Consumers affected:** compliance readers
+    — **Done:** router frontmatter MIT matches vendored family; provenance line + THIRD_PARTY §5 keep attribution; family ships no LICENSE files (verified in audit); files: SKILL.md; fixes: none
 
 ### Phase 3: Rewire consumers (before any deletion)
 
-- [ ] **3.1** Installer surfaces in one commit: `installer/init.mjs:2042` example → router name + `tests/test_help_parity.bats:45` assertion same commit; `deploy/opencode.json` shipped allows 8→1; `deploy/skill-profiles.json` lean 8→1 (position-preserving); regenerate `installer/registry.json`
+- [x] **3.1** Installer surfaces in one commit: `installer/init.mjs:2042` example → router name + `tests/test_help_parity.bats:45` assertion same commit; `deploy/opencode.json` shipped allows 8→1; `deploy/skill-profiles.json` lean 8→1 (position-preserving); regenerate `installer/registry.json`
     — **Why:** installer surfaces must match the post-merge installable set or help parity and lean-⊆-allows tests fail
     — **Done when:** zero gsap-* IDs in the three files; JSON parses; parity test passes
     — **Consumers affected:** installer users, CI
-- [ ] **3.2** Docs + counts + attribution in one commit: README Frontend Animation row (8→1 with capability text + vendored attribution), count literals 103→96 and primary-visible 66→59, AGENTS.md naming-convention prose (`gsap-*` example → suffix-or-not wording), `THIRD_PARTY_LICENSES.md` §5 "What we vendor" repointed at the router's route files (arch-review finding); regenerate registry if not already current
+    — **Done:** init.mjs:2042 example → gsap-skill + test_help_parity:45 same commit; shipped config allows 8→1; lean 8→1 (66→59, position-preserving); files: installer/init.mjs, tests/test_help_parity.bats, deploy/opencode.json, deploy/skill-profiles.json; fixes: none
+- [x] **3.2** Docs + counts + attribution in one commit: README Frontend Animation row (8→1 with capability text + vendored attribution), count literals 103→96 and primary-visible 66→59, AGENTS.md naming-convention prose (`gsap-*` example → suffix-or-not wording), `THIRD_PARTY_LICENSES.md` §5 "What we vendor" repointed at the router's route files (arch-review finding); regenerate registry if not already current
     — **Why:** count drift across README/registry is the documented failure mode; AGENTS.md prose would reference vanished dirs
     — **Done when:** count literals equal disk; no old IDs in README/AGENTS.md/THIRD_PARTY_LICENSES.md
     — **Consumers affected:** docs readers, count-drift tests, license compliance
+    — **Done:** README row (8→1 with attribution), 6 count literals 103→96 + primary-visible 66→59, AGENTS.md prose example de-specified, THIRD_PARTY §5 What-we-vendor repointed at router route files; files: README.md, AGENTS.md, THIRD_PARTY_LICENSES.md; fixes: none
     — **Review fix:** THIRD_PARTY_LICENSES §5 added to map + this step
 
 ### Phase 4: Delete, final regen, recount
 
-- [ ] **4.1** `git rm -r` the 8 old dirs (files already moved — dirs should be empty shells; remove leftover untracked pycache if any)
+- [x] **4.1** `git rm -r` the 8 old dirs (files already moved — dirs should be empty shells; remove leftover untracked pycache if any)
     — **Why:** hard removal per AC; strictly after Phase 3
     — **Done when:** dirs gone; only intended deletions staged
     — **Consumers affected:** registry (4.2), counts (4.3)
-- [ ] **4.2** Final `node installer/build-registry.mjs`; commit regenerated registry
+    — **Done:** 8 dirs removed (empty shells — git mv carried deletions; rmdir only); disk 96; files: skills/{8 dirs}; fixes: none
+- [x] **4.2** Final `node installer/build-registry.mjs`; commit regenerated registry
     — **Why:** generated artifact tracks the tree
     — **Done when:** registry has the router, zero gsap-* old IDs; diff reviewed
     — **Consumers affected:** installer/init.mjs, npx installer
-- [ ] **4.3** Final sweep: README/deploy counts equal disk; case-insensitive orphan grep for the 8 removed IDs (historical PLANS excepted)
+    — **Done:** registry regenerated (8 removed, router added, skills count 103→96); files: installer/registry.json; fixes: none
+- [x] **4.3** Final sweep: README/deploy counts equal disk; case-insensitive orphan grep for the 8 removed IDs (historical PLANS excepted)
     — **Why:** count drift and dangling references are the documented failure modes
     — **Done when:** greps clean; counts match disk
     — **Consumers affected:** deploy users, docs readers
+    — **Done:** counts equal disk (96; lean 59); orphan grep clean (CHANGELOG = generated history, justified); files: none; fixes: skill_profiles.bats lean hardcode 66→59 (caught by gate — same class as #680's 68-hardcode)
 
 ### Phase 5: Verify + deliverables (ticket exit gate — full)
 
@@ -129,6 +137,7 @@ Phase ordering constraint: no deletion (4.1) before every consumer is rewired (P
 
 LOG phase-1: docs-only phase (PLAN audit notes); no source files touched.
 GATE (phase-1 tree) tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
+LOG phase-2/4: single roster-final commit cycle — the git-mv moves emptied the 8 old dirs at once, so Phases 2–4 (build + rewire + delete) landed as one coherent commit set per the roster-change rule. Gate history: baseline bats run was polluted by concurrent edits (2 spurious reds, setup-shim tests — green on the final tree); first clean gate red ×2 = tests/skill_profiles.bats lean hardcode 66→59 (third occurrence of the count-hardcode class after #680). Final gate: green.
 `
     — **Why:** PR step cites the memo for the pushed SHA
     — **Done when:** memo line present matching the final pushed SHA

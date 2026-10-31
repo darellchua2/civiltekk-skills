@@ -202,14 +202,16 @@ SOFTWARE.
 
 ### What we vendor
 
-- **`skills/gsap-*/SKILL.md`** — the eight official GSAP
+- **`skills/gsap-skill/`** — the eight official GSAP
   skills (`gsap-core`, `gsap-timeline`, `gsap-scrolltrigger`, `gsap-plugins`,
-  `gsap-utils`, `gsap-react`, `gsap-performance`, `gsap-frameworks`) copied
-  verbatim from upstream `skills/`, plus two frontmatter keys added locally
-  for this repo's contract (`compatibility: opencode`,
-  `category: Frontend Animation`). No upstream plugin/runtime code is
-  embedded — GSAP itself is consumed from the public `gsap` npm package at
-  the target project's build time.
+  `gsap-utils`, `gsap-react`, `gsap-performance`, `gsap-frameworks`)
+  consolidated (#687) into one router whose `references/routes/<id>.md`
+  route files carry the upstream `SKILL.md` bodies verbatim (frontmatter
+  stripped; load-rule headers, provenance line, and
+  `compatibility: opencode` / `category: Frontend Animation` keys added
+  locally). No upstream plugin/runtime code is embedded — GSAP itself is
+  consumed from the public `gsap` npm package at the target project's
+  build time.
 
 ### MIT License (verbatim)
 

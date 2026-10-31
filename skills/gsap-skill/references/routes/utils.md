@@ -1,10 +1,7 @@
----
-name: gsap-utils
-description: Official GSAP skill for gsap.utils — clamp, mapRange, normalize, interpolate, random, snap, toArray, wrap, pipe. Use when the user asks about gsap.utils, clamp, mapRange, random, snap, toArray, wrap, or helper utilities in GSAP.
-license: MIT
-compatibility: opencode
-category: Frontend Animation
----
+# Route: UTILS
+
+**Load when:** the task uses `gsap.utils` helpers — clamp, mapRange, normalize, interpolate, random, snap, shuffle, distribute, getUnit, unitize, splitColor, selector, toArray, pipe, wrap. **Skip when:** none — this route is helper-scoped.
+
 
 # gsap.utils
 
@@ -12,7 +9,7 @@ category: Frontend Animation
 
 Apply when writing or reviewing code that uses **gsap.utils** for math, array/collection handling, unit parsing, or value mapping in animations (e.g. mapping scroll to a value, randomizing, snapping to a grid, or normalizing inputs).
 
-**Related skills:** Use with **gsap-core**, **gsap-timeline**, and **gsap-scrolltrigger** when building animations; CustomEase and other easing utilities are in **gsap-plugins**.
+**Related routes:** Use with `core`, `timeline`, and `scrolltrigger` when building animations; CustomEase and other easing utilities are in `plugins`.
 
 ## Overview
 

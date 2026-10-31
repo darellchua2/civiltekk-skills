@@ -1,10 +1,7 @@
----
-name: gsap-performance
-description: Official GSAP skill for performance — prefer transforms, avoid layout thrashing, will-change, batching. Use when optimizing GSAP animations, reducing jank, or when the user asks about animation performance, FPS, or smooth 60fps.
-license: MIT
-compatibility: opencode
-category: Frontend Animation
----
+# Route: PERFORMANCE
+
+**Load when:** the task optimizes GSAP animations — transforms/opacity over layout properties, will-change, batching, `gsap.quickTo()`, jank/60fps. **Skip when:** none — cross-cutting; pair with the route doing the animating.
+
 
 # GSAP Performance
 
@@ -12,7 +9,7 @@ category: Frontend Animation
 
 Apply when optimizing GSAP animations for smooth 60fps, reducing layout/paint cost, or when the user asks about performance, jank, or best practices for fast animations.
 
-**Related skills:** Build animations with **gsap-core** (transforms, autoAlpha) and **gsap-timeline**; for ScrollTrigger performance see **gsap-scrolltrigger**.
+**Related routes:** Build animations with `core` (transforms, autoAlpha) and `timeline`; for ScrollTrigger performance see `scrolltrigger`.
 
 ## Prefer Transform and Opacity
 
