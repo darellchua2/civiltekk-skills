@@ -21,7 +21,7 @@
     ],
     "requirements-inline-skill": [
       "grilling-skill",
-      "civiltekk-requirements-specs-skill"
+      "solution-docs-skill"
     ]
   },
   "shipsPlugins": {

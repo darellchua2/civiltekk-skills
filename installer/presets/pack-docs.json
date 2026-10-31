@@ -13,14 +13,12 @@
   "skills": [
     "civiltekk-diagram-skill",
     "civiltekk-documentation-inline-skill",
-    "civiltekk-requirements-specs-skill",
+    "solution-docs-skill",
     "civiltekk-startup-docs-skill",
     "coverage-readme-workflow-skill",
     "office-document-router-skill",
     "horseshoe-paper-writing-skill",
-    "research-paper-generation-skill",
-    "technical-design-creation-skill",
-    "vision-creation-skill"
+    "research-paper-generation-skill"
   ],
   "mcps": []
 }

@@ -1,13 +1,7 @@
----
-name: technical-design-creation-skill
-description: >-
-  Create Technical Design Documents — converts SRS/feature specs into
-  architecture, data models, API contracts, ADRs. Triggers: technical design,
-  architecture document, system design, design spec.
-license: Apache-2.0
-compatibility: opencode
-category: Framework
----
+# Route: TECHNICAL-DESIGN
+
+**Load when:** an SRS or feature spec must be translated into an engineering design — architecture, data models, API surface, ADRs, sequence diagrams. **Skip when:** requirements authoring (Routes: BRD/SRS) or the customer-facing Vision (Route: VISION). **Note:** "TDD" here = Technical Design Document, not Test Driven Development.
+
 
 ## What I do
 
@@ -30,7 +24,7 @@ Use this skill when:
 - Architecture decisions need to be captured as durable ADRs (context → decision → consequences)
 - The team needs a shared blueprint before implementation begins
 
-**Do NOT use for:** requirements (use `civiltekk-requirements-specs-skill`, routes `srs`/`brd`); customer-facing vision (use `vision-creation-skill`); running tests (use `tdd-workflow-skill` — different TDD).
+**Do NOT use for:** requirements (Routes: SRS/BRD); customer-facing vision (Route: VISION); running tests (use `tdd-workflow-skill` — different TDD).
 
 **Trigger phrases**: "technical design", "architecture document", "system design", "technical design doc", "design spec", "create technical design", "design the architecture"
 
@@ -41,7 +35,7 @@ The TDD is **for engineers, architects, and tech leads** — the people who will
 ## Related
 
 - **`technical-design-specialist-subagent`** — the agent that authors the TDD (this skill is its template)
-- **`civiltekk-requirements-specs-skill`** — upstream requirements docs: route `srs` — the SRS's functional requirements feed INTO the TDD; route `brd` — the sponsor-level Solution Requirements Summary informs the TDD scope
+- **Route: SRS** — the SRS's functional requirements feed INTO the TDD; **Route: BRD** — the sponsor-level Solution Requirements Summary informs the TDD scope
 - **`office-document-router-skill` route `rendering`** — shared HTML + DOCX rendering standard (snapshot HTML for TDD)
 - **`civiltekk-api-spec-skill`** (`author` route) — referenced for detailed OpenAPI/REST patterns in the API Surface section
 - **`domain-modeling-skill`** — sharpens domain terminology for the Data Model section

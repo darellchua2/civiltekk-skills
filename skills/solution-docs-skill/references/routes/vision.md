@@ -1,13 +1,7 @@
----
-name: vision-creation-skill
-description: >-
-  Create the customer-facing Vision Document (IIBA Business Need/Solution
-  Vision) from a discovery session. Triggers: create vision, vision document,
-  concept brief, solution vision.
-license: Apache-2.0
-compatibility: opencode
-category: Framework
----
+# Route: VISION
+
+**Load when:** a customer discovery session needs its output captured as the customer-facing Vision Document (IIBA Business Need/Solution Vision) for sign-off. **Skip when:** internal requirements (Route: SRS), sponsor scope (Route: BRD), or engineering design (Route: TECHNICAL-DESIGN). **No ticket linkage** — the Vision keeps its slug name for life.
+
 
 ## What I do
 
@@ -23,7 +17,7 @@ I provide the **Vision Document** template and workflow for the **customer-facin
 Use this skill when:
 - A customer discovery session is running and needs its output captured
 - Someone says "create vision", "vision document", "concept brief", "solution vision", "discovery output"
-- You need a **customer-facing** artifact to align stakeholders and get sign-off (NOT an internal requirements spec — that is `civiltekk-requirements-specs-skill`, route `srs`)
+- You need a **customer-facing** artifact to align stakeholders and get sign-off (NOT an internal requirements spec — that is Route: SRS)
 
 **Trigger phrases**: "create vision", "vision document", "concept brief", "solution vision", "discovery output", "capture the vision", "write a vision doc"
 
@@ -37,7 +31,7 @@ The Vision is **customer-facing**. Keep tone non-technical where possible, avoid
 - **`office-document-router-skill` route `rendering`** — the shared HTML + DOCX rendering standard (living HTML for Vision)
 - **`wireframer-skill`** — generates the wireframes co-located at `docs/vision/{slug}/`
 - **`pptx-specialist-subagent`** — optional customer presentation deck distilled from the Vision (routes internally to the `slides` + `template` routes of `office-document-router-skill`)
-- **`civiltekk-requirements-specs-skill`** (route `srs`) — the DOWNSTREAM internal doc; the signed Vision feeds into the SRS (different audience, different skill)
+- **Route: SRS** — the DOWNSTREAM internal doc; the signed Vision feeds into the SRS (different audience, different route)
 
 ---
 

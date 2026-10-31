@@ -1,14 +1,20 @@
+# Route: SRS
+
+**Load when:** the task creates or reviews the SRS — IEEE 830 internal "what" (functional requirements, acceptance criteria, NFRs, traceability). Legacy PRD language routes here.
+**Skip when:** sponsor-level scope (Route: BRD), customer-facing Vision (Route: VISION), engineering design (Route: TECHNICAL-DESIGN).
+**Values file:** this route IS the values file — the METHOD (route detection, discovery interview, confirm-before-write, rendering) lives in the router SKILL.md.
+
 # SRS route (values)
 
-Software Requirements Specification knowledge — the IEEE 830 internal "what" document. The host SKILL.md carries the METHOD (detect → route → interview → write → render); this file carries the VALUES for the `srs` route.
+Software Requirements Specification knowledge — the IEEE 830 internal "what" document. The router SKILL.md carries the METHOD (detect → route → interview → write → render); this file carries the VALUES for the `srs` route.
 
-**Authority:** this route owns the IEEE 830 template, the `docs/srs/` naming convention, and the xlsx peer-artifact contract; `references/brd.md` in this skill owns the BABOK sponsor-level "why" (the two were formerly peer skills — the boundary is internal now).
+**Authority:** this route owns the IEEE 830 template, the `docs/srs/` naming convention, and the xlsx peer-artifact contract; the sibling `brd.md` route file owns the BABOK sponsor-level "why" (the two were formerly peer skills — the boundary is internal now).
 
 **Back-compat:** the legacy triggers "create prd", "product requirement", "product requirement document", "product doc", "PRD" route to **this** `srs` route. PRD was the wrong label for BA→dev handoff; SRS (IEEE 830) is the proper-software-house standard.
 
 ## Audience
 
-The SRS is **internal — for the development team**. It encodes tradeoffs, non-goals, MoSCoW priorities, build-vs-buy rationale, performance targets, and traceability that you would NOT put in front of a customer. The customer-facing equivalent is the Vision Document (`vision-creation-skill`).
+The SRS is **internal — for the development team**. It encodes tradeoffs, non-goals, MoSCoW priorities, build-vs-buy rationale, performance targets, and traceability that you would NOT put in front of a customer. The customer-facing equivalent is the Vision Document (Route: VISION).
 
 ## Interview part sequence (route `srs`)
 

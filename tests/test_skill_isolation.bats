@@ -27,7 +27,7 @@ HANDOFF2_TARGETS="reviewer-baseline-skill language-review-checklists-skill"
 HANDOFF3_OWNER="architecture-review-skill"
 HANDOFF3_TARGETS="reviewer-baseline-skill"
 HANDOFF4_OWNER="requirements-inline-skill"
-HANDOFF4_TARGETS="grilling-skill civiltekk-requirements-specs-skill"
+HANDOFF4_TARGETS="grilling-skill solution-docs-skill"
 
 @test "skill_isolation_no_shared_common_references" {
   # Catches both repo paths (skills/_common/...) and deploy strings

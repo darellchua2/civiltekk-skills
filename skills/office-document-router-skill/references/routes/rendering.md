@@ -11,7 +11,7 @@ I am the **single source of truth** for how document-creation skills render thei
 1. **Interactive HTML** — a self-contained, navigable, dark-mode-aware web page
 2. **Word (.docx)** — a formal deliverable with auto-generated TOC and hyperlinked headers
 
-Consumers (`vision-creation-skill`, `civiltekk-requirements-specs-skill`) reference me via *"Render dual outputs per `Route: RENDERING`."* They do NOT redefine HTML/DOCX styling themselves — that would re-introduce the inconsistency this skill exists to eliminate.
+Consumers (`solution-docs-skill` routes VISION/BRD/SRS/TECHNICAL-DESIGN) reference me via *"Render dual outputs per `Route: RENDERING`."* They do NOT redefine HTML/DOCX styling themselves — that would re-introduce the inconsistency this skill exists to eliminate.
 
 ## SCOPE — what I do NOT do
 
@@ -188,8 +188,8 @@ If rendering requires **understanding** image content (e.g. a client attached a 
 
 ## Related
 
-- `vision-creation-skill` — discovery Vision Doc; uses **living** HTML regen
-- `civiltekk-requirements-specs-skill` — route `srs` (IEEE 830 SRS) and route `brd` (BABOK BRD); both use **snapshot** HTML at wrap
+- `solution-docs-skill` route `vision` — discovery Vision Doc; uses **living** HTML regen
+- `solution-docs-skill` routes `srs` (IEEE 830 SRS) + `brd` (BABOK BRD) + `technical-design` (TDD); snapshot HTML at wrap
 - `Route: XLSX` / `xlsx-specialist-subagent` — peer tabular deliverables
 - `pptx-specialist-subagent` — peer presentation deliverables (requires user-supplied Slide Master template)
 - `image-analyzer-subagent` — image interpretation (delegate, don't inline)

@@ -45,18 +45,18 @@ SKILL_MD="skills/requirements-inline-skill/SKILL.md"
     run node -e "
     const m = require('./installer/dependency-map.json').requiresSkills;
     const edge = m['requirements-inline-skill'] || [];
-    const want = ['grilling-skill', 'civiltekk-requirements-specs-skill'];
+    const want = ['grilling-skill', 'solution-docs-skill'];
     if (want.some(w => !edge.includes(w))) process.exit(1);
     "
     [ "$status" -eq 0 ]
     grep -q 'HANDOFF4_OWNER="requirements-inline-skill"' tests/test_skill_isolation.bats
-    grep -q 'HANDOFF4_TARGETS="grilling-skill civiltekk-requirements-specs-skill"' tests/test_skill_isolation.bats
+    grep -q 'HANDOFF4_TARGETS="grilling-skill solution-docs-skill"' tests/test_skill_isolation.bats
 }
 
 @test "req_inline: pack-inline-workers membership incl. closure + description" {
     run node -e "
     const p = require('./installer/presets/pack-inline-workers.json');
-    for (const s of ['requirements-inline-skill', 'grilling-skill', 'civiltekk-requirements-specs-skill']) {
+    for (const s of ['requirements-inline-skill', 'grilling-skill', 'solution-docs-skill']) {
         if (!p.skills.includes(s)) process.exit(1);
     }
     if (!p.description.includes('requirements-inline-skill')) process.exit(1);
@@ -75,7 +75,7 @@ SKILL_MD="skills/requirements-inline-skill/SKILL.md"
 }
 
 @test "req_inline: wrapper stays thin — no template restatement" {
-    # BABOK/IEEE-830 template content belongs to the specs skill, not here.
+    # BABOK/IEEE-830 template content belongs to solution-docs-skill, not here.
     run grep -cE "Stakeholder Requirements|Traceability Matrix" "$SKILL_MD"
     [ "$status" -eq 1 ]
     [ "$output" = "0" ]

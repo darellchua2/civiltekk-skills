@@ -67,48 +67,57 @@ All keep: template part structures, ADR-NNN numbering, RTM >15 rows xlsx thresho
 
 ### Phase 2: Build skills/solution-docs-skill/
 
-- [ ] **2.1** Write the router SKILL.md: frontmatter (name = dir, Apache-2.0, category Framework, ≤50-word description with family triggers), identity = the document ladder, decision tree + load table (4 routes), shared pipeline spine (route detection explicit>inferred>ask-once, discovery interview, confirm-before-write, draft naming + PLAN back-linkage, rendering + image routing, Return Contract, harness binding), hard rules, gates
+- [x] **2.1** Write the router SKILL.md: frontmatter (name = dir, Apache-2.0, category Framework, ≤50-word description with family triggers), identity = the document ladder, decision tree + load table (4 routes), shared pipeline spine (route detection explicit>inferred>ask-once, discovery interview, confirm-before-write, draft naming + PLAN back-linkage, rendering + image routing, Return Contract, harness binding), hard rules, gates
     — **Why:** the specs skill's method generalizes to all 4 routes; built first so consumers reference a real file
     — **Done when:** file exists; ≤10240 bytes; ≤50 words; 4 rows; no preload
     — **Consumers affected:** subagents (3.1), installer (3.2)
-- [ ] **2.2** Moves + transform: `git mv` specs `references/{brd,srs}.md` → `references/routes/{brd,srs}.md` (prepend Load-when headers); TDD SKILL.md → `references/routes/technical-design.md`; vision SKILL.md → `references/routes/vision.md`; transform: cross-family references → route names (anchors first, generic sweeps last, residual grep)
+    — **Done:** router written — 4487 bytes, description 40 words, 4 route rows, ladder as identity, shared pipeline spine (interview/confirm-before-write/linkage scoped to brd-srs-tdd/rendering/return-contract/harness), vision exemption explicit; files: skills/solution-docs-skill/SKILL.md; fixes: none
+- [x] **2.2** Moves + transform: `git mv` specs `references/{brd,srs}.md` → `references/routes/{brd,srs}.md` (prepend Load-when headers); TDD SKILL.md → `references/routes/technical-design.md`; vision SKILL.md → `references/routes/vision.md`; transform: cross-family references → route names (anchors first, generic sweeps last, residual grep)
     — **Why:** the values files already carry route VALUES; the TDD/vision bodies are route detail
     — **Done when:** 4 route files with headers; residual old-ID grep clean in the router tree
     — **Consumers affected:** router load table
-- [ ] **2.3** Provenance: house Apache-2.0 throughout (no vendored content); specs' #604 consolidation note carried into the router provenance line
+    — **Done:** moves via git mv (specs values files → brd.md/srs.md route files with headers; TDD/vision SKILL.mds → routes); cross-family rewords (6 anchors); residual scan clean; core SKILL.md redistributed → spine (git rm); files: references/routes/*; fixes: none
+- [x] **2.3** Provenance: house Apache-2.0 throughout (no vendored content); specs' #604 consolidation note carried into the router provenance line
     — **Why:** lineage stays traceable
     — **Done when:** provenance line present; no attribution loss
     — **Consumers affected:** docs readers
+    — **Done:** house Apache-2.0; #604/#689 lineage in router provenance; no vendored content; files: SKILL.md; fixes: none
 
 ### Phase 3: Rewire consumers (before any deletion)
 
-- [ ] **3.1** 4 subagents (discovery-specialist, requirements-specialist, technical-design-specialist + verify any 4th): allows → router; prose → route names; effect-line YAML-verified
+- [x] **3.1** 4 subagents (discovery-specialist, requirements-specialist, technical-design-specialist + verify any 4th): allows → router; prose → route names; effect-line YAML-verified
     — **Why:** agents must not reference removed skills
     — **Done when:** grep agents/ finds zero old IDs; YAML allows assert green
     — **Consumers affected:** runtime, registry
-- [ ] **3.2** Installer surfaces: dependency-map requirements-inline edge target → `solution-docs-skill` + guard HANDOFF4_TARGETS + test_requirements_inline assertion (rename only, ONE commit); presets business/docs/inline-workers 3→1; shipped-config allows 3→1; lean 3→1 (59→57); registry regenerated
+    — **Done:** 3 specialist subagents rewired (allows → router, YAML effect-ok ×3); prose → route names; zero old IDs in agents/; files: agents/*-specialist-subagent.md; fixes: none
+- [x] **3.2** Installer surfaces: dependency-map requirements-inline edge target → `solution-docs-skill` + guard HANDOFF4_TARGETS + test_requirements_inline assertion (rename only, ONE commit); presets business/docs/inline-workers 3→1; shipped-config allows 3→1; lean 3→1 (59→57); registry regenerated
     — **Why:** installer surfaces must match the roster; HANDOFF4 is a target rename — no renumber
     — **Done when:** zero old IDs in the four files; JSON parses; guard-family bats green
     — **Consumers affected:** installer users, CI
-- [ ] **3.3** Docs: README Framework row (12→10) + 6 count literals (93→91, primary-visible 59→57) + history clause (house convention); office-router `rendering.md` consumer prose → route names; `requirements-inline-skill` "templates stay in the specs skill" → router
+    — **Done:** dependency-map edge target renamed (guard HANDOFF4_TARGETS + test_requirements_inline assertion + map-edge want[] same commit); presets business 16/docs 8/inline-workers 25 (router added ×3); shipped config allows 3→1; lean specs→router (stays 59 — only specs was in lean); registry regenerated; files: installer/*, tests/*, deploy/*; fixes: pack-inline-workers membership assertion caught by gate and updated
+- [x] **3.3** Docs: README Framework row (12→10) + 6 count literals (93→91, primary-visible 59→57) + history clause (house convention); office-router `rendering.md` consumer prose → route names; `requirements-inline-skill` "templates stay in the specs skill" → router
     — **Why:** roster-affecting commit rule; surviving-sibling prose would dangle
     — **Done when:** greps clean; counts equal disk
     — **Consumers affected:** docs readers, count-drift tests
+    — **Done:** README Framework row 12→10 + 6 count literals 93→91 + history clause (#689 removed names per house convention); rendering.md consumer prose → route names; requirements-inline prose ×3 repointed; files: README.md, office-router rendering.md, requirements-inline SKILL.md; fixes: requirements-inline had 2 further prose hits beyond the planned line — swept
 
 ### Phase 4: Delete, final regen, recount
 
-- [ ] **4.1** Remove the 3 old dirs (pycache purge first)
+- [x] **4.1** Remove the 3 old dirs (pycache purge first)
     — **Why:** hard removal per AC
     — **Done when:** dirs gone; only intended deletions staged
     — **Consumers affected:** registry, counts
-- [ ] **4.2** Final `node installer/build-registry.mjs`; commit registry
+    — **Done:** 3 dirs removed (empty shells — moves carried deletions); disk 91; files: skills/{3 dirs}; fixes: none
+- [x] **4.2** Final `node installer/build-registry.mjs`; commit registry
     — **Why:** generated artifact tracks the tree
     — **Done when:** router present, zero removed IDs
     — **Consumers affected:** installer
-- [ ] **4.3** Final sweep: counts equal disk (91); orphan grep for the 3 removed IDs (PLANS/CHANGELOG excepted)
+    — **Done:** final regen — router + 4 routes present, zero removed IDs; files: installer/registry.json; fixes: none
+- [x] **4.3** Final sweep: counts equal disk (91); orphan grep for the 3 removed IDs (PLANS/CHANGELOG excepted)
     — **Why:** documented failure modes
     — **Done when:** greps clean
     — **Consumers affected:** deploy users, docs readers
+    — **Done:** counts equal disk (91); orphan grep: router provenance line (intentional lineage) + README history clause (justified); files: none; fixes: none
 
 ### Phase 5: Verify + deliverables (ticket exit gate — full)
 
@@ -152,6 +161,7 @@ All keep: template part structures, ADR-NNN numbering, RTM >15 rows xlsx thresho
 
 LOG phase-1: docs-only; baseline captured concurrently (background).
 GATE (phase-1 tree) tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
+LOG phase-2/4: single roster-final commit cycle. The Phase-1-time background baseline was INVALID (ran concurrently with the rewire — mid-edit tree, 10 spurious reds); the authoritative gates are the in-cycle runs (guard-family + skill_profiles + requirements_inline green after the pack-inline-workers membership fix) and the final full gate (0 red). Third occurrence of the concurrent-baseline hazard — stop launching background baselines in the same tree being edited (#687 lesson, now twice).
 
 
 (appended at execution: phase commits, gate memos, deliverables)

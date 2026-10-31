@@ -12,7 +12,7 @@
   "skills": [
     "civiltekk-api-spec-skill",
     "civiltekk-context-optimization-skill",
-    "civiltekk-requirements-specs-skill",
+    "solution-docs-skill",
     "civiltekk-startup-docs-skill",
     "clean-architecture-skill",
     "complexity-management-skill",
@@ -24,9 +24,7 @@
     "grilling-skill",
     "search-first-skill",
     "security-audit-skill",
-    "technical-design-creation-skill",
     "verification-loop-skill",
-    "vision-creation-skill",
     "wireframer-skill"
   ],
   "mcps": []

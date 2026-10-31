@@ -1,8 +1,14 @@
+# Route: BRD
+
+**Load when:** the task creates or reviews the BRD — BABOK/IIBA sponsor-level "why" (business requirements, stakeholder needs, solution summary, transition requirements).
+**Skip when:** internal functional spec (Route: SRS), customer-facing Vision (Route: VISION), engineering design (Route: TECHNICAL-DESIGN).
+**Values file:** this route IS the values file — the METHOD (route detection, discovery interview, confirm-before-write, rendering) lives in the router SKILL.md.
+
 # BRD route (values)
 
-Business Requirements Document knowledge — the BABOK/IIBA sponsor-level "why" document. The host SKILL.md carries the METHOD (detect → route → interview → write → render); this file carries the VALUES for the `brd` route.
+Business Requirements Document knowledge — the BABOK/IIBA sponsor-level "why" document. The router SKILL.md carries the METHOD (detect → route → interview → write → render); this file carries the VALUES for the `brd` route.
 
-**Authority:** this route owns the BABOK template, the `docs/brd/` naming convention, and the sponsor-facing audience contract; `references/srs.md` in this skill owns the IEEE 830 internal "what" (the two were formerly peer skills — the boundary is internal now).
+**Authority:** this route owns the BABOK template, the `docs/brd/` naming convention, and the sponsor-facing audience contract; the sibling `srs.md` route file owns the IEEE 830 internal "what" (the two were formerly peer skills — the boundary is internal now).
 
 **Position in the document ladder:** the BRD is the **sponsor-level** document. It captures the business problem/opportunity, objectives, stakeholder needs, and a high-level solution summary — it is NOT a detailed functional spec (that is route `srs`). Flow: **Vision** (customer-facing) → **BRD** (sponsor/stakeholder scope) → **SRS** (internal functional/technical scope). BRD is a **new** document type — there is no "prd" back-compat alias (prd routes to `srs`).
 
