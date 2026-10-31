@@ -141,18 +141,21 @@ Phase ordering constraint: no deletion (4.1) before every consumer of the 10 IDs
 
 ### Phase 4: Delete, regenerate, recount
 
-- [ ] **4.1** `git rm -r` the 10 merged skill dirs
+- [x] **4.1** `git rm -r` the 10 merged skill dirs
     — **Why:** hard removal per AC; strictly after Phase 3 so no consumer dangles mid-history
     — **Done when:** dirs gone; `git status` shows only the 10 intended deletions plus prior phases' changes
     — **Consumers affected:** registry build (4.2), counts (4.3)
-- [ ] **4.2** Run `node installer/build-registry.mjs`; commit the regenerated `installer/registry.json`
+    — **Done:** 10 dirs removed (3 already empty from the moves — rmdir; 6 via git rm of tracked residue); only intended deletions staged; files: skills/{10 removed dirs}; fixes: none
+- [x] **4.2** Run `node installer/build-registry.mjs`; commit the regenerated `installer/registry.json`
     — **Why:** the registry is generated from skill/agent frontmatter and must never be hand-edited
     — **Done when:** registry contains `cad-specialist-skill`, contains none of the 10 removed IDs; diff shows no unrelated churn
     — **Consumers affected:** installer/init.mjs, npx installer consumers
-- [ ] **4.3** Update `README.md` skill/category tables and counts, `deploy/setup.sh` + `deploy/setup.ps1` counts/banner/help text (repo-root docs included — not just skills-scoped sweeps)
+    — **Done:** final regen run — registry contains cad-specialist-skill, zero removed IDs; files: installer/registry.json; fixes: none
+- [x] **4.3** Update `README.md` skill/category tables and counts, `deploy/setup.sh` + `deploy/setup.ps1` counts/banner/help text (repo-root docs included — not just skills-scoped sweeps)
     — **Why:** count drift across deploy scripts and root docs is the documented sync failure mode
     — **Done when:** case-insensitive grep across README.md, deploy/*.sh, deploy/*.ps1 finds no removed IDs; stated counts equal `ls skills/ | wc -l`
     — **Consumers affected:** deploy users, docs readers
+    — **Done:** README preset row, CAD category listing (15→6 with capability text), subagent blurb, Autodesk MCP policy pointer updated; setup.sh/ps1 carry no removed IDs (help text count-free, still accurate); case-insensitive grep 0/0/0; counts consistent (113); files: README.md; fixes: README:225 MCP-policy straggler repointed
 
 ### Phase 5: Verify + deliverables (full gate — ticket exit gate)
 
@@ -209,3 +212,4 @@ LOG phase-2 fix-on-fail: full gate red ×9 with ONE root cause — committed reg
 
 GATE 9f0f1a8 tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
 GATE (phase-3 tree) tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
+GATE (phase-4 tree) tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a

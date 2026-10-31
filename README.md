@@ -115,7 +115,7 @@ npx github:darellchua2/civiltekk-opencode-claude-skills --project . --preset rev
 | `business` | BD / founder workflows (discovery → requirements → technical-design) |
 | `research` | Autonomous loops (autoresearch ml/code/research; ml needs GPU) |
 | `inline-workers` | Inline delegation family — `plan-execution-inline-skill` + the testing/linting/documentation/responsive-audit/code-review/requirements inline skills, the `architecture-review-skill` decision-tree reviewer, the `requirements-inline-skill` detection-gate delegate, and their knowledge-skill closure; companion to the inline-default `/run-plan` and `/run-worktree-pipeline` |
-| `cad` | CAD / robotics / hardware (cad-specialist + 15 CAD skills) |
+| `cad` | CAD / robotics / hardware (cad-specialist + router skill + 5 capability siblings) |
 
 ## Directory structure
 
@@ -231,7 +231,7 @@ Globally: set `"disabled": false` in `~/.config/opencode/opencode.json`, or use 
 
 > **Troubleshooting:** `--enable-pack` fails with "no full definition" when the deployed config predates the pack — re-run `setup.sh` and answer **y** to the overwrite prompt (or re-copy `deploy/opencode.json`), then re-run the enable. Applies to `--dry-run` previews too.
 
-> **Autodesk MCP policy (official-only):** no Autodesk MCP pack ships. The former pack pointed at `mcp.autodesk.com` endpoints that do not resolve. Autodesk MCP may only be re-admitted once an **official** Autodesk MCP server's connection details are verifiable from Autodesk's own documentation — the archived `autodesk-platform-services/aps-mcp-server-nodejs` sample (clone-based, archived 2026-05) does not qualify. Until then, use the Autodesk Platform Services REST APIs via `autodesk-aps-skill`.
+> **Autodesk MCP policy (official-only):** no Autodesk MCP pack ships. The former pack pointed at `mcp.autodesk.com` endpoints that do not resolve. Autodesk MCP may only be re-admitted once an **official** Autodesk MCP server's connection details are verifiable from Autodesk's own documentation — the archived `autodesk-platform-services/aps-mcp-server-nodejs` sample (clone-based, archived 2026-05) does not qualify. Until then, use the Autodesk Platform Services REST APIs via the router's `aps` route (`cad-specialist-skill`).
 
 ```bash
 ./deploy/setup.sh --enable-pack markitdown,docling   # multiple packs, comma-separated
@@ -322,7 +322,7 @@ Current count: **113** (history: 123 after the BT-142 pptx migration → consoli
 | **DevOps** (5) | docker-containerization-skill, monorepo-management-skill, database-migration-skill, logging-observability-skill, aws-iac-safety-skill | Containerization, monorepos, database migrations, observability, and IaC safety |
 | **Planning & Alignment** (3) | grilling-skill, domain-modeling-skill, requirements-inline-skill | Relentless interview/grilling sessions, canonical domain-model capture, and the in-session requirements detection gate + Mode R/A delegate |
 | **Responsive & Visual Testing** (3) | wireframer-skill, playwright-responsive-audit-skill, responsive-audit-inline-skill | Low-fidelity wireframes, Playwright-driven responsive UI audit + fix, and the in-session responsive audit delegate |
-| **CAD & Hardware Design** (15) | cad-generation-skill, cad-viewer-skill, cad-step-parts-skill, cad-dxf-skill, cad-urdf-skill, cad-srdf-skill, cad-sdf-skill, cad-sendcutsend-skill, cad-gcode-skill, cad-bambu-labs-skill, cad-implicit-skill, autodesk-aps-skill, civil-3d-skill, open3d-skill, cad-redraw-skill | Parametric CAD (STEP/STL/3MF/GLB), CAD Viewer previews, off-the-shelf parts, DXF drawings, evidence-aware drawing redraw, robot descriptions (URDF/SRDF/SDF), G-code slicing, 3D printing, SendCutSend validation, implicit CAD, Autodesk APS, Civil 3D, Open3D |
+| **CAD & Hardware Design** (6) | cad-specialist-skill, cad-generation-skill, cad-viewer-skill, cad-dxf-skill, cad-implicit-skill, cad-redraw-skill | Router for robot descriptions (URDF/SRDF/SDF), G-code slicing, 3D printing, SendCutSend validation, step.parts catalog, Autodesk APS, Civil 3D, Open3D; parametric CAD (STEP/STL/3MF/GLB), DXF drawings, evidence-aware drawing redraw, implicit CAD, CAD Viewer previews |
 | **Media Generation** (1) | civiltekk-zai-media-skill | Z.AI media endpoints: text-to-image (GLM-Image), text/image-to-video (CogVideoX-3), audio transcription (GLM-ASR), layout-aware OCR (GLM-OCR) — artifacts saved to local files |
 
 Browse live: the [GitHub Pages catalog](https://darellchua2.github.io/civiltekk-opencode-claude-skills/) (deployed on every `main` push), or `civiltekk-init --list skills`.
@@ -343,7 +343,7 @@ Browse live: the [GitHub Pages catalog](https://darellchua2.github.io/civiltekk-
 | **nextjs-specialist-subagent** | Next.js 16 scaffolding + runtime diagnosis + audit |
 | **docx/pptx/xlsx specialist subagents** | Office document pipelines (Word, PowerPoint, Excel) |
 | **image-analyzer / zai-media / uiux-reviewer** | Vision tier — native multimodal analysis, media generation, 13-axis UI/UX review |
-| **cad-specialist-subagent** | CAD/engineering/robotics — orchestrates 15 CAD skills |
+| **cad-specialist-subagent** | CAD/engineering/robotics — drives the cad-specialist-skill router |
 | **discovery / requirements / technical-design specialists** | Discovery sessions → Vision docs; BRD/SRS drafting; technical design + ADRs |
 | **autoresearch-ml/code/research subagents** | Autonomous loops (GPU training, code optimization, literature review) |
 | **loop-operator-subagent** | Autonomous loop execution with self-correction |
