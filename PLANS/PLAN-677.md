@@ -78,20 +78,23 @@ Phase order: P1 → P2 (listings read pack data); P3, P4 independent; P5 after P
     — **Consumers affected:** none
     — **Done:** test_mcp_count_consistency + test_help_parity green with zero test edits — derivation satisfies the guards by construction; also re-ran dry_run_leaks + pack_permissions (no regression); files: none; fixes: none
 
-### Phase 3: Plugin provisioning convention
+### Phase 3: Plugin provisioning convention ✅
 
-- [ ] **3.1** Create `plugins/laya-guard/provision.sh` (body of `provision_laya_guard` moved verbatim: LAYA_GUARD_SKIP/Node≥24/npm gates, sidecar copy + npm install + `.provisioned` hash marker, warm pre-pull prompt/LAYA_GUARD_WARM; dry-run gate preserved via `[ "$DRY_RUN" = true ]` prints; sources nothing — reads env `DRY_RUN`, `AUTO_ACCEPT`, `REPO_DIR`, `LAYA_GUARD_*`)
+- [x] **3.1** Create `plugins/laya-guard/provision.sh` (body of `provision_laya_guard` moved verbatim: LAYA_GUARD_SKIP/Node≥24/npm gates, sidecar copy + npm install + `.provisioned` hash marker, warm pre-pull prompt/LAYA_GUARD_WARM; dry-run gate preserved via `[ "$DRY_RUN" = true ]` prints; sources nothing — reads env `DRY_RUN`, `AUTO_ACCEPT`, `REPO_DIR`, `LAYA_GUARD_*`)
     — **Why:** provisioning knowledge belongs to the self-contained plugin dir (#437 isolation contract), not the orchestrator
     — **Done when:** `bash plugins/laya-guard/provision.sh` from the worktree provisions `~/.cache/laya-guard` (or skips per gates) exactly as the old function did; `LAYA_GUARD_SKIP=1` exits 0 with note; `DRY_RUN=true` mutates nothing
     — **Consumers affected:** `deploy_plugins` (3.2), `tests/test_laya_guard.bats`
-- [ ] **3.2** Extend `deploy_plugins` copy loop: after copying a plugin subdir, if `<plugin>/provision.sh` exists run `bash <src>/provision.sh` (non-fatal; inherits DRY_RUN/AUTO_ACCEPT env; one log line per hook run)
+    — **Done:** plugins/laya-guard/provision.sh created — body moved verbatim into provision_main() with a self-contained header (own run_cmd/log_*/prompt_yes_no, DRY_RUN/AUTO_ACCEPT explicit-comparison, REPO_DIR auto-resolve from script location); verified: SKIP=1 escape, dry-run zero-mutation, real provision + npm install, idempotent marker re-run; files: plugins/laya-guard/provision.sh; fixes: standalone-script gaps (run_cmd missing, function-only return/local, missing trailing newline gluing the close brace)
+- [x] **3.2** Extend `deploy_plugins` copy loop: after copying a plugin subdir, if `<plugin>/provision.sh` exists run `bash <src>/provision.sh` (non-fatal; inherits DRY_RUN/AUTO_ACCEPT env; one log line per hook run)
     — **Why:** generic `if [ -f ]` hook — second provisionable plugin needs zero setup.sh edits
     — **Done when:** a fresh-machine dry-run deploy prints the laya provision hook line; a plugin without `provision.sh` skips silently
     — **Consumers affected:** `tests/deploy_delegate.bats` (verify), `tests/test_dry_run_leaks.bats`
-- [ ] **3.3** Delete `provision_laya_guard` from `deploy/setup.sh` and its `setup_config` call site; update `tests/test_laya_guard.bats` to exercise `plugins/laya-guard/provision.sh` directly (behavior asserts survive; location greps change)
+    — **Done:** deploy_plugins runs <plugin>/provision.sh when present after the copy loop — non-fatal, env pass-through; verified end-to-end via sandboxed deploy_plugins run (hook fired for laya-guard); files: deploy/setup.sh; fixes: none
+- [x] **3.3** Delete `provision_laya_guard` from `deploy/setup.sh` and its `setup_config` call site; update `tests/test_laya_guard.bats` to exercise `plugins/laya-guard/provision.sh` directly (behavior asserts survive; location greps change)
     — **Why:** single home for the logic; tests point at the real artifact
     — **Done when:** `grep -c provision_laya_guard deploy/setup.sh` = 0; `bats tests/test_laya_guard.bats` green
     — **Consumers affected:** none
+    — **Done:** provision_laya_guard (93 lines incl. comment block) + its setup_config call site deleted — 0 references left; test_laya_guard.bats +6 tests (parses, setup.sh-free, generic hook, dry-run no-mutation, SKIP escape, no process.env) — 14/14 green; files: deploy/setup.sh, tests/test_laya_guard.bats; fixes: none
 
 ### Phase 4: seed-provider-auth.mjs
 
@@ -164,6 +167,8 @@ LOG fix1: test_setup_ps1_vars pin grep moved to pack JSON (pin relocated by desi
 LOG fix2: pack_permissions merge-strip test used undefined $CONFIG/$PACKS_DIR → literal deploy/opencode.json + deploy/packs
 
 GATE phase2 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — test_mcp_count_consistency + test_help_parity green with ZERO test edits (derivation satisfies guards by construction); deploy/opencode.json restored to origin/main (phase-1 test artifact)
+
+GATE phase3 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — test_laya_guard 14/14, dry_run_leaks + deploy_delegate no regression; deploy_plugins hook verified in sandbox
 
 ## Technical Notes
 
