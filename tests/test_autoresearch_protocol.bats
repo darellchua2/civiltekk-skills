@@ -334,7 +334,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-skill/references"
   [ -f "$skill_md" ]
   grep -q '^## Iteration Protocol (opt-in)' "$skill_md"
 }
-@test "{}" {
+@test "tier3_code-smells_has_opt_in_metadata" {
   # #690: opt-in marker moved to the router frontmatter
   skill_md="$SKILLS_DIR/code-principles-skill/SKILL.md"
   [ -f "$skill_md" ]
@@ -386,7 +386,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-skill/references"
   [ -f "$skill_md" ]
   grep -q '^## Iteration Protocol (opt-in)' "$skill_md"
 }
-@test "{}" {
+@test "tier3_solid-principles_has_opt_in_metadata" {
   # #690: opt-in marker moved to the router frontmatter
   skill_md="$SKILLS_DIR/code-principles-skill/SKILL.md"
   [ -f "$skill_md" ]
@@ -404,7 +404,7 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-skill/references"
   [ -f "$skill_md" ]
   grep -q '^## Iteration Protocol (opt-in)' "$skill_md"
 }
-@test "{}" {
+@test "tier3_clean-code_has_opt_in_metadata" {
   # #690: opt-in marker moved to the router frontmatter
   skill_md="$SKILLS_DIR/code-principles-skill/SKILL.md"
   [ -f "$skill_md" ]
