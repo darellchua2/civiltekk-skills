@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [18.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v17.0.0...v18.0.0) (2026-10-31)
+
+### ⚠ BREAKING CHANGES
+
+* consolidate 7 code-principle skills into code-principles-skill router (#690) (#695)
+
+### Features
+
+* consolidate 7 code-principle skills into code-principles-skill router ([#690](https://github.com/darellchua2/civiltekk-skills/issues/690)) ([#695](https://github.com/darellchua2/civiltekk-skills/issues/695)) ([e35972f](https://github.com/darellchua2/civiltekk-skills/commit/e35972f9c4039b5fb6dc78d40878502bad2115bb))
+
 ## [17.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v16.0.0...v17.0.0) (2026-10-31)
 
 ### ⚠ BREAKING CHANGES
