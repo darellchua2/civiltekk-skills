@@ -201,3 +201,4 @@ LOG phase-5: exit gate full on 559efc70 — bats 0 failures, TS green, registry 
 
 ## Trace
 GATE 559efc70 tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
+GATE 4f86e49e tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
