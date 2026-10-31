@@ -16,9 +16,57 @@
 - [ ] Full bats suite passes (skill isolation, vendored-copy guard)
 - [ ] Generalizer output contract deliverables: weight line before→after, change list, residual list
 
-## Audit Baseline (measured at plan time)
+## Audit Notes (Phase 1 — detector pass, 2026-10-31)
 
-15 skills, ~114,100 bytes of SKILL.md total (~28.5k tokens), ~25MB on disk. Merge set (10): cad-urdf, cad-srdf, cad-sdf, cad-gcode, cad-bambu-labs, cad-sendcutsend, cad-step-parts, civil-3d, autodesk-aps, open3d. Sibling set (5, stay installable): cad-generation (1.9MB), cad-dxf (732KB), cad-implicit (552KB), cad-redraw (180KB, borderline — runtime toolchain-heavy), cad-viewer (18.5MB vendored app).
+### Split confirmation (step 1.2)
+
+Merge set confirmed — all self-contained text + stdlib/pip scripts:
+
+| Skill | Route id | Side assets |
+|---|---|---|
+| cad-urdf-skill | `urdf` | refs 6 files, scripts/urdf + packages/cadpy_metadata, req |
+| cad-srdf-skill | `srdf` | refs 8 files, scripts/srdf + same cadpy_metadata (byte-identical), req |
+| cad-sdf-skill | `sdf` | refs 12 files, scripts/sdf + same cadpy_metadata (byte-identical), req |
+| cad-gcode-skill | `gcode` | refs 2 files, scripts/gcode_tool.py |
+| cad-bambu-labs-skill | `bambu` | refs 3 files, scripts/bambu_lan_print.py |
+| cad-sendcutsend-skill | `sendcutsend` | refs 2 files, no scripts |
+| cad-step-parts-skill | `step-parts` | refs 1 file, scripts/download_step_part.py |
+| civil-3d-skill | `civil3d` | text-only |
+| autodesk-aps-skill | `aps` | text-only |
+| open3d-skill | `open3d` | text-only |
+
+Sibling set confirmed — vendored app or heavy toolchain: cad-generation (1.9MB engine), cad-dxf (732KB), cad-implicit (552KB), cad-redraw (180KB, ODA toolchain runtime deps), cad-viewer (18.5MB vendored browser app). **cad-redraw → sibling** (its weight is runtime tooling, not bytes).
+
+### Named-entity dispositions (step 1.1)
+
+- **Keep (attribution/provenance, not method):** `earthtojake/text-to-cad` provenance links; `extracted from *-specialist-subagent` provenance lines (civil3d/aps/open3d).
+- **Keep (domain vocabulary = route identity/service facts):** step.parts / api.step.parts; SendCutSend; Bambu Lab, A1 Mini, p1s-0.4, OrcaSlicer, PrusaSlicer, CuraEngine, Bambu Studio; RViz, Gazebo/Ignition, MoveIt, ROS; Autodesk Civil 3D / Revit / Fusion 360 / AutoCAD / ObjectARX / Dynamo / LINZ; Open3D + dataset/sensor names (KITTI, NuScenes, ScanNet, Azure Kinect, RealSense, LIVOX).
+- **Drop (origin-story phrasing, 1 hit):** bambu "the validated A1 Mini path **from this repo's LAN debugging**" → "the validated A1 Mini path (LAN debugging)".
+- **Reword (cross-skill path reference, 1 hit):** srdf → "in that skill, read `references/moveit2-server.md`" names a sibling's internal file; reword to skill-name reference without repo path.
+
+### Anecdote→rule scan
+
+No rewrite needed: bambu Failure Modes and gcode backend notes are already signature + mechanism + test form. The STS3215 alias example generalizes (search aliases/vendor spellings) — keep.
+
+### Constants audit
+
+- **Protocol facts (keep unconditional):** Civil 3D PROGID mapping (13.6→13.3), SDF `version="1.12"`, DXF `$INSUNITS` 1=inch/4=mm, Bambu error codes 83935248 / 0500-C010, Open3D API signatures/RANSAC parameters.
+- **Examples (keep, clearly illustrative):** 180×180 bed, 220/65 °C temps in JSON shapes.
+
+### Cross-reference resolution (pass 8)
+
+- urdf ↔ srdf ↔ sdf format-boundary references → internal route references.
+- gcode ↔ bambu boundary → internal route references.
+- sendcutsend → cad-generation-skill → **sibling install-if-missing row** (generation stays out of the merge).
+- 6 of 10 routes → cad-viewer-skill handoff → **shared router hard rule** + viewer install-if-missing row ("report if unavailable, never silently omit").
+- gcode → references/slicer-backends.md, gcode-validation.md; urdf/srdf/sdf → per-format reference files: absorbed into `references/routes/<id>/` subdirs.
+- Repeated verbatim blocks promoted to router spine once: `python`-as-placeholder interpreter note; viewer handoff rule; generation-time validation + report-assumptions shape.
+
+### Vendor facts
+
+- `cadpy_metadata` package byte-identical ×3 (diff -rq clean) → single copy at `scripts/packages/cadpy_metadata`; scripts/urdf|srdf|sdf subdirs preserved as-is.
+- LICENSE: all 7 present merge-set LICENSE files identical house Apache-2.0 → one root LICENSE; civil3d/aps/open3d covered by repo license. `requirements.txt` ×3 all `--editable ./scripts/packages/cadpy_metadata` → single merged file.
+
 
 ## Dependency & Consumer Map
 
@@ -38,14 +86,16 @@ Phase ordering constraint: no deletion (4.1) before every consumer of the 10 IDs
 
 ### Phase 1: Generalizer audit (detector pass)
 
-- [ ] **1.1** Run named-entity, anecdote→rule, constants, and contradiction detectors over the 10 merge-set SKILL.mds; record every proper noun / anecdote / magic number with its disposition (generalize / pin / parameterize / delete) in a new `## Audit Notes` section of this PLAN
+- [x] **1.1** Run named-entity, anecdote→rule, constants, and contradiction detectors over the 10 merge-set SKILL.mds; record every proper noun / anecdote / magic number with its disposition (generalize / pin / parameterize / delete) in a new `## Audit Notes` section of this PLAN
     — **Why:** the generalizer method requires the detector pass before merge content is written; dispositions drive route-file content
     — **Done when:** zero un-dispositioned named entities remain in the 10 files; notes list each finding + disposition
     — **Consumers affected:** Phase 2 route files
-- [ ] **1.2** Confirm the merge/sibling split against the sizing rule (dir bytes, vendored third-party app detection, heavy runtime deps); decide borderline `cad-redraw` and record the outcome per skill
+    — **Done:** all 10 files scanned (read in full); 4 disposition classes recorded in Audit Notes — 2 drop/reword hits, 0 un-dispositioned entities; files: PLANS/PLAN-679.md; fixes: none
+- [x] **1.2** Confirm the merge/sibling split against the sizing rule (dir bytes, vendored third-party app detection, heavy runtime deps); decide borderline `cad-redraw` and record the outcome per skill
     — **Why:** the Phase 4 deletion list must be exact before any removal
     — **Done when:** audit notes name the final 10 merge IDs and 5 sibling IDs, each with the rule outcome that placed it
     — **Consumers affected:** Phases 2–4
+    — **Done:** split table recorded with per-skill rule outcomes; cad-redraw → sibling (runtime toolchain weight); files: PLANS/PLAN-679.md; fixes: none
 
 ### Phase 2: Build skills/cad-specialist-skill/
 
@@ -145,3 +195,7 @@ Phase ordering constraint: no deletion (4.1) before every consumer of the 10 IDs
 ## Trace
 
 (appended at execution: phase commits, gate memos, deliverables)
+
+LOG phase-1: docs-only phase (PLAN audit notes); no source files touched.
+GATE b58170f tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
+
