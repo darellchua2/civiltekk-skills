@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [16.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v15.0.0...v16.0.0) (2026-10-31)
+
+### ⚠ BREAKING CHANGES
+
+* consolidate 4 autoresearch skills into autoresearch-skill router (#688) (#693)
+
+### Features
+
+* consolidate 4 autoresearch skills into autoresearch-skill router ([#688](https://github.com/darellchua2/civiltekk-skills/issues/688)) ([#693](https://github.com/darellchua2/civiltekk-skills/issues/693)) ([5ebad55](https://github.com/darellchua2/civiltekk-skills/commit/5ebad55210c1bfa68f0547433b74a42648b5d864)), closes [#602](https://github.com/darellchua2/civiltekk-skills/issues/602)
+
 ## [15.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v14.0.0...v15.0.0) (2026-10-31)
 
 ### ⚠ BREAKING CHANGES
