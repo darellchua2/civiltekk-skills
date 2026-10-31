@@ -60,20 +60,23 @@ Phase order: P1 → P2 (listings read pack data); P3, P4 independent; P5 after P
     — **Consumers affected:** none
     — **Done:** tests updated: pack_permissions (3 pins moved to pack JSON + 2 new tests: schema validation, merge-strip guard), help_parity (bump-ritual grep → pack JSON + setup.sh pin-absence), ps1_vars (pin greps → pack JSON), dry_run_leaks (+install_pack_runtime preview case); files: tests/test_pack_permissions.bats, tests/test_help_parity.bats, tests/test_setup_ps1_vars.bats, tests/test_dry_run_leaks.bats; fixes: undefined $CONFIG/$PACKS_DIR in pack_permissions test → literal paths
 
-### Phase 2: Derived MCP listings
+### Phase 2: Derived MCP listings ✅
 
-- [ ] **2.1** Add `mcp_state_listing` helper to `deploy/setup.sh` (one `node -e` read of the deployed `~/.config/opencode/opencode.json` `mcp.servers` — auto-start = `disabled:false` — plus packs-dir enumeration with required-key hints from pack `$comment`/`requires` field; falls back to `deploy/opencode.json` when no config deployed)
+- [x] **2.1** Add `mcp_state_listing` helper to `deploy/setup.sh` (one `node -e` read of the deployed `~/.config/opencode/opencode.json` `mcp.servers` — auto-start = `disabled:false` — plus packs-dir enumeration with required-key hints from pack `$comment`/`requires` field; falls back to `deploy/opencode.json` when no config deployed)
     — **Why:** one derivation point replaces four hand-maintained lists; the drift class this repo has re-fixed three times dies
     — **Done when:** helper prints auto-start + opt-in lists correctly against a fixture config; missing config file → falls back to source config, never errors
     — **Consumers affected:** the four surfaces in 2.2
-- [ ] **2.2** Replace the hand-written MCP blocks in `show_help`, `setup_config` echo, `print_summary`, and `print_next_steps` with `mcp_state_listing` output (keep the literal `MCP SERVERS:` header line — `test_mcp_count_consistency.bats` greps it)
+    — **Done:** mcp_state_listing + mcp_state_lines + mcp_state_count + mcp_pack_names added (packs derive covered servers from their own mcp.servers keys — handles nextjs→next-devtools mapping); verified AUTO-START=3/PACKED=7/OPTIN=1(atlassian)/COUNT=11 + no-deployed-config fallback to source; files: deploy/setup.sh; fixes: none
+- [x] **2.2** Replace the hand-written MCP blocks in `show_help`, `setup_config` echo, `print_summary`, and `print_next_steps` with `mcp_state_listing` output (keep the literal `MCP SERVERS:` header line — `test_mcp_count_consistency.bats` greps it)
     — **Why:** surfaces stop restating; a new pack appears in help/summary automatically
     — **Done when:** `grep -n "markitdown,docling\|alpha-vantage,nanobanana" deploy/setup.sh` finds zero hand-maintained enumerations outside comments; the four surfaces render the helper output
     — **Consumers affected:** `tests/test_help_parity.bats`, `tests/test_mcp_count_consistency.bats`
-- [ ] **2.3** Verify count tests: `bats tests/test_mcp_count_consistency.bats tests/test_help_parity.bats` green (no test edit expected — derivation satisfies the existing greps by construction)
+    — **Done:** all four surfaces rewired (show_help MCP SERVERS block, setup_config echo, print_summary, print_next_steps incl. dynamic MCP Servers (N) count + derived --enable-pack vocabulary); parse_arguments error + flag comment de-enumerated; files: deploy/setup.sh; fixes: worktree deploy/opencode.json had been silently mutated by an earlier in-place merge test AND swept into the phase-1 commit — reverted to origin/main here (fix-forward)
+- [x] **2.3** Verify count tests: `bats tests/test_mcp_count_consistency.bats tests/test_help_parity.bats` green (no test edit expected — derivation satisfies the existing greps by construction)
     — **Why:** proves the drift class is closed without loosening guards
     — **Done when:** both files green
     — **Consumers affected:** none
+    — **Done:** test_mcp_count_consistency + test_help_parity green with zero test edits — derivation satisfies the guards by construction; also re-ran dry_run_leaks + pack_permissions (no regression); files: none; fixes: none
 
 ### Phase 3: Plugin provisioning convention
 
@@ -159,6 +162,8 @@ Phase order: P1 → P2 (listings read pack data); P3, P4 independent; P5 after P
 GATE bc5e069+phase1 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — 67/67 green across test_pack_permissions, test_help_parity, test_dry_run_leaks, deploy_delegate, test_setup_ps1_vars, test_markitdown_skill, test_docling_skill
 LOG fix1: test_setup_ps1_vars pin grep moved to pack JSON (pin relocated by design)
 LOG fix2: pack_permissions merge-strip test used undefined $CONFIG/$PACKS_DIR → literal deploy/opencode.json + deploy/packs
+
+GATE phase2 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — test_mcp_count_consistency + test_help_parity green with ZERO test edits (derivation satisfies guards by construction); deploy/opencode.json restored to origin/main (phase-1 test artifact)
 
 ## Technical Notes
 

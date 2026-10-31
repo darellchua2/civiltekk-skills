@@ -362,7 +362,7 @@ MODELS_ONLY=false        # --models-only (provider + resolve only)
 FORCE_RESOLVE=false      # --force (ignore preserve-edits)
 MIGRATE_ONLY=false       # --migrate (migration + resolve only)
 MIX_MODE=false           # --mix (per-category provider/model editor)
-ENABLE_PACK=""           # --enable-pack <csv> (provider packs: markitdown,nextjs,docling,chrome-devtools,playwright,alpha-vantage,nanobanana)
+ENABLE_PACK=""           # --enable-pack <csv> (provider packs — the vocabulary is deploy/packs/pack-*.json)
 SKILL_PROFILE="lean"     # --skill-profile lean|full (default lean: primary-visible skills per deploy/skill-profiles.json; full = the shipped opencode.json skill set)
 
 # API Keys (initialize to empty to avoid unbound variable errors)
@@ -448,6 +448,79 @@ print_skill_categories() {
         | sed -E 's/^[[:space:]]*category:[[:space:]]*//' \
         | sort | uniq -c | sort -rn \
         | while read -r n c; do [ -n "$c" ] && echo "    - ${c} (${n})"; done
+}
+
+# Derive MCP state from data (#677): the deployed config's mcp.servers block
+# + the packs dir are the single source. The four prose surfaces (help,
+# config echo, summary, next-steps) render this output — hand-maintained
+# server lists were the drift class this replaces (PLAN-GIT-262/GIT-336/GIT-364).
+# Falls back to the shipped source config when nothing is deployed yet.
+# Prints one KEY: value line per state:
+#   AUTO-START: <csv, servers with disabled:false>
+#   PACKED:    <csv, servers covered by a pack partial's mcp.servers keys>
+#   OPTIN:     <csv, remaining disabled servers (per-project opt-in)>
+#   COUNT:     <total server entries>
+mcp_state_listing() {
+    local config_src="$CONFIG_FILE"
+    [ -f "$config_src" ] || config_src="$SOURCE_CONFIG"
+    node -e '
+        const fs = require("fs");
+        const read = (f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return null; } };
+        const config = read(process.argv[1]) || {};
+        const servers = (config.mcp && config.mcp.servers) || {};
+        const autostart = [], names = Object.keys(servers);
+        for (const name of names) {
+            if (servers[name] && servers[name].disabled === false) autostart.push(name);
+        }
+        const packed = [];
+        try {
+            for (const f of fs.readdirSync(process.argv[2])) {
+                if (!/^pack-.+\.json$/.test(f)) continue;
+                const pack = read(process.argv[2] + "/" + f);
+                if (pack && pack.mcp && pack.mcp.servers) packed.push(...Object.keys(pack.mcp.servers));
+            }
+        } catch {}
+        const optin = names.filter((n) => !autostart.includes(n) && !packed.includes(n));
+        console.log("AUTO-START: " + autostart.join(", "));
+        console.log("PACKED: " + packed.join(", "));
+        console.log("OPTIN: " + optin.join(", "));
+        console.log("COUNT: " + names.length);
+    ' "$config_src" "$PACKS_DIR" 2>/dev/null
+}
+
+# Render mcp_state_listing as the three prose lines the surfaces share.
+# Prefix-free (callers indent); csv counts derived, never hand-written.
+mcp_state_lines() {
+    local listing auto packed optin
+    listing="$(mcp_state_listing)"
+    auto="$(sed -n 's/^AUTO-START: //p' <<< "$listing")"
+    packed="$(sed -n 's/^PACKED: //p' <<< "$listing")"
+    optin="$(sed -n 's/^OPTIN: //p' <<< "$listing")"
+    local n_auto n_packed n_optin
+    n_auto="$(awk -F', ' 'NF {print NF}' <<< "$auto")"; n_auto="${n_auto:-0}"
+    n_packed="$(awk -F', ' 'NF {print NF}' <<< "$packed")"; n_packed="${n_packed:-0}"
+    n_optin="$(awk -F', ' 'NF {print NF}' <<< "$optin")"; n_optin="${n_optin:-0}"
+    echo "Auto-start (${n_auto}): ${auto:-none}"
+    echo "Opt-in via provider packs (${n_packed}) — ./setup.sh --enable-pack <name>: ${packed:-none}"
+    echo "Opt-in per-project (${n_optin}) — .opencode/opencode.json: ${optin:-none}"
+}
+
+# Total configured MCP server entries (derived — the count-literal ban in
+# test_mcp_count_consistency.bats applies to prose surfaces, never here).
+mcp_state_count() {
+    sed -n 's/^COUNT: //p' <<< "$(mcp_state_listing)"
+}
+
+# Pack names (the --enable-pack vocabulary) derived from the packs dir —
+# mirrors validate_enable_pack's enumeration without duplicating it.
+mcp_pack_names() {
+    local f out=""
+    for f in "$PACKS_DIR"/pack-*.json; do
+        [ -f "$f" ] || continue
+        out="${out}${f##*/pack-}"
+        out="${out%.json}|"
+    done
+    echo "${out%|}"
 }
 
 ################################################################################
@@ -616,7 +689,7 @@ USAGE:
                           and appends v2 permissions-array allow rules for the
                           named packs. Available
                           packs: markitdown, nextjs, docling, chrome-devtools, playwright, alpha-vantage, nanobanana
-                          (comma-separated, e.g. --enable-pack markitdown,docling).
+                          (comma-separated pack names, e.g. two packs — see the derived list under MCP SERVERS).
                           No-op if omitted; default state of every pack is OFF.
 
   SKILL PROFILE (deploy-time primary visibility):
@@ -642,7 +715,7 @@ USAGE:
 
   Provider packs (deploy-time MCP toggle):
     ./setup.sh --enable-pack markitdown           # Enable the markitdown MCP server
-    ./setup.sh --enable-pack markitdown,docling   # Enable multiple packs
+    ./setup.sh --enable-pack <pack-names>   # Enable packs (see MCP SERVERS for the derived list)
     ./setup.sh --quick --enable-pack markitdown   # Combine with other modes
 
   Model resolution + skill profile:
@@ -734,22 +807,9 @@ USAGE:
            opencode --agent explore "find all API routes"
 
   MCP SERVERS:
-    Auto-start (enabled by default):
-      codegraph           Pre-indexed code knowledge graph (100% local)
-      zai-web-reader      Web page content extraction (remote, needs ZAI_API_KEY)
-      zai-web-search      Web search with cited results (remote, needs ZAI_API_KEY)
-
-    Available but disabled (opt-in — enable per-project via
-    opencode.json or opencode-repo-setup-skill):
-      atlassian           JIRA and Confluence integration (first use opens browser OAuth)
-      next-devtools      Next.js DevTools integration
-      markitdown         Document-to-Markdown (upstream markitdown-mcp, stdio, plugins off)
-      docling            Layout-aware document extraction (heavy ~3-4 GB)
-      chrome-devtools    Live Chrome automation: perf traces, network/console, Lighthouse, heap snapshots
-                          (privacy-hardened: telemetry + CrUX OFF; throwaway profile; enable via --enable-pack chrome-devtools)
-      playwright         Logged-in web automation via accessibility snapshots (Microsoft, Apache-2.0)
-      alpha-vantage      Market/macro/commodities data with cited figures (remote; needs ALPHA_VANTAGE_API_KEY)
-      nanobanana         Google Nano Banana image generation: 4K, multi-reference editing (needs GEMINI_API_KEY)
+$(mcp_state_lines | sed 's/^/    /')
+    Enable a group: ./setup.sh --enable-pack <$(mcp_pack_names)>
+    (listing derived from the deployed opencode.json + deploy/packs — never hand-maintained)
 
     SKILLS ($(count_skills "${REPO_DIR}/skills")):
 
@@ -933,7 +993,7 @@ parse_arguments() {
                 # Accept any value including "" (empty = no-op, handled by
                 # merge-packs.mjs). Only error if no following token at all.
                 if [ $# -lt 2 ]; then
-                    log_error "--enable-pack requires an argument (csv: markitdown,nextjs,docling,chrome-devtools,playwright,alpha-vantage,nanobanana)"
+                    log_error "--enable-pack requires an argument (csv: $(mcp_pack_names | tr '|' ','))"
                     exit 1
                 fi
                 ENABLE_PACK="$2"
@@ -2833,10 +2893,8 @@ setup_config() {
         echo "    - ... and $(($(count_agents "${REPO_DIR}/agents") - 6)) more agents"
             echo ""
              echo "✓ Configured MCP servers:"
-             echo "    Auto-start: codegraph, web-reader, web-search"
-              echo "    Opt-in per-project (.opencode/opencode.json): atlassian"
-              echo "    Available but disabled (opt-in): next-devtools, markitdown, docling, chrome-devtools, playwright, alpha-vantage, nanobanana"
-              echo "    Enable a group with: ./setup.sh --enable-pack <markitdown|nextjs|docling|chrome-devtools|playwright|alpha-vantage|nanobanana>"
+            mcp_state_lines | sed 's/^/    /'
+              echo "    Enable a group with: ./setup.sh --enable-pack <$(mcp_pack_names)>"
             echo ""
         else
             log_error "opencode.json source not found: ${SOURCE_CONFIG}"
@@ -4905,20 +4963,10 @@ print_summary() {
         echo "    - ... and $(($(count_agents "${REPO_DIR}/agents") - 5)) more agents"
     fi
 
-    # MCP servers configured
+    # MCP servers configured — listing derived (#677), never hand-maintained
     if [ -f "$CONFIG_FILE" ]; then
-         echo "✓ Configured MCP servers:"
-         echo "    - codegraph - Code knowledge graph (auto-start)"
-         echo "    - web-reader - Web page reading (auto-start, needs ZAI_API_KEY)"
-         echo "    - web-search - Web search with cited results (auto-start, needs ZAI_API_KEY)"
-         echo "    - atlassian - JIRA and Confluence (opt-in per-project)"
-         echo "    - next-devtools - Next.js DevTools (opt-in)"
-         echo "    - markitdown - Document-to-Markdown (upstream markitdown-mcp), opt-in"
-         echo "    - docling - Layout-aware document extraction, opt-in (~3-4 GB)"
-         echo "    - chrome-devtools - Live Chrome automation, opt-in"
-         echo "    - playwright - Logged-in web automation, opt-in"
-         echo "    - alpha-vantage - Market/macro data (needs ALPHA_VANTAGE_API_KEY), opt-in"
-         echo "    - nanobanana - Nano Banana image generation (needs GEMINI_API_KEY), opt-in"
+         echo "✓ Configured MCP servers (derived from the deployed config):"
+         mcp_state_lines | sed 's/^/     /'
 
     # Secret masking
     if [ -f "${CONFIG_DIR}/vibeguard.config.json" ]; then
@@ -5006,12 +5054,11 @@ print_next_steps() {
     echo "  Run 'opencode --skill <name> \"prompt\"' to use a skill"
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-     echo "                     🔌 MCP Servers (4)"
+     echo "                     🔌 MCP Servers ($(mcp_state_count))"
      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
      echo ""
-     echo "  Auto-start: codegraph, web-reader, web-search"
-      echo "  Opt-in per-project: atlassian"
-     echo "  Opt-in global packs: next-devtools, markitdown, docling, chrome-devtools, playwright, alpha-vantage, nanobanana"
+    mcp_state_lines | sed 's/^/  /'
+     echo "  Enable a group: ./setup.sh --enable-pack <$(mcp_pack_names)>"
     echo ""
     echo "  Auth: opencode mcp auth atlassian / opencode mcp auth github"
     echo ""
