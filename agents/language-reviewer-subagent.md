@@ -46,16 +46,7 @@ permissions:
     resource: reviewer-baseline-skill
     effect: allow
   - action: skill
-    resource: solid-principles-skill
-    effect: allow
-  - action: skill
-    resource: clean-code-skill
-    effect: allow
-  - action: skill
-    resource: code-smells-skill
-    effect: allow
-  - action: skill
-    resource: design-patterns-skill
+    resource: code-principles-skill
     effect: allow
   - action: skill
     resource: civiltekk-python-backend-skill

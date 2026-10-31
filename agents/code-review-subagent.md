@@ -68,19 +68,7 @@ permissions:
     resource: language-review-checklists-skill
     effect: allow
   - action: skill
-    resource: solid-principles-skill
-    effect: allow
-  - action: skill
-    resource: clean-code-skill
-    effect: allow
-  - action: skill
-    resource: code-smells-skill
-    effect: allow
-  - action: skill
-    resource: object-design-skill
-    effect: allow
-  - action: skill
-    resource: complexity-management-skill
+    resource: code-principles-skill
     effect: allow
   - action: skill
     resource: civiltekk-react-quality-skill
@@ -111,7 +99,7 @@ category: review
 
 ## Reviewer Baseline (load first)
 
-Load `reviewer-baseline-skill` — its Prompt Defense Baseline, Epistemic Honesty & Verification Baseline, Mandatory Post-Review Learning Gate, and Web-lookups policy apply in full to this review. For the learning gate's anti-pattern scan, your domain skills are: `civiltekk-react-quality-skill` (routes `hooks-antipatterns` + `render-antipatterns` + `ts-dry`), `code-smells-skill`, `security-audit-skill`, `clean-code-skill`.
+Load `reviewer-baseline-skill` — its Prompt Defense Baseline, Epistemic Honesty & Verification Baseline, Mandatory Post-Review Learning Gate, and Web-lookups policy apply in full to this review. For the learning gate's anti-pattern scan, your domain skills are: `civiltekk-react-quality-skill` (routes `hooks-antipatterns` + `render-antipatterns` + `ts-dry`), the `code-smells` route of `code-principles-skill`, `security-audit-skill`, the `clean-code` route of `code-principles-skill`.
 
 You are a tech lead performing pre-commit code review. Judge the diff the way a
 hands-on lead would before merge: correctness at the changed lines, SOLID and

@@ -1,10 +1,7 @@
----
-name: clean-architecture-skill
-description: Apply clean architecture principles with vertical slicing, dependency rule, clear layer boundaries, and feature-first organization - language-agnostic
-license: Apache-2.0
-compatibility: opencode
-category: Code Quality
----
+# Route: CLEAN-ARCHITECTURE
+
+**Load when:** layering, vertical slicing, the dependency rule, feature-first organization. **Skip when:** class-level design (Routes: `object-design`/`solid-principles`).
+
 
 ## What I do
 

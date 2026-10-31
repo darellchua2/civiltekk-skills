@@ -1,12 +1,7 @@
----
-name: clean-code-skill
-description: Write clean, human-readable code with proper naming, small functions, self-documenting patterns, and object calisthenics - language-agnostic
-license: Apache-2.0
-compatibility: opencode
-metadata:
-  protocol: autoresearch-opt-in
-category: Code Quality
----
+# Route: CLEAN-CODE
+
+**Load when:** writing or reviewing code for readability, naming, small functions, self-documenting style, object calisthenics. **Skip when:** a specific smell hunt (Route: `code-smells`), SOLID compliance (Route: `solid-principles`), or pattern selection (Route: `design-patterns`).
+
 
 ## What I do
 

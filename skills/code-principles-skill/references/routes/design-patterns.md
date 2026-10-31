@@ -1,10 +1,7 @@
----
-name: design-patterns-skill
-description: Apply GoF design patterns (Creational, Structural, Behavioral) appropriately without over-engineering - language-agnostic with practical examples
-license: Apache-2.0
-compatibility: opencode
-category: Code Quality
----
+# Route: DESIGN-PATTERNS
+
+**Load when:** choosing or reviewing GoF patterns (Creational/Structural/Behavioral) without over-engineering — applicability per pattern. **Skip when:** principle-level questions (Routes: `solid-principles`/`object-design`).
+
 
 ## What I do
 

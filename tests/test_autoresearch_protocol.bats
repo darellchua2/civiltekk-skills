@@ -330,17 +330,18 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-skill/references"
 
 # --- code-smells ---
 @test "tier3_code-smells_has_iteration_protocol_section" {
-  skill_md="$SKILLS_DIR/code-smells-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/code-smells.md"
   [ -f "$skill_md" ]
   grep -q '^## Iteration Protocol (opt-in)' "$skill_md"
 }
 @test "tier3_code-smells_has_opt_in_metadata" {
-  skill_md="$SKILLS_DIR/code-smells-skill/SKILL.md"
+  # #690: opt-in marker moved to the router frontmatter
+  skill_md="$SKILLS_DIR/code-principles-skill/SKILL.md"
   [ -f "$skill_md" ]
   python3 -c "import yaml; d=open('$skill_md').read(); fm=yaml.safe_load(d.split('---')[1]); assert fm['metadata'].get('protocol')=='autoresearch-opt-in'"
 }
 @test "tier3_code-smells_cites_iteration_safety" {
-  skill_md="$SKILLS_DIR/code-smells-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/code-smells.md"
   [ -f "$skill_md" ]
   grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
@@ -381,34 +382,36 @@ CORE_REFS_DIR="$SKILLS_DIR/autoresearch-skill/references"
 
 # --- solid-principles ---
 @test "tier3_solid-principles_has_iteration_protocol_section" {
-  skill_md="$SKILLS_DIR/solid-principles-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/solid-principles.md"
   [ -f "$skill_md" ]
   grep -q '^## Iteration Protocol (opt-in)' "$skill_md"
 }
 @test "tier3_solid-principles_has_opt_in_metadata" {
-  skill_md="$SKILLS_DIR/solid-principles-skill/SKILL.md"
+  # #690: opt-in marker moved to the router frontmatter
+  skill_md="$SKILLS_DIR/code-principles-skill/SKILL.md"
   [ -f "$skill_md" ]
   python3 -c "import yaml; d=open('$skill_md').read(); fm=yaml.safe_load(d.split('---')[1]); assert fm['metadata'].get('protocol')=='autoresearch-opt-in'"
 }
 @test "tier3_solid-principles_cites_iteration_safety" {
-  skill_md="$SKILLS_DIR/solid-principles-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/solid-principles.md"
   [ -f "$skill_md" ]
   grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }
 
 # --- clean-code ---
 @test "tier3_clean-code_has_iteration_protocol_section" {
-  skill_md="$SKILLS_DIR/clean-code-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/clean-code.md"
   [ -f "$skill_md" ]
   grep -q '^## Iteration Protocol (opt-in)' "$skill_md"
 }
 @test "tier3_clean-code_has_opt_in_metadata" {
-  skill_md="$SKILLS_DIR/clean-code-skill/SKILL.md"
+  # #690: opt-in marker moved to the router frontmatter
+  skill_md="$SKILLS_DIR/code-principles-skill/SKILL.md"
   [ -f "$skill_md" ]
   python3 -c "import yaml; d=open('$skill_md').read(); fm=yaml.safe_load(d.split('---')[1]); assert fm['metadata'].get('protocol')=='autoresearch-opt-in'"
 }
 @test "tier3_clean-code_cites_iteration_safety" {
-  skill_md="$SKILLS_DIR/clean-code-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/clean-code.md"
   [ -f "$skill_md" ]
   grep -q 'autoresearch-skill/references/iteration-safety.md' "$skill_md"
 }

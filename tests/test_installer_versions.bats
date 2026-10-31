@@ -33,9 +33,9 @@ console.log(parseTagLines(out) + ' ' + empty);"
 @test "add --source . stamps .skill-source.json + manifest ref" {
     local ver
     ver="$(cat "${PROJECT_ROOT}/VERSION")"
-    run inst add solid-principles-skill --source . --target opencode --yes --no-deps
+    run inst add code-principles-skill --source . --target opencode --yes --no-deps
     [ "$status" -eq 0 ]
-    local sc="${TEST_HOME}/.config/opencode/skills/solid-principles-skill/.skill-source.json"
+    local sc="${TEST_HOME}/.config/opencode/skills/code-principles-skill/.skill-source.json"
     [ -f "$sc" ]
     run node -e "
 const m = JSON.parse(require('fs').readFileSync('${sc}', 'utf8'));
@@ -43,35 +43,35 @@ console.log([m.source.startsWith('github:'), m.ref === 'v${ver}', m.version === 
     [ "$output" = "true true true true true" ]
     run node -e "
 const m = JSON.parse(require('fs').readFileSync('${TEST_HOME}/.config/opencode/.skill-manifest.json', 'utf8'));
-const e = m.entries['solid-principles-skill'];
+const e = m.entries['code-principles-skill'];
 console.log(e.ref === 'v${ver}' && e.version === '${ver}');"
     [ "$output" = "true" ]
 }
 
 @test "sidecar is hash-transparent: update reports unchanged after add" {
-    inst add solid-principles-skill --source . --target opencode --yes --no-deps > /dev/null
+    inst add code-principles-skill --source . --target opencode --yes --no-deps > /dev/null
     run inst update
     [ "$status" -eq 0 ]
-    [[ "$output" != *"updated: solid-principles-skill"* ]]
+    [[ "$output" != *"updated: code-principles-skill"* ]]
 }
 
 @test "list installed prints installed-vs-latest rows" {
-    inst add solid-principles-skill --source . --target opencode --yes --no-deps > /dev/null
+    inst add code-principles-skill --source . --target opencode --yes --no-deps > /dev/null
     run inst list installed
     [ "$status" -eq 0 ]
     run node -e "
 const rows = JSON.parse(require('child_process').execSync(
     'HOME=${TEST_HOME} node ${PROJECT_ROOT}/installer/init.mjs list installed 2>/dev/null').toString());
-const r = rows.find((x) => x.name === 'solid-principles-skill');
+const r = rows.find((x) => x.name === 'code-principles-skill');
 console.log(r && r.installedRef && typeof r.updateAvailable === 'boolean' ? 'row-ok' : 'row-missing');"
     [ "$output" = "row-ok" ]
 }
 
 @test "--ref <older-tag> pins the installed ref exactly" {
     tag_probe_ok || skip "network unreachable — ls-remote probe failed"
-    run inst add solid-principles-skill --ref v12.18.0 --target opencode --yes --no-deps
+    run inst add ticketing-skill --ref v12.18.0 --target opencode --yes --no-deps
     [ "$status" -eq 0 ]
-    local sc="${TEST_HOME}/.config/opencode/skills/solid-principles-skill/.skill-source.json"
+    local sc="${TEST_HOME}/.config/opencode/skills/ticketing-skill/.skill-source.json"
     [ -f "$sc" ]
     run node -e "
 const m = JSON.parse(require('fs').readFileSync('${sc}', 'utf8'));

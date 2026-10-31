@@ -64,7 +64,7 @@ teardown() { rm -rf "$TMP_PROJ"; }
   delegates=$(echo "$out" | jq_get "len(d['delegatesTo'])")
   avail=$(echo "$out" | jq_get "d['modelAvailable']")
   echo "skills=$skills delegates=$delegates avail=$avail" >&3
-  [ "$skills" = "15" ]
+  [ "$skills" = "11" ]
   [ "$delegates" -ge 4 ]
   [ "$avail" = "True" ]
 }
@@ -77,13 +77,13 @@ teardown() { rm -rf "$TMP_PROJ"; }
   [ "$has_img" = "True" ]
 }
 
-@test "install review --yes lands exactly 4 agents + 27 skills + codegraph (resolver deps)" {
+@test "install review --yes lands exactly 4 agents + 21 skills + codegraph (resolver deps)" {
   run $INIT --project "$TMP_PROJ" --preset review --yes
   [ "$status" -eq 0 ]
   agent_files=$(ls "$TMP_PROJ/.opencode/agents/" | wc -l)
   skill_dirs=$(ls "$TMP_PROJ/.agents/skills/" | wc -l)
   [ "$agent_files" -eq 4 ]
-  [ "$skill_dirs" -eq 27 ]
+  [ "$skill_dirs" -eq 21 ]
 }
 
 @test "each installed agent has a model: frontmatter line" {
@@ -333,9 +333,9 @@ EOC
   run $INIT add tdd-workflow-skill -g --yes
   [ "$status" -eq 0 ]
   [ -d "${HOME}/.config/opencode/skills/tdd-workflow-skill" ]
-  run $INIT add solid-principles-skill --global --yes
+  run $INIT add code-principles-skill --global --yes
   [ "$status" -eq 0 ]
-  [ -d "${HOME}/.config/opencode/skills/solid-principles-skill" ]
+  [ -d "${HOME}/.config/opencode/skills/code-principles-skill" ]
 }
 
 @test "add -g --project conflicts and exits non-zero (#563)" {
@@ -384,9 +384,9 @@ EOC
   cd "$TMP_PROJ"
   export HOME="$TMP_PROJ/home2"
   mkdir -p "$HOME"
-  run $INIT add solid-principles-skill -p -y
+  run $INIT add code-principles-skill -p -y
   [ "$status" -eq 0 ]
-  [ -d "$TMP_PROJ/.agents/skills/solid-principles-skill" ]
+  [ -d "$TMP_PROJ/.agents/skills/code-principles-skill" ]
   [ ! -e "$TMP_PROJ/-y" ]
 }
 
@@ -422,11 +422,11 @@ EOC
   run $INIT add tdd-workflow-skill --target claude --yes
   [ "$status" -eq 0 ]
   [ -d "${HOME}/.config/opencode" ]
-  run $INIT add solid-principles-skill --target auto --yes
+  run $INIT add code-principles-skill --target auto --yes
   [ "$status" -eq 0 ]
   echo "$output" | grep -q "detected claude"
-  [ ! -e "${HOME}/.config/opencode/skills/solid-principles-skill" ]
-  [ -d "${HOME}/.claude/skills/solid-principles-skill" ]
+  [ ! -e "${HOME}/.config/opencode/skills/code-principles-skill" ]
+  [ -d "${HOME}/.claude/skills/code-principles-skill" ]
 }
 
 @test "add --prune is rejected explicitly on all add paths (#567)" {

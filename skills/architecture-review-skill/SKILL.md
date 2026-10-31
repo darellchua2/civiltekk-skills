@@ -291,8 +291,8 @@ raw tool outputs, or loaded skill content.
 Related:
 - **reviewer-baseline-skill** — load first, always (§2 step 1)
 - **blast-radius-skill** — the evidence ladder §5 applies
-- **clean-architecture-skill** — dependency rule backing axis 2
-- **complexity-management-skill** — essential vs accidental complexity backing axis 5
+- **`code-principles-skill` route `clean-architecture`** — dependency rule backing axis 2
+- **`code-principles-skill` route `complexity-management`** — essential vs accidental complexity backing axis 5
 - **security-audit-skill** — deep-dive target for axis 6 findings
-- **design-patterns-skill** — pattern appropriateness backing axis 4
+- **`code-principles-skill` route `design-patterns`** — pattern appropriateness backing axis 4
 - **requirements-specialist-subagent** — receives §8 Requirements Gaps (Mode R relay)

@@ -1,10 +1,7 @@
----
-name: object-design-skill
-description: Apply responsibility-driven design with object stereotypes, value objects, entities, aggregates, and encapsulation - language-agnostic
-license: Apache-2.0
-compatibility: opencode
-category: Code Quality
----
+# Route: OBJECT-DESIGN
+
+**Load when:** responsibility-driven design — object stereotypes, value objects vs entities, aggregates, encapsulation. **Skip when:** SOLID mechanics (Route: `solid-principles`) or pattern catalogs (Route: `design-patterns`).
+
 
 ## What I do
 

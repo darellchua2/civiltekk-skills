@@ -25,6 +25,6 @@ Any commit that adds/removes/moves skill or agent directories IS a roster
 change: regenerate `installer/registry.json` and update the README count
 literals (the `readme_count_assert` contexts) IN THE SAME COMMIT — the
 count-drift tests enforce disk↔registry↔README agreement at every commit, so
-a split commit cannot go green. Never `git checkout` a generated artifact to
+a split commit cannot go green. The count surface is NOT just README: `tests/skill_profiles.bats` pins the lean length and installer tests pin preset/agent counts — update every pinned count in the same commit (recurred 4×: #680, #687, #690×2 before this line was added). Never `git checkout` a generated artifact to
 "clean up" before a gate run: if a regen diff exists, either commit it or
 prove it is timestamp-only first.

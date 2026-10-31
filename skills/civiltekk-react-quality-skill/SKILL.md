@@ -112,7 +112,7 @@ of LOW fixes (hoisting regexps).
   module-scope cache leaks) → `performance-optimization-skill`; the `perf`
   route is React/Next.js-specific.
 - Language-agnostic duplication smells (Rule of Three, extract-function)
-  → `code-smells-skill` / `clean-code-skill`; route `ts-dry` is the
+  → the `code-smells` route of `code-principles-skill` / the `clean-code` route of `code-principles-skill`; route `ts-dry` is the
   TypeScript-specific recipe (canonical type imports, shared status maps).
 
 ## Agent behavior rules

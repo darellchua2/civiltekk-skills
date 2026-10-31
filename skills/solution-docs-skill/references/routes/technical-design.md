@@ -124,7 +124,7 @@ graph TD
 | {e.g. Runtime} | {e.g. Node.js 20} | {why} |
 | {e.g. Data store} | {e.g. Postgres} | {why} |
 
-> Reference `design-patterns-skill` and `search-first-skill` for stack rationale.
+> Reference the `design-patterns` route of `code-principles-skill` and `search-first-skill` for stack rationale.
 ```
 
 ### 2.3 Layering & Dependency Strategy
@@ -134,7 +134,7 @@ graph TD
 
 {Describe the layering (e.g. clean architecture: domain → application →
 infrastructure → presentation) and the dependency rule (dependencies point
-inward toward domain). Reference `clean-architecture-skill`.}
+inward toward domain). Reference the `clean-architecture` route of `code-principles-skill`.}
 ```
 
 ---

@@ -47,13 +47,7 @@ permissions:
     resource: architecture-review-skill
     effect: allow
   - action: skill
-    resource: clean-architecture-skill
-    effect: allow
-  - action: skill
-    resource: design-patterns-skill
-    effect: allow
-  - action: skill
-    resource: complexity-management-skill
+    resource: code-principles-skill
     effect: allow
   - action: skill
     resource: security-audit-skill

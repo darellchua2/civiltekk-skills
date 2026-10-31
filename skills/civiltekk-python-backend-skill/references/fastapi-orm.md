@@ -2,7 +2,7 @@
 
 Battle-tested patterns for FastAPI + Pydantic v2 + SQLAlchemy/asyncpg backends, extracted from production incidents across multiple repos. Each pattern caused a real bug and has a concrete fix. The host SKILL.md carries the METHOD (detect → route → load); this file carries the VALUES for the `patterns` route.
 
-<!-- Provenance: canvastekk-workflow-engine + canvastekk-defect-service LEARNINGS. PLAN-GIT-312. Excludes 12 patterns already in the scaffold route, design-patterns-skill, object-design-skill. -->
+<!-- Provenance: canvastekk-workflow-engine + canvastekk-defect-service LEARNINGS. PLAN-GIT-312. Excludes 12 patterns already in the scaffold route, code-principles-skill route `design-patterns`, code-principles-skill route `object-design`. -->
 
 **Scope:** writing or reviewing FastAPI endpoints (especially async sessions); configuring Pydantic v2 models, validators, serializers; writing Alembic migrations (especially asyncpg + JSONB); auditing multi-tenant isolation or auth flows; debugging race conditions in state transitions; reviewing error handling in service-to-service calls.
 
