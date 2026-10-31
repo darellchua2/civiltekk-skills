@@ -16,6 +16,26 @@
 
 7 markdown-only skills, 18,186 bytes total (clean-code 5.8K, design-patterns 3.0K, clean-architecture 2.4K, code-smells 2.1K, solid-principles 1.8K, object-design 1.8K, complexity-management 1.4K). All 7 in lean + shipped config. **3 are retrofitted autoresearch skills** (clean-code, code-smells, solid-principles): `## Iteration Protocol (opt-in)` sections + `metadata.protocol: autoresearch-opt-in` + `autoresearch-skill/references/iteration-safety.md` citations — enforced by `test_autoresearch_protocol.bats` tier3 blocks and `test_default_behavior.bats` per-skill assertions. `solid-principles-skill` is init.bats's install-fixture skill (×3+ tests) and init.mjs:917's die() example.
 
+## Audit Notes (Phase 1 — detector pass, 2026-10-31)
+
+### Boundary + retrofit design (steps 1.1–1.2)
+
+**All 7 merge.** Router: **`code-principles-skill`**. Retrofit design: route files keep their `## Iteration Protocol (opt-in)` sections + `autoresearch-skill/references/iteration-safety.md` citations VERBATIM (clean-code ×2 cites, code-smells ×1, solid-principles ×1); router frontmatter carries `metadata.protocol: autoresearch-opt-in`. Routes are loaded one-at-a-time, so per-route loop semantics are unchanged.
+
+### Test-surface inventory (step 1.1)
+
+- `test_autoresearch_protocol.bats` tier3: per-skill section/metadata/citation tests ×3 skills → section+citation retarget to route files, metadata to router.
+- `test_default_behavior.bats`: ~17 assertion lines (imperative gating preamble "DO NOT execute any of the following unless" + exactly-once + evaluator-token-in-section-only) for code-smells + solid-principles → retarget to route files.
+- `tests/init.bats`: solid-principles install fixture (global ×1, project ×1, target ×1+) → repoint fixture name.
+- `test_installer_versions.bats`: --source . install + .skill-source.json + manifest entry (×3 lines) → repoint.
+- `test_help_parity.bats`: NO assertion on the die() example (verified) — init.mjs:917 reword is free.
+
+### Named-entity dispositions
+
+- **Keep verbatim:** all principle content (smell catalogs, SOLID rules, pattern applicability tables, complexity heuristics, architecture principles); retrofit sections ×3; the imperative gating preamble (exactly-once constraint is test-enforced).
+- **Reword (siblings citing the 7):** architecture-review backing-axis lines (×3+), eval-harness signals line, ponytail-audit, react-quality, python-backend reference, solution-docs technical-design route (×2) → `code-principles-skill` route `<id>`.
+- **No anecdotes/constants needing disposition** — the bodies are already rule-form reference material.
+
 ## Dependency & Consumer Map
 
 | Node (file/module) | Depends on (must precede) | Consumers (who depends on this) | Change risk |
@@ -33,14 +53,16 @@
 
 ### Phase 1: Generalizer audit (detector pass)
 
-- [ ] **1.1** Run detectors over the 7 SKILL.mds; inventory the retrofit sections (3 skills), the sibling citation sites (6 files, exact lines), the test assertion surfaces (autoresearch_protocol tier3, default_behavior blocks, init.bats fixture, installer_versions, help_parity)
+- [x] **1.1** Run detectors over the 7 SKILL.mds; inventory the retrofit sections (3 skills), the sibling citation sites (6 files, exact lines), the test assertion surfaces (autoresearch_protocol tier3, default_behavior blocks, init.bats fixture, installer_versions, help_parity)
     — **Why:** the retrofit carry-over and the fixture repoint are this ticket's correctness conditions
     — **Done when:** dispositions + complete test-surface inventory recorded
     — **Consumers affected:** Phases 2–3
-- [ ] **1.2** Confirm boundary (all 7 merge) + retrofit design (route files keep sections verbatim; router frontmatter carries the opt-in marker) + router name `code-principles-skill`
+    — **Done:** all 7 read; retrofit inventory (3 skills, sections+cites counted); test-surface inventory complete (5 test files with exact assertion shapes); sibling citation sites listed; files: PLANS/PLAN-690.md; fixes: none
+- [x] **1.2** Confirm boundary (all 7 merge) + retrofit design (route files keep sections verbatim; router frontmatter carries the opt-in marker) + router name `code-principles-skill`
     — **Why:** the retrofit design must be fixed before the transform
     — **Done when:** recorded in Audit Notes
     — **Consumers affected:** Phases 2–3
+    — **Done:** all-7-merge; retrofit design recorded (route-verbatim + router metadata); name `code-principles-skill`; files: PLANS/PLAN-690.md; fixes: none
 
 ### Phase 2: Build skills/code-principles-skill/
 
@@ -130,5 +152,9 @@
 | Count drift | roster rule; count-drift tests |
 
 ## Trace
+
+LOG phase-1: docs-only; no background baseline (in-cycle + final gates authoritative).
+GATE (phase-1 tree) tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
+
 
 (appended at execution: phase commits, gate memos, deliverables)
