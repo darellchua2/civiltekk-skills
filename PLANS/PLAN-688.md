@@ -6,12 +6,12 @@
 
 ## Acceptance Criteria
 
-- [ ] Router ships: ≤10240 bytes, ≤50-word description, triggers preserved (autonomous loop, code optimization, ML training, literature review, keep/revert), decision tree, core protocol as spine, load table (3 routes), gates, zero-preload
-- [ ] 3 route files with headers; core `references/` at router root; scripts + per-loop templates absorbed; no old-ID path strings in scripts/templates/fenced blocks
-- [ ] HANDOFF2 (multi-owner autoresearch pair) retired: dependency-map ×3 edges removed + guard renumbered across ALL affected test files in one commit; `grep -rn "HANDOFF" tests/` re-verified post-renumber
-- [ ] Retrofit citation network repointed: all surviving skills citing `autoresearch-core-skill/references/` (24 files) renamed to `autoresearch-skill/references/`; protocol test expected prefix updated
-- [ ] 3 loop subagents rewired (router allow); pack-research preset 4→1; README row + count literals (96→93); AGENTS.md prose (exception retired + stale HANDOFF3 mention fixed); THIRD_PARTY §1 paths repointed; old dirs hard-removed; orphan grep clean
-- [ ] Registry regen + count literals ride roster-affecting commits; full bats green; generalizer output contract (weight line, change list, residual list) in trace
+- [x] Router ships: ≤10240 bytes, ≤50-word description, triggers preserved (autonomous loop, code optimization, ML training, literature review, keep/revert), decision tree, core protocol as spine, load table (3 routes), gates, zero-preload
+- [x] 3 route files with headers; core `references/` at router root; scripts + per-loop templates absorbed; no old-ID path strings in scripts/templates/fenced blocks
+- [x] HANDOFF2 (multi-owner autoresearch pair) retired: dependency-map ×3 edges removed + guard renumbered across ALL affected test files in one commit; `grep -rn "HANDOFF" tests/` re-verified post-renumber
+- [x] Retrofit citation network repointed: all surviving skills citing `autoresearch-core-skill/references/` (24 files) renamed to `autoresearch-skill/references/`; protocol test expected prefix updated
+- [x] 3 loop subagents rewired (router allow); pack-research preset 4→1; README row + count literals (96→93); AGENTS.md prose (exception retired + stale HANDOFF3 mention fixed); THIRD_PARTY §1 paths repointed; old dirs hard-removed; orphan grep clean
+- [x] Registry regen + count literals ride roster-affecting commits; full bats green; generalizer output contract (weight line, change list, residual list) in trace
 
 ## Audit Baseline (measured at plan time)
 
@@ -131,22 +131,26 @@ Phase ordering: no deletion (4.1) before every consumer is rewired (Phase 3); re
 
 ### Phase 5: Verify + deliverables (ticket exit gate — full)
 
-- [ ] **5.1** Full bats suite green on the final tree
+- [x] **5.1** Full bats suite green on the final tree
     — **Why:** isolation + governance enforcement
     — **Done when:** exit 0, zero `not ok`
     — **Consumers affected:** repo governance, CI
-- [ ] **5.2** Generalizer verification: ≤10240 bytes, ≤50-word description, rows resolve, route cross-refs resolve, no preload, no old-ID path strings
+    — **Done:** full bats green on 559efc70 (0 not-ok; TS green); files: tests/; fixes: see LOG history
+- [x] **5.2** Generalizer verification: ≤10240 bytes, ≤50-word description, rows resolve, route cross-refs resolve, no preload, no old-ID path strings
     — **Why:** router-pattern correctness conditions
     — **Done when:** all checks pass with measurements
     — **Consumers affected:** skill consumers
-- [ ] **5.3** Deliverables in trace: weight line, change list, residual list
+    — **Done:** router 5060 bytes ≤10240; description 34 words ≤50; 3 rows resolve; route cross-refs resolve; only preload hits are negations; zero old-ID path strings; files: skills/autoresearch-skill/; fixes: none
+- [x] **5.3** Deliverables in trace: weight line, change list, residual list
     — **Why:** ticket AC
     — **Done when:** three blocks present
     — **Consumers affected:** reviewers, ticket close
-- [ ] **5.4** Full exit gate + `tier=full` memo for the final implementation SHA in Trace
+    — **Done:** deliverables above (weight line, 5-part change list, 3-item residual list); files: PLANS/PLAN-688.md; fixes: none
+- [x] **5.4** Full exit gate + `tier=full` memo for the final implementation SHA in Trace
     — **Why:** PR citation
     — **Done when:** memo matches final pushed SHA
     — **Consumers affected:** PR creation (Step 10a)
+    — **Done:** exit gate full on 559efc70, memo below; files: none; fixes: none
 
 ## Technical Notes
 
@@ -176,3 +180,24 @@ LOG phase-2/4: single roster-final commit cycle (moves emptied the old dirs at o
 
 
 (appended at execution: phase commits, gate memos, deliverables)
+
+LOG phase-5: exit gate full on 559efc70 — bats 0 failures, TS green, registry regen content-stable.
+
+## Deliverables (generalizer output contract)
+
+**Weight line**: trigger-time SKILL.md load: 4 catalog entries, 21,829 bytes / ~5.5k tokens (avg ~5.5KB per trigger) + core references always one hop away → 1 router at 5,060 bytes (~1.3k tokens, incl. the full protocol spine) + one route file on match; catalog rows 96 → 93; lean unchanged (family not in lean); subagent allows 2 → 1 ×3; installer requiresSkills edges 7 → 4; description: per-skill 15–35 words × 4 → one 34-word description.
+
+**Change list**:
+- Generalized: core's methodology (5-stage loop, evaluator contract, stuck detection, injection boundary, autonomy, crash recovery) → router spine, stated once; citation convention (skill-root-relative) stated once.
+- Conditionalized: 3 loops behind WHEN+WHAT load rules with their overrides + per-loop templates; references/*.md on demand.
+- Modularized: core references/ + scripts/ at router root serving the catalog-wide retrofit network; templates/<loop>/ per loop.
+- Deleted: 4 skill identities; HANDOFF2 multi-owner pair (retired by construction — 7→4 installer edges); core's obsolete "When to use me" self-description; loop "Load me" phrasing.
+- Rewired (rename, not rewire): 24-skill citation network `autoresearch-core-skill/…` → `autoresearch-skill/…` — the protocol-host pattern makes consolidation a namespace change.
+
+**Residual list (owner)**:
+- The retrofit citation format (`autoresearch-skill/references/*.md`) is now load-bearing across 24 skills — future moves of those references must repeat the sweep (protocol test enforces).
+- Loop TSV filenames (`autoresearch-code-results.tsv` etc.) are runtime artifact names — unchanged by design.
+- AGENTS.md HANDOFF prose now describes 4 uniform pairs; a future multi-owner pair reintroduces the OWNERS/TARGETS shape — the guard python would need the loop form again.
+
+## Trace
+GATE 559efc70 tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
