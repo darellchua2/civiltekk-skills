@@ -6,11 +6,11 @@
 
 ## Acceptance Criteria
 
-- [ ] Router ships: ≤10240 bytes, ≤50-word description, triggers preserved (vision document, BRD, SRS, PRD, technical design, architecture document, design spec), document-ladder decision tree, load table (4 routes), shared pipeline spine, gates, zero-preload
-- [ ] 4 route files with headers (brd, srs, technical-design, vision); specs values-files become route files; no old-ID path strings in fences
-- [ ] Consumers rewired: 4 subagents (discovery, requirements, technical-design specialists + any prose), dependency-map HANDOFF4 target rename (no renumber), presets ×3, shipped config, skill-profiles lean (3→1), README (Framework row 12→10, counts 93→91, primary-visible 59→57, history clause per house convention), office-router rendering.md prose, requirements-inline prose; registry regenerated
-- [ ] 3 old dirs hard-removed; orphan-reference grep clean (PLANS/CHANGELOG excepted)
-- [ ] Full bats green; generalizer output contract (weight line, change list, residual list) in trace
+- [x] Router ships: ≤10240 bytes, ≤50-word description, triggers preserved (vision document, BRD, SRS, PRD, technical design, architecture document, design spec), document-ladder decision tree, load table (4 routes), shared pipeline spine, gates, zero-preload
+- [x] 4 route files with headers (brd, srs, technical-design, vision); specs values-files become route files; no old-ID path strings in fences
+- [x] Consumers rewired: 4 subagents (discovery, requirements, technical-design specialists + any prose), dependency-map HANDOFF4 target rename (no renumber), presets ×3, shipped config, skill-profiles lean (3→1), README (Framework row 12→10, counts 93→91, primary-visible 59→57, history clause per house convention), office-router rendering.md prose, requirements-inline prose; registry regenerated
+- [x] 3 old dirs hard-removed; orphan-reference grep clean (PLANS/CHANGELOG excepted)
+- [x] Full bats green; generalizer output contract (weight line, change list, residual list) in trace
 
 ## Audit Baseline (measured at plan time)
 
@@ -121,22 +121,26 @@ All keep: template part structures, ADR-NNN numbering, RTM >15 rows xlsx thresho
 
 ### Phase 5: Verify + deliverables (ticket exit gate — full)
 
-- [ ] **5.1** Full bats green on the final tree
+- [x] **5.1** Full bats green on the final tree
     — **Why:** governance enforcement
     — **Done when:** exit 0, zero `not ok`
     — **Consumers affected:** repo governance, CI
-- [ ] **5.2** Generalizer verification: ≤10240 bytes, ≤50 words, rows resolve, cross-refs resolve, no preload, no old-ID strings
+    — **Done:** full bats green on 908b168d (0 not-ok; TS 0); files: tests/; fixes: pack-inline-workers membership assertion (in-cycle)
+- [x] **5.2** Generalizer verification: ≤10240 bytes, ≤50 words, rows resolve, cross-refs resolve, no preload, no old-ID strings
     — **Why:** router-pattern correctness
     — **Done when:** checks pass with measurements
     — **Consumers affected:** skill consumers
-- [ ] **5.3** Deliverables in trace: weight line, change list, residual list
+    — **Done:** router 4487 bytes ≤10240; description 40 words ≤50; 4 rows resolve; route cross-refs resolve; only preload hits are negations; zero old-ID strings outside provenance; files: skills/solution-docs-skill/; fixes: none
+- [x] **5.3** Deliverables in trace: weight line, change list, residual list
     — **Why:** ticket AC
     — **Done when:** three blocks present
     — **Consumers affected:** reviewers, ticket close
-- [ ] **5.4** Full exit gate + `tier=full` memo for the final implementation SHA
+    — **Done:** deliverables above; files: PLANS/PLAN-689.md; fixes: none
+- [x] **5.4** Full exit gate + `tier=full` memo for the final implementation SHA
     — **Why:** PR citation
     — **Done when:** memo matches final pushed SHA
     — **Consumers affected:** PR creation (Step 10a)
+    — **Done:** exit gate full on 908b168d, memo below; files: none; fixes: none
 
 ## Technical Notes
 
@@ -165,3 +169,23 @@ LOG phase-2/4: single roster-final commit cycle. The Phase-1-time background bas
 
 
 (appended at execution: phase commits, gate memos, deliverables)
+
+LOG phase-5: exit gate full on 908b168d — bats 0, TS 0, regen content-stable.
+
+## Deliverables (generalizer output contract)
+
+**Weight line**: trigger-time SKILL.md load: 3 catalog entries, 26,983 bytes / ~6.7k tokens (avg ~9KB per trigger) → 1 router at 4,487 bytes (~1.1k tokens, incl. the shared pipeline) + one route file on match; catalog rows 93 → 91; lean unchanged at 59 (only specs was lean — 1:1 swap); shipped-config allows 3 → 1; description: per-skill 15–40 words × 3 → one 40-word description.
+
+**Change list**:
+- Generalized: the specs skill's METHOD (route detection, discovery interview, confirm-before-write, draft naming + PLAN linkage, rendering, image routing, Return Contract, harness binding) → router spine for all 4 routes; ladder descriptions ×3 → the router identity.
+- Conditionalized: 4 routes behind WHEN+WHAT load rules; values-file pattern preserved (brd/srs files were already route-shaped); vision's living-render + no-linkage exceptions stay in-route.
+- Modularized: TDD's 7-part template and Vision's 8-section template absorbed verbatim as route detail.
+- Deleted: 3 skill identities; near-verbatim rendering/image-routing/return-contract/harness duplicates (×3 → ×1); the ladder paragraph ×3 → ×1.
+
+**Residual list (owner)**:
+- README's history clause now lists the 3 removed `add` names — extend it again if the router is ever renamed.
+- worktree-pipeline-skill §6b auto-detects `docs/brd|srs` drafts — unchanged and still router-compatible; `docs/vision/` intentionally not ticket-keyed.
+- The TDD-vs-TDD name-collision note lives only in the technical-design route — reviewers greping the router body for it won't find it (by design; route files own detail).
+
+## Trace
+GATE 908b168d tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
