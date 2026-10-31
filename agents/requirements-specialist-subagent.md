@@ -50,7 +50,7 @@ permissions:
     resource: civiltekk-requirements-specs-skill
     effect: allow
   - action: skill
-    resource: interactive-document-rendering-skill
+    resource: office-document-router-skill
     effect: allow
   - action: skill
     resource: domain-modeling-skill
@@ -59,16 +59,7 @@ permissions:
     resource: grilling-skill
     effect: allow
   - action: skill
-    resource: docx-creation-skill
-    effect: allow
-  - action: skill
-    resource: xlsx-specialist-skill
-    effect: allow
-  - action: skill
     resource: search-first-skill
-    effect: allow
-  - action: skill
-    resource: markitdown-mcp-skill
     effect: allow
   - action: skill
     resource: unslop-skill
@@ -218,7 +209,7 @@ For SRS, after Part 3/4, ask: "Will the Requirements Traceability Matrix / data 
    (create the directory if it doesn't exist)
 2. Use the template from the resolved route of `civiltekk-requirements-specs-skill` (`brd` / `srs`)
 3. Include the header with `**PLAN**: PLANS/PLAN-{key}.md _(filled when ticket is created)_`
-4. Render the **snapshot** interactive HTML + .docx per `interactive-document-rendering-skill`
+4. Render the **snapshot** interactive HTML + .docx per `office-document-router-skill route `rendering``
 5. Return the file path
 
 ### Image routing

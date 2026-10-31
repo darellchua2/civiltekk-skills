@@ -2152,3 +2152,15 @@
 - **Folder**: `anti-patterns/`
 - **Summary**: any commit adding/removing/moving skill or agent dirs must regenerate installer/registry.json and update README count literals in the same commit (count-drift tests enforce agreement at every commit); never `git checkout` a generated artifact to clean up before a gate — the Phase-3 regen revert resurfaced as stale 15-entry requiresSkills at exit-gate time (#679)
 - **Date**: 2026-10-31
+
+### Generic content rewrites must run after anchor-specific edits (or use disjoint anchors)
+
+- **Folder**: `anti-patterns/`
+- **Summary**: broad string swaps applied before anchor-specific rewrites mutate the anchors — the specific pass then no-ops or assert-fails and mangled text ships (#680 modifier.md SLIDE_SKILL_DIR; #679 srdf moveit2). Anchor-specific first, generic last, residual grep for both.
+- **Date**: 2026-10-31
+
+### Retiring a HANDOFF pair renumbers positional args across three test files
+
+- **Folder**: `anti-patterns/`
+- **Summary**: the HANDOFF guard vars are a positional contract (guard python argv arity, mirror-test heredoc unpacks + config-index offsets, per-family literal greps by number) — removing a pair requires grepping tests/ for HANDOFF\d and renumbering every occurrence in the same commit as the dependency-map edit (#680 HANDOFF1 retirement needed 3 gate cycles).
+- **Date**: 2026-10-31

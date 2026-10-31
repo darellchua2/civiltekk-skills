@@ -320,7 +320,7 @@ docs/srs/SRS-{ticket-key}.md
 
 ## Tabular Artifacts (peer deliverables)
 
-Large tabular deliverables are exported as `.xlsx` via `xlsx-specialist-skill` / `xlsx-specialist-subagent`, **not** inlined:
+Large tabular deliverables are exported as `.xlsx` via the `xlsx` route of `office-document-router-skill` / `xlsx-specialist-subagent`, **not** inlined:
 
 | Artifact | Path | When |
 |---|---|---|
@@ -334,7 +334,7 @@ Small tables stay inline in the Markdown. The `.xlsx` files are **peer deliverab
 
 ## Rendering (route `srs`)
 
-**Render dual outputs per `interactive-document-rendering-skill` (snapshot for SRS):**
+**Render dual outputs per the `rendering` route of `office-document-router-skill` (snapshot for SRS):**
 - **Interactive HTML** — rendered once at wrap (`docs/srs/{slug}/SRS-{slug}.interactive.html`), snapshot (not living)
 - **Word .docx** — formal deliverable for review/sign-off (`docs/srs/SRS-{slug}.docx`), auto-TOC + hyperlinked headers + section page-breaks
 

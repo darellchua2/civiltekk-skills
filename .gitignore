@@ -101,3 +101,5 @@ docs/OpenCode-Agent-Tooling-Research-2026-09-24.interactive.html
 !LEARNINGS/anti-patterns/plan-tick-backfill-must-key-on-step-id.md
 !LEARNINGS/anti-patterns/surviving-sibling-refs-dangle-after-consolidation.md
 !LEARNINGS/anti-patterns/skill-moves-are-roster-changes-carry-counts.md
+!LEARNINGS/anti-patterns/generic-rewrites-before-anchors-mangle-text.md
+!LEARNINGS/anti-patterns/handoff-renumber-positional-contract.md

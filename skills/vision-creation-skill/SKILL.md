@@ -15,7 +15,7 @@ I provide the **Vision Document** template and workflow for the **customer-facin
 
 1. **Vision Doc template** — IIBA "Business Need / Solution Vision" structure
 2. **docs/vision/ naming convention** — `VISION-{slug}.md` (no draft/final rename, **no** ticket linkage)
-3. **Dual-output rendering** — living interactive HTML through the session + .docx on wrap (per `interactive-document-rendering-skill`)
+3. **Dual-output rendering** — living interactive HTML through the session + .docx on wrap (per the `rendering` route of `office-document-router-skill`)
 4. **Wireframe co-location** — wireframes live beside the Vision at `docs/vision/{slug}/wireframe-*.html`
 
 ## When to use me
@@ -34,9 +34,9 @@ The Vision is **customer-facing**. Keep tone non-technical where possible, avoid
 ## Related
 
 - **`discovery-specialist-subagent`** — the agent that runs the live discovery session and produces the Vision (this skill is its template)
-- **`interactive-document-rendering-skill`** — the shared HTML + DOCX rendering standard (living HTML for Vision)
+- **`office-document-router-skill` route `rendering`** — the shared HTML + DOCX rendering standard (living HTML for Vision)
 - **`wireframer-skill`** — generates the wireframes co-located at `docs/vision/{slug}/`
-- **`pptx-specialist-subagent`** — optional customer presentation deck distilled from the Vision (routes internally to `pptx-generate-slide-skill` + `pptx-generate-template-skill`)
+- **`pptx-specialist-subagent`** — optional customer presentation deck distilled from the Vision (routes internally to the `slides` + `template` routes of `office-document-router-skill`)
 - **`civiltekk-requirements-specs-skill`** (route `srs`) — the DOWNSTREAM internal doc; the signed Vision feeds into the SRS (different audience, different skill)
 
 ---
@@ -162,11 +162,11 @@ docs/vision/
 
 ## Rendering
 
-**Render dual outputs per `interactive-document-rendering-skill`:**
+**Render dual outputs per the `rendering` route of `office-document-router-skill`:**
 - **Interactive HTML** — *living*: regenerate after each discovery round (sidebar nav, dark-mode-aware, color-aware selection)
 - **Word .docx** — render once on wrap for client sign-off (auto-TOC, hyperlinked headers, section page-breaks)
 
-**Optional customer presentation deck:** after the Vision is approved, distill it into a slide deck via `pptx-specialist-subagent` (delegate via Task tool — it requires a user-supplied Slide Master template and routes to `pptx-generate-slide-skill`) for steering-committee or client meetings. This is a peer deliverable, linked from the Vision. Delegation binding (§Portability contract, applies here and to the Image-routing paragraph below): OpenCode and Claude Code — Task tool; Other/none (no subagent tool) — run the referenced skill's steps inline.
+**Optional customer presentation deck:** after the Vision is approved, distill it into a slide deck via `pptx-specialist-subagent` (delegate via Task tool — it requires a user-supplied Slide Master template and routes to the `slides` route of `office-document-router-skill`) for steering-committee or client meetings. This is a peer deliverable, linked from the Vision. Delegation binding (§Portability contract, applies here and to the Image-routing paragraph below): OpenCode and Claude Code — Task tool; Other/none (no subagent tool) — run the referenced skill's steps inline.
 
 **Image routing:** if client-shared screenshots/reference images must be described, delegate to `image-analyzer-subagent` (do not interpret inline).
 

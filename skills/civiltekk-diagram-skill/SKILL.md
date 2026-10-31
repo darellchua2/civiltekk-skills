@@ -42,7 +42,7 @@ Diagram creation across two routes:
 Side files carry VALUES only; this file carries the METHOD. Composing
 diagrams into larger artifacts (slide decks, PDF documents) is not this
 skill's space — `pptx-specialist-subagent` owns decks,
-`pdf-specialist-skill` owns PDF composition.
+the `pdf` route of `office-document-router-skill` owns PDF composition.
 
 ## Routes
 

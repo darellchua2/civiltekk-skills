@@ -28,7 +28,7 @@ permissions:
     resource: '*'
     effect: allow
   - action: skill
-    resource: docx-creation-skill
+    resource: office-document-router-skill
     effect: allow
   - action: skill
     resource: civiltekk-startup-docs-skill

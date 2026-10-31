@@ -2037,7 +2037,7 @@ USAGE
 EXAMPLES (npx invocation — copy-paste)
   npx github:darellchua2/civiltekk-opencode-claude-skills --list categories
   npx github:darellchua2/civiltekk-opencode-claude-skills add civiltekk-api-spec-skill
-  npx github:darellchua2/civiltekk-opencode-claude-skills add pdf-specialist-skill --dry-run
+  npx github:darellchua2/civiltekk-opencode-claude-skills add office-document-router-skill --dry-run
   npx github:darellchua2/civiltekk-opencode-claude-skills add code-review-subagent --project .
   npx github:darellchua2/civiltekk-opencode-claude-skills add gsap-core --target claude
 

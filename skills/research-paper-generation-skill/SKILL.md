@@ -47,4 +47,4 @@ Folder: `papers/v<N>-<framing>/`.
 - DOCX: real structure — paragraphs, tables, embedded images, OMML equations
 - **Round-trip check**: DOCX → markdown via pypandoc; key percentages, headings, table contents match the source .md
 
-**Related:** `horseshoe-paper-writing-skill` (the writing method this pipeline drafts under) · `docx-creation-skill` (conversion engine detail) · `zai-media-subagent` (OCR/transcription of source material).
+**Related:** `horseshoe-paper-writing-skill` (the writing method this pipeline drafts under) · the `docx` route of `office-document-router-skill` (conversion engine detail) · `zai-media-subagent` (OCR/transcription of source material).

@@ -52,7 +52,7 @@ permissions:
     resource: vision-creation-skill
     effect: allow
   - action: skill
-    resource: interactive-document-rendering-skill
+    resource: office-document-router-skill
     effect: allow
   - action: skill
     resource: wireframer-skill
@@ -62,15 +62,6 @@ permissions:
     effect: allow
   - action: skill
     resource: grilling-skill
-    effect: allow
-  - action: skill
-    resource: docx-creation-skill
-    effect: allow
-  - action: skill
-    resource: xlsx-specialist-skill
-    effect: allow
-  - action: skill
-    resource: markitdown-mcp-skill
     effect: allow
   - action: skill
     resource: unslop-skill
@@ -171,7 +162,7 @@ Repeat until the client's direction is clear:
 2. **Generate a wireframe** via `wireframer-skill` to illustrate the proposed UI → write to `docs/vision/{slug}/wireframe-*.html`
 3. Present the wireframe; ask the user to relay client feedback
 4. Capture client statements **verbatim** in running notes
-5. Update/regenerate the **living interactive HTML** per `interactive-document-rendering-skill` so the client always sees the current state
+5. Update/regenerate the **living interactive HTML** per `office-document-router-skill route `rendering`` so the client always sees the current state
 6. Refine terminology via `domain-modeling-skill` when new terms appear
 7. Confirm the captured feedback before the next iteration
 
@@ -182,8 +173,8 @@ Repeat until the client's direction is clear:
 ### Step 4: Write & Render
 1. Write the source to `docs/vision/VISION-{slug}.md` (create `docs/vision/` if needed)
 2. Render the **living interactive HTML** at `docs/vision/{slug}/VISION-{slug}.interactive.html`
-3. On wrap, render the **Word .docx** at `docs/vision/VISION-{slug}.docx` for client sign-off (per `interactive-document-rendering-skill`)
-4. **Optional**: distill into a customer presentation deck via `pptx-specialist-subagent` (delegate via Task tool — it routes to pptx-generate-slide-skill with a user-supplied template) — ask the user if they want this
+3. On wrap, render the **Word .docx** at `docs/vision/VISION-{slug}.docx` for client sign-off (per `office-document-router-skill route `rendering``)
+4. **Optional**: distill into a customer presentation deck via `pptx-specialist-subagent` (delegate via Task tool — it routes to office-document-router-skill route `slides` with a user-supplied template) — ask the user if they want this
 
 ### Image routing
 If a client-shared screenshot/reference image must be interpreted, **delegate to `image-analyzer-subagent`** — do not attempt to interpret images inline.

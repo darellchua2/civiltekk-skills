@@ -16,21 +16,11 @@
     "civiltekk-requirements-specs-skill",
     "civiltekk-startup-docs-skill",
     "coverage-readme-workflow-skill",
-    "docling-mcp-skill",
-    "docx-creation-skill",
+    "office-document-router-skill",
     "horseshoe-paper-writing-skill",
-    "interactive-document-rendering-skill",
-    "markitdown-mcp-skill",
-    "office-thumbnail-skill",
-    "ooxml-editing-skill",
-    "pdf-specialist-skill",
-    "pptx-generate-slide-skill",
-    "pptx-generate-template-skill",
-    "pptx-template-modifier-skill",
     "research-paper-generation-skill",
     "technical-design-creation-skill",
-    "vision-creation-skill",
-    "xlsx-specialist-skill"
+    "vision-creation-skill"
   ],
   "mcps": []
 }

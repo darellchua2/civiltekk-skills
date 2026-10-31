@@ -1,884 +1,864 @@
 {
-    "$schema": "https://opencode.ai/config.json",
-    "default_agent": "build",
-    "experimental": {
-        "subagent_depth": 3
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "build",
+  "experimental": {
+    "subagent_depth": 3
+  },
+  "permissions": [
+    {
+      "action": "read",
+      "resource": "mcp:*",
+      "effect": "deny"
     },
-    "permissions": [
-        {
-            "action": "read",
-            "resource": "mcp:*",
-            "effect": "deny"
-        },
-        {
-            "action": "read",
-            "resource": "*.env",
-            "effect": "deny"
-        },
-        {
-            "action": "read",
-            "resource": "*.env.*",
-            "effect": "deny"
-        },
-        {
-            "action": "read",
-            "resource": "*.env.example",
-            "effect": "allow"
-        },
-        {
-            "action": "bash",
-            "resource": "git push --force*",
-            "effect": "deny"
-        },
-        {
-            "action": "bash",
-            "resource": "rm -rf /*",
-            "effect": "deny"
-        },
-        {
-            "action": "bash",
-            "resource": "curl * | sh",
-            "effect": "deny"
-        },
-        {
-            "action": "skill",
-            "resource": "*",
-            "effect": "deny"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-zai-media-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "unslop-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "technical-writing-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "blast-radius-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-ponytail-audit-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-api-spec-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "markitdown-mcp-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "docling-mcp-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-git-commits-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-documentation-sync-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "email-drafter-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "ticketing-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "gh-cli-setup-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "grilling-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "linting-workflow-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "wireframer-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "vision-creation-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-requirements-specs-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "technical-design-creation-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "domain-modeling-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "research-paper-generation-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "horseshoe-paper-writing-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "plan-execution-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-pr-workflow-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "semantic-release-convention-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "worktree-pipeline-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "wayfinder-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-opencode-creation-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "opencode-repo-setup-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-coding-harness-setup-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "opencode-skills-maintainer-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "opencode-v2-migration-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "skill-generalizer",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "agent-introspection-debugging-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-context-optimization-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "continuous-learning-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "verification-loop-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "eval-harness-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "clean-code-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "clean-architecture-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "solid-principles-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "design-patterns-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "code-smells-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "complexity-management-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "object-design-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "search-first-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "security-audit-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "performance-optimization-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-nextjs-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-diagram-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "authentication-authorization-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "database-migration-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "docker-containerization-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "logging-observability-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "tdd-workflow-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "deprecated-code-cleanup-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "error-resolver-workflow-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "docx-creation-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "pdf-specialist-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "xlsx-specialist-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "construction-bd-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-startup-docs-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-python-backend-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "language-linting-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-react-quality-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "monorepo-management-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "frontend-design-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "accessibility-a11y-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "changelog-python-cliff-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "aws-iac-safety-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "gsap-core",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "gsap-timeline",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "gsap-scrolltrigger",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "gsap-plugins",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "gsap-utils",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "gsap-react",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "gsap-performance",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "gsap-frameworks",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "architecture-review-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "reviewer-baseline-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "language-review-checklists-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "uiux-review-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "mcp-install-assistant-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "testing-inline-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "linting-inline-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "civiltekk-documentation-inline-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "responsive-audit-inline-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "playwright-responsive-audit-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "plan-execution-inline-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "code-review-inline-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "skill",
-            "resource": "requirements-inline-skill",
-            "effect": "allow"
-        },
-        {
-            "action": "codegraph*",
-            "resource": "*",
-            "effect": "allow"
-        },
-        {
-            "action": "atlassian*",
-            "resource": "*",
-            "effect": "allow"
-        },
-        {
-            "action": "markitdown*",
-            "resource": "*",
-            "effect": "deny"
-        },
-        {
-            "action": "docling*",
-            "resource": "*",
-            "effect": "deny"
-        },
-        {
-            "action": "zai-web-reader*",
-            "resource": "*",
-            "effect": "allow"
-        },
-        {
-            "action": "zai-web-search*",
-            "resource": "*",
-            "effect": "allow"
-        },
-        {
-            "action": "next-devtools*",
-            "resource": "*",
-            "effect": "deny"
-        }
-    ],
-    "plugins": [],
-    "instructions": [
-        "AGENTS.md"
-    ],
-    "media": {
-        "image": {
-            "max_width": 6000,
-            "max_height": 6000,
-            "max_base64_bytes": 7000000
-        }
+    {
+      "action": "read",
+      "resource": "*.env",
+      "effect": "deny"
     },
-    "commands": {
-        "run-plan": {
-            "description": "Fully-automated plan execution loop — implement PLAN*.md phase-by-phase inline via plan-execution-inline-skill (tiered verification gate per verification-loop-skill: light — scoped lint + typecheck + affected tests — per phase; full on critical-area anchors and the ticket exit gate; then commit + push per phase). Subagent workers only on explicit request.",
-            "template": "Execute the plan file given as the argument INLINE by default via `plan-execution-inline-skill` (same gate contract): $ARGUMENTS. Route to `plan-execution-skill` --gate (subagent workers) ONLY on explicit user request + OpenCode harness + the skill resolving; otherwise proceed inline with a note.",
-            "agent": "build",
-            "subagent": false
-        },
-        "create-ticket": {
-            "description": "Create a structured GitHub issue or JIRA ticket — platform detection, structured description, labels, sub-issues. Ticket only: no branch/PLAN/execution (use /run-worktree-pipeline for that).",
-            "template": "Load the skill `ticketing-skill` and run it with the arguments: $ARGUMENTS",
-            "agent": "build"
-        },
-        "run-worktree-pipeline": {
-            "description": "Tracker-ticket-to-merged-PR pipeline via git worktrees — fully inline by default (zero subagents end to end); subagent orchestration only on explicit request on OpenCode. Usage: /run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>",
-            "template": "Run fully INLINE by default per worktree-pipeline-skill §arm selection — subagent orchestration only on explicit user request + OpenCode harness + deps resolving (unavailable → proceed inline with a prominent note). Load the skill `worktree-pipeline-skill` and run it fully for: $ARGUMENTS — spawn NO subagents anywhere in the run. Your cwd stays the session checkout: scope every worktree-scoped operation explicitly (git -C <ticket-repo> for diffs; absolute <root>/<KEY>/ paths for file reads). At Step 7, run the requirements detection gate first: invoke the skill `requirements-inline-skill` (its decision tree inspects the ticket + PLAN acceptance criteria and the triage outcome — skip with a one-line reason when green, interrogate the ACs inline when it fires; skill absent → note and continue: quality gate, not a backstop). Then run each selected reviewer IN-SESSION with `reviewer-baseline-skill` first: ARCHITECTURE review loads the skill `architecture-review-skill` — the decision-tree routing, review axes, blast-radius gate, finding schema, and Return Contract live there (unresolvable → skip that reviewer with a note per the skill's Step 7 soft-dep rule); UI/UX review loads the deployed file agents/uiux-reviewer-subagent.md as your checklist (deploy-mode path: CLI ~/.config/opencode/agents/uiux-reviewer-subagent.md — if it does not resolve, skip that reviewer with a note per the skill's Step 7 soft-dep rule); never run a review without its skill/checklist, never spawn a subagent in its place; relay any Requirements Gaps in-session by invoking the skill `requirements-inline-skill` Mode R (grilling happens in this session; unresolvable → surface the gaps to the user directly and proceed on their answers, per the skill's relay rule). At Step 8, execute `plan-execution-inline-skill` with the explicit PLAN path. At Step 9, invoke the skill `code-review-inline-skill` for the code review (pass the ticket repo and the diff range `origin/<base>...feat/<KEY>`; the skill owns baseline-first and checklist resolution — unresolvable checklist → it reports the review unavailable and you stop: Step 9 is the unconditional backstop with no further net); max 2 fix-and-re-review iterations + full re-gate before fix pushes unchanged. At Step 10, invoke the skill `civiltekk-pr-workflow-skill` (create route — it owns framework detection, the gate-memo check, the PR body, and the semver label; the skill's pipeline pins apply: PR target `<base>`, the `tier=full` gate-memo citation for the pushed SHA, `Closes <TICKET_ID>` with the `#`; unresolvable → stop — declared hard dep): create the PR with gh in-session and watch the merge via a background shell poll (gh pr checks --watch), never a subagent.",
-            "agent": "build",
-            "subagent": false
-        },
-        "review-arch": {
-            "description": "Architecture review — delegates to architecture-review-subagent in an isolated child session: system design, layer boundaries, dependency direction, transitive blast radius. Usage: /review-arch <review target — diff range, files, or PLAN>",
-            "template": "Perform an architecture review of: $ARGUMENTS. Follow your system prompt's full workflow — reviewer-baseline-skill first, severity-gated findings with business impact, Requirements Gaps array, Patterns applied/violated with LEARNINGS evidence, Return Contract.",
-            "agent": "architecture-review-subagent",
-            "subagent": true
-        },
-        "review-inline": {
-            "description": "Architecture review executed in-session (no subagent): load the skill `architecture-review-skill` (reviewer-baseline-skill first) and run the decision-tree review in this context. Usage: /review-inline <review target — diff range, files, or PLAN>",
-            "template": "Load the skill `architecture-review-skill` (reviewer-baseline-skill first) IN THIS SESSION and review: $ARGUMENTS — the skill owns the decision-tree routing, review axes, blast-radius gate, finding schema, severity rubric, and Return Contract. If it does not resolve, report the review as unavailable and stop. Same severity gates — in-session: state the review scope before starting and keep findings evidence-backed (file:line).",
-            "agent": "build",
-            "subagent": false
-        },
-        "worktree-pipeline-preview": {
-            "description": "Plan-mode-safe pipeline preview — read-only walk-through of worktree-pipeline-skill: sync/preflight/dry-run reported in-chat, no worktree, no commits, no pushes, no PRs, no file writes. Usage: /worktree-pipeline-preview [base-branch] <ticket-refs...>",
-            "template": "Load the skill `worktree-pipeline-skill` and run a PREVIEW for: $ARGUMENTS — spawn NO subagents anywhere in the run; if the skill does not resolve or load, report the command as unavailable and stop with the install hint: npx github:darellchua2/civiltekk-opencode-claude-skills add worktree-pipeline-skill. Read-only contract: inspect only (git status/log/diff, gh issue view); no fetch/pull/push, no worktree creation, no branches, no commits, no PRs, no file writes — present the would-be PLAN content in the conversation instead of writing PLANS/. Walk each pipeline step, report what it would do, then stop before Step 8 execution.",
-            "agent": "plan",
-            "subagent": false
-        }
+    {
+      "action": "read",
+      "resource": "*.env.*",
+      "effect": "deny"
     },
-    "providers": {
-        "local-llm": {
-            "package": "aisdk:@ai-sdk/openai-compatible",
-            "name": "Local LLM (llama.cpp)",
-            "settings": {
-                "baseURL": "http://127.0.0.1:17851/v1"
-            },
-            "models": {
-                "local/gemma-4-E4B-q4_0": {
-                    "name": "gemma-4-E4B (local q4_0)",
-                    "capabilities": {
-                        "input": [
-                            "text",
-                            "image"
-                        ]
-                    }
-                }
-            }
-        },
-        "vllm": {
-            "package": "aisdk:@ai-sdk/openai-compatible",
-            "name": "Local LLM (vLLM)",
-            "settings": {
-                "baseURL": "http://127.0.0.1:17852/v1"
-            },
-            "models": {
-                "local/nemotron-3-nano": {
-                    "name": "Nemotron-3-Nano-4B-FP8 (vLLM)",
-                    "capabilities": {
-                        "input": [
-                            "text"
-                        ]
-                    },
-                    "limit": {
-                        "context": 200000,
-                        "output": 32768
-                    }
-                }
-            }
-        },
-        "ollama": {
-            "package": "aisdk:@ai-sdk/openai-compatible",
-            "name": "Ollama (local)",
-            "settings": {
-                "baseURL": "http://localhost:11434/v1"
-            },
-            "models": {
-                "qwen3-coder:a3b": {
-                    "name": "Qwen3-Coder a3b (Ollama)",
-                    "limit": {
-                        "context": 128000,
-                        "output": 65536
-                    }
-                }
-            }
-        },
-        "zai-custom": {
-            "package": "aisdk:@ai-sdk/openai-compatible",
-            "name": "Z.AI Coding Plan (Custom)",
-            "settings": {
-                "baseURL": "https://api.z.ai/api/coding/paas/v4",
-                "apiKey": "{env:ZAI_API_KEY}"
-            },
-            "models": {
-                "glm-5.3-flash": {
-                    "name": "GLM-5.3 Flash (Custom)",
-                    "capabilities": {
-                        "tools": true,
-                        "input": [
-                            "text",
-                            "image"
-                        ],
-                        "output": [
-                            "text"
-                        ]
-                    },
-                    "cost": {
-                        "input": 0,
-                        "output": 0,
-                        "cache": {
-                            "read": 0,
-                            "write": 0
-                        }
-                    },
-                    "limit": {
-                        "context": 1000000,
-                        "output": 131072
-                    }
-                },
-                "glm-5.3": {
-                    "name": "GLM-5.3 (Custom)",
-                    "capabilities": {
-                        "tools": true,
-                        "input": [
-                            "text"
-                        ],
-                        "output": [
-                            "text"
-                        ]
-                    },
-                    "cost": {
-                        "input": 0,
-                        "output": 0,
-                        "cache": {
-                            "read": 0,
-                            "write": 0
-                        }
-                    },
-                    "limit": {
-                        "context": 1000000,
-                        "output": 131072
-                    }
-                }
-            }
-        }
+    {
+      "action": "read",
+      "resource": "*.env.example",
+      "effect": "allow"
     },
-    "mcp": {
-        "servers": {
-            "codegraph": {
-                "type": "local",
-                "command": [
-                    "npx",
-                    "-y",
-                    "@colbymchenry/codegraph",
-                    "serve",
-                    "--mcp"
-                ],
-                "disabled": false
-            },
-            "atlassian": {
-                "type": "local",
-                "command": [
-                    "npx",
-                    "-y",
-                    "mcp-remote",
-                    "https://mcp.atlassian.com/v1/mcp"
-                ],
-                "disabled": true
-            },
-            "zai-web-reader": {
-                "type": "remote",
-                "url": "https://api.z.ai/api/mcp/web_reader/mcp",
-                "headers": {
-                    "Authorization": "Bearer {env:ZAI_API_KEY}"
-                },
-                "disabled": false
-            },
-            "zai-web-search": {
-                "type": "remote",
-                "url": "https://api.z.ai/api/mcp/web_search_prime/mcp",
-                "headers": {
-                    "Authorization": "Bearer {env:ZAI_API_KEY}"
-                },
-                "disabled": false
-            },
-            "next-devtools": {
-                "type": "local",
-                "command": [
-                    "npx",
-                    "-y",
-                    "next-devtools-mcp@latest"
-                ],
-                "environment": {
-                    "NEXT_TELEMETRY_DISABLED": "1"
-                },
-                "disabled": true
-            },
-            "markitdown": {
-                "type": "local",
-                "command": [
-                    "markitdown-mcp"
-                ],
-                "environment": {
-                    "MARKITDOWN_ENABLE_PLUGINS": "false"
-                },
-                "disabled": true
-            },
-            "docling": {
-                "type": "local",
-                "command": [
-                    "docling-mcp-server",
-                    "--transport",
-                    "stdio"
-                ],
-                "environment": {
-                    "DOCLING_CONVERSION_MODE": "local"
-                },
-                "disabled": true
-            },
-            "chrome-devtools": {
-                "type": "local",
-                "command": [
-                    "npx",
-                    "-y",
-                    "chrome-devtools-mcp@latest",
-                    "--no-usage-statistics",
-                    "--no-performance-crux",
-                    "--redact-network-headers",
-                    "--isolated"
-                ],
-                "environment": {
-                    "CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS": "1"
-                },
-                "disabled": true
-            },
-            "playwright": {
-                "type": "local",
-                "command": [
-                    "npx",
-                    "-y",
-                    "@playwright/mcp@latest"
-                ],
-                "disabled": true
-            },
-            "alpha-vantage": {
-                "type": "remote",
-                "url": "https://mcp.alphavantage.co/mcp",
-                "oauth": false,
-                "headers": {
-                    "Authorization": "Bearer {env:ALPHA_VANTAGE_API_KEY}"
-                },
-                "disabled": true
-            },
-            "nanobanana": {
-                "type": "local",
-                "command": [
-                    "npx",
-                    "-y",
-                    "@mindstone/mcp-server-nano-banana@latest"
-                ],
-                "environment": {
-                    "GEMINI_API_KEY": "{env:GEMINI_API_KEY}"
-                },
-                "disabled": true
-            }
-        }
+    {
+      "action": "bash",
+      "resource": "git push --force*",
+      "effect": "deny"
     },
-    "agents": {
-        "build": {
-            "permissions": [
-                {
-                    "action": "subagent",
-                    "resource": "*",
-                    "effect": "allow"
-                }
-            ]
-        },
-        "plan": {
-            "permissions": [
-                {
-                    "action": "edit",
-                    "resource": "*",
-                    "effect": "ask"
-                },
-                {
-                    "action": "shell",
-                    "resource": "*",
-                    "effect": "ask"
-                },
-                {
-                    "action": "subagent",
-                    "resource": "*",
-                    "effect": "allow"
-                }
-            ]
-        },
-        "explore": {
-            "model": "zai-coding-plan/glm-5.3-flash",
-            "permissions": [
-                {
-                    "action": "read",
-                    "resource": "*",
-                    "effect": "allow"
-                },
-                {
-                    "action": "read",
-                    "resource": "mcp:*",
-                    "effect": "deny"
-                }
-            ]
-        },
-        "general": {
-            "model": "zai-coding-plan/glm-5.3",
-            "permissions": [
-                {
-                    "action": "read",
-                    "resource": "*",
-                    "effect": "allow"
-                },
-                {
-                    "action": "read",
-                    "resource": "mcp:*",
-                    "effect": "deny"
-                }
-            ]
-        }
+    {
+      "action": "bash",
+      "resource": "rm -rf /*",
+      "effect": "deny"
+    },
+    {
+      "action": "bash",
+      "resource": "curl * | sh",
+      "effect": "deny"
+    },
+    {
+      "action": "skill",
+      "resource": "*",
+      "effect": "deny"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-zai-media-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "unslop-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "technical-writing-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "blast-radius-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-ponytail-audit-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-api-spec-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "office-document-router-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-git-commits-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-documentation-sync-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "email-drafter-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "ticketing-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "gh-cli-setup-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "grilling-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "linting-workflow-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "wireframer-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "vision-creation-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-requirements-specs-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "technical-design-creation-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "domain-modeling-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "research-paper-generation-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "horseshoe-paper-writing-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "plan-execution-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-pr-workflow-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "semantic-release-convention-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "worktree-pipeline-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "wayfinder-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-opencode-creation-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "opencode-repo-setup-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-coding-harness-setup-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "opencode-skills-maintainer-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "opencode-v2-migration-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "skill-generalizer",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "agent-introspection-debugging-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-context-optimization-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "continuous-learning-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "verification-loop-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "eval-harness-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "clean-code-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "clean-architecture-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "solid-principles-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "design-patterns-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "code-smells-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "complexity-management-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "object-design-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "search-first-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "security-audit-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "performance-optimization-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-nextjs-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-diagram-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "authentication-authorization-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "database-migration-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "docker-containerization-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "logging-observability-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "tdd-workflow-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "deprecated-code-cleanup-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "error-resolver-workflow-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "construction-bd-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-startup-docs-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-python-backend-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "language-linting-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-react-quality-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "monorepo-management-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "frontend-design-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "accessibility-a11y-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "changelog-python-cliff-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "aws-iac-safety-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "gsap-core",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "gsap-timeline",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "gsap-scrolltrigger",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "gsap-plugins",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "gsap-utils",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "gsap-react",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "gsap-performance",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "gsap-frameworks",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "architecture-review-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "reviewer-baseline-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "language-review-checklists-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "uiux-review-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "mcp-install-assistant-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "testing-inline-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "linting-inline-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "civiltekk-documentation-inline-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "responsive-audit-inline-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "playwright-responsive-audit-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "plan-execution-inline-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "code-review-inline-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "requirements-inline-skill",
+      "effect": "allow"
+    },
+    {
+      "action": "codegraph*",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "atlassian*",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "markitdown*",
+      "resource": "*",
+      "effect": "deny"
+    },
+    {
+      "action": "docling*",
+      "resource": "*",
+      "effect": "deny"
+    },
+    {
+      "action": "zai-web-reader*",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "zai-web-search*",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "next-devtools*",
+      "resource": "*",
+      "effect": "deny"
     }
+  ],
+  "plugins": [],
+  "instructions": [
+    "AGENTS.md"
+  ],
+  "media": {
+    "image": {
+      "max_width": 6000,
+      "max_height": 6000,
+      "max_base64_bytes": 7000000
+    }
+  },
+  "commands": {
+    "run-plan": {
+      "description": "Fully-automated plan execution loop \u2014 implement PLAN*.md phase-by-phase inline via plan-execution-inline-skill (tiered verification gate per verification-loop-skill: light \u2014 scoped lint + typecheck + affected tests \u2014 per phase; full on critical-area anchors and the ticket exit gate; then commit + push per phase). Subagent workers only on explicit request.",
+      "template": "Execute the plan file given as the argument INLINE by default via `plan-execution-inline-skill` (same gate contract): $ARGUMENTS. Route to `plan-execution-skill` --gate (subagent workers) ONLY on explicit user request + OpenCode harness + the skill resolving; otherwise proceed inline with a note.",
+      "agent": "build",
+      "subagent": false
+    },
+    "create-ticket": {
+      "description": "Create a structured GitHub issue or JIRA ticket \u2014 platform detection, structured description, labels, sub-issues. Ticket only: no branch/PLAN/execution (use /run-worktree-pipeline for that).",
+      "template": "Load the skill `ticketing-skill` and run it with the arguments: $ARGUMENTS",
+      "agent": "build"
+    },
+    "run-worktree-pipeline": {
+      "description": "Tracker-ticket-to-merged-PR pipeline via git worktrees \u2014 fully inline by default (zero subagents end to end); subagent orchestration only on explicit request on OpenCode. Usage: /run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>",
+      "template": "Run fully INLINE by default per worktree-pipeline-skill \u00a7arm selection \u2014 subagent orchestration only on explicit user request + OpenCode harness + deps resolving (unavailable \u2192 proceed inline with a prominent note). Load the skill `worktree-pipeline-skill` and run it fully for: $ARGUMENTS \u2014 spawn NO subagents anywhere in the run. Your cwd stays the session checkout: scope every worktree-scoped operation explicitly (git -C <ticket-repo> for diffs; absolute <root>/<KEY>/ paths for file reads). At Step 7, run the requirements detection gate first: invoke the skill `requirements-inline-skill` (its decision tree inspects the ticket + PLAN acceptance criteria and the triage outcome \u2014 skip with a one-line reason when green, interrogate the ACs inline when it fires; skill absent \u2192 note and continue: quality gate, not a backstop). Then run each selected reviewer IN-SESSION with `reviewer-baseline-skill` first: ARCHITECTURE review loads the skill `architecture-review-skill` \u2014 the decision-tree routing, review axes, blast-radius gate, finding schema, and Return Contract live there (unresolvable \u2192 skip that reviewer with a note per the skill's Step 7 soft-dep rule); UI/UX review loads the deployed file agents/uiux-reviewer-subagent.md as your checklist (deploy-mode path: CLI ~/.config/opencode/agents/uiux-reviewer-subagent.md \u2014 if it does not resolve, skip that reviewer with a note per the skill's Step 7 soft-dep rule); never run a review without its skill/checklist, never spawn a subagent in its place; relay any Requirements Gaps in-session by invoking the skill `requirements-inline-skill` Mode R (grilling happens in this session; unresolvable \u2192 surface the gaps to the user directly and proceed on their answers, per the skill's relay rule). At Step 8, execute `plan-execution-inline-skill` with the explicit PLAN path. At Step 9, invoke the skill `code-review-inline-skill` for the code review (pass the ticket repo and the diff range `origin/<base>...feat/<KEY>`; the skill owns baseline-first and checklist resolution \u2014 unresolvable checklist \u2192 it reports the review unavailable and you stop: Step 9 is the unconditional backstop with no further net); max 2 fix-and-re-review iterations + full re-gate before fix pushes unchanged. At Step 10, invoke the skill `civiltekk-pr-workflow-skill` (create route \u2014 it owns framework detection, the gate-memo check, the PR body, and the semver label; the skill's pipeline pins apply: PR target `<base>`, the `tier=full` gate-memo citation for the pushed SHA, `Closes <TICKET_ID>` with the `#`; unresolvable \u2192 stop \u2014 declared hard dep): create the PR with gh in-session and watch the merge via a background shell poll (gh pr checks --watch), never a subagent.",
+      "agent": "build",
+      "subagent": false
+    },
+    "review-arch": {
+      "description": "Architecture review \u2014 delegates to architecture-review-subagent in an isolated child session: system design, layer boundaries, dependency direction, transitive blast radius. Usage: /review-arch <review target \u2014 diff range, files, or PLAN>",
+      "template": "Perform an architecture review of: $ARGUMENTS. Follow your system prompt's full workflow \u2014 reviewer-baseline-skill first, severity-gated findings with business impact, Requirements Gaps array, Patterns applied/violated with LEARNINGS evidence, Return Contract.",
+      "agent": "architecture-review-subagent",
+      "subagent": true
+    },
+    "review-inline": {
+      "description": "Architecture review executed in-session (no subagent): load the skill `architecture-review-skill` (reviewer-baseline-skill first) and run the decision-tree review in this context. Usage: /review-inline <review target \u2014 diff range, files, or PLAN>",
+      "template": "Load the skill `architecture-review-skill` (reviewer-baseline-skill first) IN THIS SESSION and review: $ARGUMENTS \u2014 the skill owns the decision-tree routing, review axes, blast-radius gate, finding schema, severity rubric, and Return Contract. If it does not resolve, report the review as unavailable and stop. Same severity gates \u2014 in-session: state the review scope before starting and keep findings evidence-backed (file:line).",
+      "agent": "build",
+      "subagent": false
+    },
+    "worktree-pipeline-preview": {
+      "description": "Plan-mode-safe pipeline preview \u2014 read-only walk-through of worktree-pipeline-skill: sync/preflight/dry-run reported in-chat, no worktree, no commits, no pushes, no PRs, no file writes. Usage: /worktree-pipeline-preview [base-branch] <ticket-refs...>",
+      "template": "Load the skill `worktree-pipeline-skill` and run a PREVIEW for: $ARGUMENTS \u2014 spawn NO subagents anywhere in the run; if the skill does not resolve or load, report the command as unavailable and stop with the install hint: npx github:darellchua2/civiltekk-opencode-claude-skills add worktree-pipeline-skill. Read-only contract: inspect only (git status/log/diff, gh issue view); no fetch/pull/push, no worktree creation, no branches, no commits, no PRs, no file writes \u2014 present the would-be PLAN content in the conversation instead of writing PLANS/. Walk each pipeline step, report what it would do, then stop before Step 8 execution.",
+      "agent": "plan",
+      "subagent": false
+    }
+  },
+  "providers": {
+    "local-llm": {
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "name": "Local LLM (llama.cpp)",
+      "settings": {
+        "baseURL": "http://127.0.0.1:17851/v1"
+      },
+      "models": {
+        "local/gemma-4-E4B-q4_0": {
+          "name": "gemma-4-E4B (local q4_0)",
+          "capabilities": {
+            "input": [
+              "text",
+              "image"
+            ]
+          }
+        }
+      }
+    },
+    "vllm": {
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "name": "Local LLM (vLLM)",
+      "settings": {
+        "baseURL": "http://127.0.0.1:17852/v1"
+      },
+      "models": {
+        "local/nemotron-3-nano": {
+          "name": "Nemotron-3-Nano-4B-FP8 (vLLM)",
+          "capabilities": {
+            "input": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 200000,
+            "output": 32768
+          }
+        }
+      }
+    },
+    "ollama": {
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "settings": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "qwen3-coder:a3b": {
+          "name": "Qwen3-Coder a3b (Ollama)",
+          "limit": {
+            "context": 128000,
+            "output": 65536
+          }
+        }
+      }
+    },
+    "zai-custom": {
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "name": "Z.AI Coding Plan (Custom)",
+      "settings": {
+        "baseURL": "https://api.z.ai/api/coding/paas/v4",
+        "apiKey": "{env:ZAI_API_KEY}"
+      },
+      "models": {
+        "glm-5.3-flash": {
+          "name": "GLM-5.3 Flash (Custom)",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "limit": {
+            "context": 1000000,
+            "output": 131072
+          }
+        },
+        "glm-5.3": {
+          "name": "GLM-5.3 (Custom)",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "limit": {
+            "context": 1000000,
+            "output": 131072
+          }
+        }
+      }
+    }
+  },
+  "mcp": {
+    "servers": {
+      "codegraph": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@colbymchenry/codegraph",
+          "serve",
+          "--mcp"
+        ],
+        "disabled": false
+      },
+      "atlassian": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "mcp-remote",
+          "https://mcp.atlassian.com/v1/mcp"
+        ],
+        "disabled": true
+      },
+      "zai-web-reader": {
+        "type": "remote",
+        "url": "https://api.z.ai/api/mcp/web_reader/mcp",
+        "headers": {
+          "Authorization": "Bearer {env:ZAI_API_KEY}"
+        },
+        "disabled": false
+      },
+      "zai-web-search": {
+        "type": "remote",
+        "url": "https://api.z.ai/api/mcp/web_search_prime/mcp",
+        "headers": {
+          "Authorization": "Bearer {env:ZAI_API_KEY}"
+        },
+        "disabled": false
+      },
+      "next-devtools": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "next-devtools-mcp@latest"
+        ],
+        "environment": {
+          "NEXT_TELEMETRY_DISABLED": "1"
+        },
+        "disabled": true
+      },
+      "markitdown": {
+        "type": "local",
+        "command": [
+          "markitdown-mcp"
+        ],
+        "environment": {
+          "MARKITDOWN_ENABLE_PLUGINS": "false"
+        },
+        "disabled": true
+      },
+      "docling": {
+        "type": "local",
+        "command": [
+          "docling-mcp-server",
+          "--transport",
+          "stdio"
+        ],
+        "environment": {
+          "DOCLING_CONVERSION_MODE": "local"
+        },
+        "disabled": true
+      },
+      "chrome-devtools": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "chrome-devtools-mcp@latest",
+          "--no-usage-statistics",
+          "--no-performance-crux",
+          "--redact-network-headers",
+          "--isolated"
+        ],
+        "environment": {
+          "CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS": "1"
+        },
+        "disabled": true
+      },
+      "playwright": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@playwright/mcp@latest"
+        ],
+        "disabled": true
+      },
+      "alpha-vantage": {
+        "type": "remote",
+        "url": "https://mcp.alphavantage.co/mcp",
+        "oauth": false,
+        "headers": {
+          "Authorization": "Bearer {env:ALPHA_VANTAGE_API_KEY}"
+        },
+        "disabled": true
+      },
+      "nanobanana": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@mindstone/mcp-server-nano-banana@latest"
+        ],
+        "environment": {
+          "GEMINI_API_KEY": "{env:GEMINI_API_KEY}"
+        },
+        "disabled": true
+      }
+    }
+  },
+  "agents": {
+    "build": {
+      "permissions": [
+        {
+          "action": "subagent",
+          "resource": "*",
+          "effect": "allow"
+        }
+      ]
+    },
+    "plan": {
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "ask"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "ask"
+        },
+        {
+          "action": "subagent",
+          "resource": "*",
+          "effect": "allow"
+        }
+      ]
+    },
+    "explore": {
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "mcp:*",
+          "effect": "deny"
+        }
+      ]
+    },
+    "general": {
+      "model": "zai-coding-plan/glm-5.3",
+      "permissions": [
+        {
+          "action": "read",
+          "resource": "*",
+          "effect": "allow"
+        },
+        {
+          "action": "read",
+          "resource": "mcp:*",
+          "effect": "deny"
+        }
+      ]
+    }
+  }
 }

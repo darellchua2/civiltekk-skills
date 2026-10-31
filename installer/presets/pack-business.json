@@ -19,23 +19,15 @@
     "construction-bd-skill",
     "continuous-learning-skill",
     "design-patterns-skill",
-    "docx-creation-skill",
+    "office-document-router-skill",
     "domain-modeling-skill",
     "grilling-skill",
-    "interactive-document-rendering-skill",
-    "markitdown-mcp-skill",
-    "office-thumbnail-skill",
-    "ooxml-editing-skill",
-    "pptx-generate-slide-skill",
-    "pptx-generate-template-skill",
-    "pptx-template-modifier-skill",
     "search-first-skill",
     "security-audit-skill",
     "technical-design-creation-skill",
     "verification-loop-skill",
     "vision-creation-skill",
-    "wireframer-skill",
-    "xlsx-specialist-skill"
+    "wireframer-skill"
   ],
   "mcps": []
 }

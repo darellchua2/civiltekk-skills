@@ -1,14 +1,15 @@
 #!/usr/bin/env bats
 
-# Tests for markitdown-mcp-skill (PLAN-GIT-264).
+# Tests for the markitdown route of office-document-router-skill (PLAN-GIT-264; absorbed #680).
 # Verifies skill existence, frontmatter validity, required sections, exact MCP
 # tool name reference, agent routing grants, and cross-file skill count
 # consistency. Peer to tests/test_mcp_count_consistency.bats (PLAN-GIT-262).
 
-SKILL_MD="skills/markitdown-mcp-skill/SKILL.md"
+# Route file since #680 (skill absorbed into office-document-router-skill)
+SKILL_MD="skills/office-document-router-skill/references/routes/markitdown.md"
 AGENTS_DIR="agents"
 
-# Agents that should have markitdown-mcp-skill: allow in their permission.skill
+# Agents that should have an office-document-router-skill: allow in their permission.skill
 AGENTS_WITH_SKILL_GRANT=(
   "office-document-router-subagent"
   "documentation-subagent"
@@ -26,7 +27,9 @@ AGENTS_WITH_SKILL_GRANT=(
 }
 
 @test "markitdown_skill_frontmatter_parses" {
-  python3 -c "import yaml; d=open('$SKILL_MD').read(); fm=yaml.safe_load(d.split('---')[1]); assert fm['name']=='markitdown-mcp-skill'; assert 'license' in fm; assert 'compatibility' in fm; assert 'metadata' in fm"
+  # Route files carry a Load-when header instead of frontmatter (#680)
+  grep -qF '**Load when:**' "$SKILL_MD"
+  grep -qF '**Skip when:**' "$SKILL_MD"
 }
 
 @test "markitdown_skill_required_sections_present" {
@@ -45,12 +48,12 @@ AGENTS_WITH_SKILL_GRANT=(
 }
 
 @test "markitdown_skill_decision_tree_covers_pdf_specialist_collision" {
-  # Per arch-C2: skill must disambiguate markitdown vs pdf-specialist-skill
-  grep -q 'pdf-specialist-skill' "$SKILL_MD"
+  # Per arch-C2: route must disambiguate markitdown vs the pdf route
+  grep -q 'Route: PDF' "$SKILL_MD"
 }
 
 # =============================================================================
-# Agent routing — 5 agents should grant markitdown-mcp-skill: allow
+# Agent routing — 5 agents should grant office-document-router-skill: allow
 # =============================================================================
 
 @test "agents_have_markitdown_skill_grant" {
@@ -59,14 +62,14 @@ AGENTS_WITH_SKILL_GRANT=(
     python3 -c "
 import yaml
 fm=yaml.safe_load(open('$AGENTS_DIR/$agent.md').read().split('---')[1])
-assert any(r['action']=='skill' and r['resource']=='markitdown-mcp-skill' and r['effect']=='allow' for r in fm['permissions']), 'markitdown skill rule missing'
+assert any(r['action']=='skill' and r['resource']=='office-document-router-skill' and r['effect']=='allow' for r in fm['permissions']), 'office-document-router-skill rule missing'
 "
   done
 }
 
 @test "office_document_primary_agent_has_routing_matrix_row" {
   # Peer-conventional row format (not "Direct MCP call")
-  grep -qF 'Load `markitdown-mcp-skill` → call `markitdown` MCP' \
+  grep -qF 'route `markitdown`' \
     "$AGENTS_DIR/office-document-router-subagent.md"
 }
 

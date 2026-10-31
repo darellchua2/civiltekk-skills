@@ -277,7 +277,7 @@ For accelerator or conference presentations (5-7 slides, 3-5 minutes):
 
 | Skill | Integration |
 |-------|-------------|
-| `pptx-specialist-subagent` | Actual PPTX creation (delegates to `pptx-generate-slide-skill`; requires user-supplied Slide Master template) |
+| `pptx-specialist-subagent` | Actual PPTX creation (delegates to the `slides` route of `office-document-router-skill`; requires user-supplied Slide Master template) |
 | `continuous-learning` | Extract presentation patterns for future reference |
 | `verification-loop` | Verify presentation meets investor-readiness criteria |
 | `references/business-docs.md` (this skill) | report metrics and financial-model workflows feeding deck content |

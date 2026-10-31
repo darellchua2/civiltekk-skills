@@ -36,7 +36,7 @@ permissions:
     resource: coverage-readme-workflow-skill
     effect: allow
   - action: skill
-    resource: markitdown-mcp-skill
+    resource: office-document-router-skill
     effect: allow
   - action: skill
     resource: civiltekk-diagram-skill

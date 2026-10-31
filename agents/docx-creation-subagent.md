@@ -30,10 +30,7 @@ permissions:
     resource: '*'
     effect: allow
   - action: skill
-    resource: docx-creation-skill
-    effect: allow
-  - action: skill
-    resource: markitdown-mcp-skill
+    resource: office-document-router-skill
     effect: allow
   - action: skill
     resource: unslop-skill
@@ -91,7 +88,7 @@ Workflow for Editing:
 4. Pack: python scripts/pack.py unpacked/ output.docx
 5. Validate
 
-Critical Rules: `docx-creation-skill` is the source of truth for docx-js specifics
+Critical Rules: `office-document-router-skill route `docx`` is the source of truth for docx-js specifics
 (page size, WidthType.DXA tables, PageBreak placement, tracked changes, comment markers) —
 consult it before writing document-generation code.
 

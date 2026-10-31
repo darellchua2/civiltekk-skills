@@ -19,7 +19,7 @@ Every skill directory under `skills/` (name suffix or not — e.g. the `gsap-*` 
 - **Cross-skill code duplication is intentional.** Shared helpers are vendored per skill (per-skill copy model), not factored into shared packages. Do not "DRY up" duplicated code across skills by extracting a common module — that is the exact regression this contract bans.
 - **No new shared `_`-prefixed dirs** (e.g. a `skills/_common/`). The former `skills/_common/scripts` engine was vendored into each pptx skill as `scripts/_common/` and the shared dir deleted.
 - **Vendored copies stay in sync**: the three pptx skills' `scripts/_common` trees must remain byte-identical (guard-enforced). Fix a vendored bug once, copy to all three trees, run the guard.
-- **Cross-skill runtime deps are banned by default.** The declared exceptions, all in the guard's allowlist: `pptx-template-modifier-skill → pptx-generate-slide-skill` (#437 — capability split: the modifier extends templates, the slide engine fills), `plan-execution-inline-skill → {testing,linting,responsive-audit}-inline-skill + civiltekk-documentation-inline-skill` (#597 — the inline executor routes its delegate matrix to the inline worker family), and `{autoresearch-code, autoresearch-ml, autoresearch-research}-skill → autoresearch-core-skill` (#602 — the loop skills cite the core protocol host's references at runtime). The guard's `HANDOFF1_OWNER`/`HANDOFF1_TARGETS` + `HANDOFF2_OWNER`/`HANDOFF2_TARGETS` vars (uniform owner → space-separated-targets shape) plus the `HANDOFF3_OWNERS`/`HANDOFF3_TARGETS` multi-owner pair (every owner maps to every target) — mirrored by the `installer/dependency-map.json` `requiresSkills` entries — are the source of truth for the allowlist: a new handoff updates those first, then the SKILL.md prose — or duplicate the code instead.
+- **Cross-skill runtime deps are banned by default.** The declared exceptions, all in the guard's allowlist: `plan-execution-inline-skill → {testing,linting,responsive-audit}-inline-skill + civiltekk-documentation-inline-skill` (#597 — the inline executor routes its delegate matrix to the inline worker family), and `{autoresearch-code, autoresearch-ml, autoresearch-research}-skill → autoresearch-core-skill` (#602 — the loop skills cite the core protocol host's references at runtime). The guard's `HANDOFF1_OWNER`/`HANDOFF1_TARGETS` vars (uniform owner → space-separated-targets shape) plus the `HANDOFF3_OWNERS`/`HANDOFF3_TARGETS` multi-owner pair (every owner maps to every target) — mirrored by the `installer/dependency-map.json` `requiresSkills` entries — are the source of truth for the allowlist: a new handoff updates those first, then the SKILL.md prose — or duplicate the code instead.
 
 ## Secret Masking
 
@@ -122,13 +122,13 @@ All subagents return (additive signal fields allowed beyond, never replacing):
 
 ## Office Document Extraction Routing
 
-**Single source of truth** — skills/subagents reference this section instead of duplicating the tree. Binary office docs (`.docx`, `.pptx`, `.xlsx`, born-digital `.pdf`) need an extraction engine — `Read` cannot parse them. Escalate only when the cheaper tier is insufficient:
+**Single source of truth: `office-document-router-skill`** (routes `markitdown`, `docling`, `pdf` — #680 consolidated the office family). This section summarizes the ladder; the router's SKILL.md owns it. Binary office docs (`.docx`, `.pptx`, `.xlsx`, born-digital `.pdf`) need an extraction engine — `Read` cannot parse them. Escalate only when the cheaper tier is insufficient:
 
 | Tier | Engine | Best for | Enable |
 |------|--------|----------|--------|
-| 1 | markitdown (MCP) | Fast text dumps of born-digital docs (~1s/50 pages; local conversion, plugins off — note: audio inputs upload to Google Speech and YouTube URLs contact YouTube, #487) | `--enable-pack markitdown` |
-| 2 | docling (CLI or MCP) | Layout-aware: complex tables, multi-column, scanned PDFs | CLI `pip install --user docling` (ask consent, ~3-4 GB); MCP `--enable-pack docling` |
+| 1 | markitdown (MCP) — router route `markitdown` | Fast text dumps of born-digital docs (~1s/50 pages; local conversion, plugins off — note: audio inputs upload to Google Speech and YouTube URLs contact YouTube, #487) | `--enable-pack markitdown` (consent-gated) |
+| 2 | docling (CLI or MCP) — router route `docling` | Layout-aware: complex tables, multi-column, scanned PDFs | CLI `pip install --user docling` (ask consent, ~3-4 GB); MCP `--enable-pack docling` |
 | 3 | image-analyzer-subagent | Visual understanding: charts, diagrams, screenshots | always available (native multimodal) |
-| 4 | pdf-specialist-skill | Structured PDF data: forms, fillable fields, OCR-as-purpose | load skill |
+| 4 | pdf route — router route `pdf` | Structured PDF data: forms, fillable fields, OCR-as-purpose | load route |
 
 markitdown and docling are both opt-in (disabled by default). When markitdown is disabled, tell the user to `--enable-pack markitdown`. When its output is insufficient, escalate to docling — if absent, ask consent via `question` (never auto-install 3-4 GB). Headless/CI: soft-fail to markitdown best-effort.

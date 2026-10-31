@@ -25,10 +25,7 @@ permissions:
     resource: '*'
     effect: allow
   - action: skill
-    resource: xlsx-specialist-skill
-    effect: allow
-  - action: skill
-    resource: markitdown-mcp-skill
+    resource: office-document-router-skill
     effect: allow
 category: docs
 ---
@@ -66,7 +63,7 @@ You are a spreadsheet specialist. Handle all .xlsx and .csv file operations.
 ## Workflow
 
 1. **Task Classification**: Determine if this is a read, create, edit, or conversion task
-2. **Skill Delegation**: Invoke `xlsx-specialist-skill` via Skill tool for detailed workflows
+2. **Skill Delegation**: Invoke `office-document-router-skill route `xlsx`` via Skill tool for detailed workflows
 3. **Execution**: Follow skill guidance for the specific operation
 4. **Validation**: Verify output file opens correctly and data is accurate
 
