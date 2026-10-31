@@ -77,4 +77,4 @@ Relative source targets and CLI output overrides are resolved from the current w
 - Disabled collisions: `srdf/disabled-collisions.md`
 - Runtime notes and current limitations: `srdf/implementation-notes.md`
 
-For local MoveIt2 controls, use `cad-viewer-skill` (install-if-missing sibling); that skill carries its own `srdf/moveit2-server.md`.
+For local MoveIt2 controls, use `cad-viewer-skill` (install-if-missing sibling); that skill ships its own MoveIt2 server reference — consult its references directory after install.

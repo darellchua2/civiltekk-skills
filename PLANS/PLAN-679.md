@@ -6,15 +6,15 @@
 
 ## Acceptance Criteria
 
-- [ ] `skills/cad-specialist-skill/` ships: router SKILL.md ≤10KB (~2.5k tokens), decision tree, shared spine, load table (Route | Read | When | Skip-when), gates in router; description ≤50 words, trigger phrases preserved
-- [ ] One `references/routes/<id>.md` per merged route; absorbed scripts + merged `requirements.txt` (dependency-conflict audit)
-- [ ] Install-if-missing rows: dry-run + consent, never auto-install; no sibling path strings in fenced blocks
-- [ ] The 10 merged skill dirs hard-removed (the 5 install-on-demand siblings remain: generation, dxf, implicit, redraw, viewer); orphan-reference grep clean for the 10 removed IDs (historical PLANS excepted)
-- [ ] `agents/cad-specialist-subagent.md` rewired: permissions allowlist 15→1, routing table points at internal routes
-- [ ] `installer/presets/pack-cad.json` updated; `installer/registry.json` regenerated via `node installer/build-registry.mjs`
-- [ ] `README.md`, `deploy/setup.sh`, `deploy/setup.ps1` counts/banner updated
-- [ ] Full bats suite passes (skill isolation, vendored-copy guard)
-- [ ] Generalizer output contract deliverables: weight line before→after, change list, residual list
+- [x] `skills/cad-specialist-skill/` ships: router SKILL.md ≤10KB (~2.5k tokens), decision tree, shared spine, load table (Route | Read | When | Skip-when), gates in router; description ≤50 words, trigger phrases preserved
+- [x] One `references/routes/<id>.md` per merged route; absorbed scripts + merged `requirements.txt` (dependency-conflict audit)
+- [x] Install-if-missing rows: dry-run + consent, never auto-install; no sibling path strings in fenced blocks
+- [x] The 10 merged skill dirs hard-removed (the 5 install-on-demand siblings remain: generation, dxf, implicit, redraw, viewer); orphan-reference grep clean for the 10 removed IDs (historical PLANS excepted)
+- [x] `agents/cad-specialist-subagent.md` rewired: permissions allowlist 15→1, routing table points at internal routes
+- [x] `installer/presets/pack-cad.json` updated; `installer/registry.json` regenerated via `node installer/build-registry.mjs`
+- [x] `README.md`, `deploy/setup.sh`, `deploy/setup.ps1` counts/banner updated
+- [x] Full bats suite passes (skill isolation, vendored-copy guard)
+- [x] Generalizer output contract deliverables: weight line before→after, change list, residual list
 
 ## Audit Notes (Phase 1 — detector pass, 2026-10-31)
 
@@ -159,26 +159,31 @@ Phase ordering constraint: no deletion (4.1) before every consumer of the 10 IDs
 
 ### Phase 5: Verify + deliverables (full gate — ticket exit gate)
 
-- [ ] **5.1** Run the full bats suite (`tests/`), including skill-isolation and vendored-copy guards
+- [x] **5.1** Run the full bats suite (`tests/`), including skill-isolation and vendored-copy guards
     — **Why:** the isolation contract is the repo's mechanical enforcement; this change touches its subject matter directly
     — **Done when:** every bats test exits 0 (guards use grep, not rg — CI parity)
     — **Consumers affected:** repo governance, CI
-- [ ] **5.2** Orphan-reference grep for the 10 removed IDs repo-wide, case-insensitive, excluding `.git/` and historical `PLANS/` entries
+    — **Done:** full bats suite green on final trees (phase-4 68e57fc and exit-gate 3651923): 703/703, exit 0, 0 `not ok`; files: tests/; fixes: none
+- [x] **5.2** Orphan-reference grep for the 10 removed IDs repo-wide, case-insensitive, excluding `.git/` and historical `PLANS/` entries
     — **Why:** a missed consumer reference breaks at first use, not at review
     — **Done when:** remaining hits are only historical PLAN docs or are justified line-by-line in the run report
     — **Consumers affected:** none (verification)
-- [ ] **5.3** Generalizer verification pass on the new skill: router ≤10240 bytes, description ≤50 words with triggers intact, every load-table row points at an existing file, route-file cross-references resolve within the skill, no load rule says "read all references", no sibling path strings in fenced blocks
+    — **Done:** case-insensitive orphan grep repo-wide: only PLANS history (PLAN-513/553/679) + registry.json (fixed via 3651923, now 0 hits); files: none changed; fixes: registry fix commit 3651923
+- [x] **5.3** Generalizer verification pass on the new skill: router ≤10240 bytes, description ≤50 words with triggers intact, every load-table row points at an existing file, route-file cross-references resolve within the skill, no load rule says "read all references", no sibling path strings in fenced blocks
     — **Why:** load-weight and load-rule integrity are the router pattern's correctness conditions
     — **Done when:** all checks pass with recorded measurements (bytes, word count, row→file map)
     — **Consumers affected:** skill consumers
-- [ ] **5.4** Record the generalizer output contract in this PLAN's trace: weight line (SKILL.md bytes/tokens before → after; description word count before → after), change list (generalized / conditionalized / modularized / deleted — one line each), residual list (items flagged for the owner)
+    — **Done:** router 5022 bytes ≤10240; description 47 words ≤50; 10 load-table rows all resolve; 10 route dirs exist; route cross-refs resolve in-skill; only 'preload' hits are negation rules; zero sibling path strings; files: skills/cad-specialist-skill/; fixes: none
+- [x] **5.4** Record the generalizer output contract in this PLAN's trace: weight line (SKILL.md bytes/tokens before → after; description word count before → after), change list (generalized / conditionalized / modularized / deleted — one line each), residual list (items flagged for the owner)
     — **Why:** the ticket AC requires the contract deliverables to be reviewable
     — **Done when:** PLAN contains the three deliverable blocks with final numbers
     — **Consumers affected:** reviewers, ticket close
-- [ ] **5.5** Run the full verification gate per verification-loop-skill (command discovery in this repo: bats suite, registry build, JSON validity, shell syntax checks on touched deploy scripts); write the `tier=full` gate memo line for the final tree into the PLAN `## Trace` section
+    — **Done:** deliverables block written above (weight line, 4-part change list, 4-item residual list); files: PLANS/PLAN-679.md; fixes: none
+- [x] **5.5** Run the full verification gate per verification-loop-skill (command discovery in this repo: bats suite, registry build, JSON validity, shell syntax checks on touched deploy scripts); write the `tier=full` gate memo line for the final tree into the PLAN `## Trace` section
     — **Why:** the pipeline's PR step must cite a green full-gate memo for the exact pushed SHA
     — **Done when:** memo line `GATE <short-sha> tier=full` present in PLAN Trace matching the final pushed SHA
     — **Consumers affected:** PR creation (Step 10a)
+    — **Done:** exit gate full on 3651923: build green (regen timestamp-only), bats 703/703 green, memo below; files: none; fixes: registry fix 3651923
 
 ## Technical Notes
 
@@ -213,3 +218,24 @@ LOG phase-2 fix-on-fail: full gate red ×9 with ONE root cause — committed reg
 GATE 9f0f1a8 tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
 GATE (phase-3 tree) tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
 GATE (phase-4 tree) tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
+
+LOG phase-5 fix: phase-3's registry regen had been reverted by a gate-time `git checkout installer/registry.json` and never committed — exit-gate orphan grep caught the subagent entry still carrying 15 requiresSkills (incl. 10 deleted dirs, breaking `add --all`). Fix commit 3651923 (regen, requiresSkills 15→1). Rule captured in LEARNINGS (skill-moves-are-roster-changes).
+
+## Deliverables (generalizer output contract)
+
+**Weight line**: trigger-time SKILL.md load: 15 catalog entries, ~5.7KB avg full-body load each (~114,100 bytes / ~28.5k tokens across the family) → 1 router at 5,022 bytes (~1.25k tokens) + one route file (5–13KB) loaded only when matched; route detail dirs (72,914 bytes across 10) load on named demand; catalog rows 15 → 6 (router + 5 install-on-demand siblings); description: per-skill ~25–35 words × 15 → one 47-word description with family triggers preserved.
+
+**Change list**:
+- Generalized: viewer-handoff boilerplate (×7) + interpreter-placeholder note (×3) + gen-source-is-truth / validate-before-export rules → router shared spine, stated once.
+- Conditionalized: per-route mechanics behind WHEN+WHAT load rules (10 route files + 10 detail dirs); sibling capability behind install-if-missing (dry-run + consent, never auto-install).
+- Modularized: 10 absorbed routes (urdf, srdf, sdf, gcode, bambu, sendcutsend, step-parts, civil3d, aps, open3d); vendored cadpy_metadata deduped ×3 → 1; per-format scripts preserved as subdirs.
+- Deleted: 10 skill identities (dirs + registry/preset/README/subagent refs); origin-story phrase ("from this repo's LAN debugging"); 2 cross-skill path references reworded; 5 heavy skills deliberately retained as siblings.
+
+**Residual list (owner)**:
+- bambu route: device/firmware-specific validated paths (A1 Mini template-project, error codes) — refresh per Bambu firmware releases.
+- civil3d + open3d routes: version tables (2022–2026 builds; 0.13–0.19) are time-sensitive — verify per release cycle.
+- aps route: official-only Autodesk MCP policy stands; re-admit only with a verified official server.
+- npx `add cad-<absorbed>-skill` now 404s by design (hard removal); the router is the entry point.
+
+## Trace
+GATE 3651923 tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
