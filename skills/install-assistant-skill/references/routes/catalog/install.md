@@ -70,7 +70,7 @@ default through this assistant?" On consent:
 ## Skill & Agent Installation
 
 Route skill/subagent lookup, install, update, and removal through the
-`civiltekk-install-assistant` skill (`.agents/skills/civiltekk-install-assistant/`)
+`install-assistant-skill` skill (`.agents/skills/install-assistant-skill/`)
 — dry-run first, never hand-copy from a skill repo. Before authoring a new
 skill or agent, search the installed catalog first; a match may already
 exist. Never hand-edit installed copies — fix at source and run the

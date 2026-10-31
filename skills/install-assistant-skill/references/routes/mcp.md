@@ -1,24 +1,13 @@
----
-name: mcp-install-assistant-skill
-description: >-
-  Interactive MCP installation assistant — inventories shipped MCP servers
-  and provider packs from the deployed config, prechecks prerequisites
-  (env keys, node, Chrome, pip), enables globally via --enable-pack or
-  per-project v2 config, verifies with opencode mcp list. Triggers:
-  install mcp, enable mcp, which mcp, set up mcp server, mcp assistant.
-license: Apache-2.0
-compatibility: opencode
-metadata:
-  harness: "opencode"
-category: Configuration
----
+# Route: MCP
 
-# Skill: mcp-install-assistant-skill
+**Load when:** the task enables or diagnoses OpenCode MCP servers — inventory, precheck, `--enable-pack` or per-project enable, verify. **Skip when:** installing catalog skills/subagents (Route: CATALOG).
+
+
 
 Interactive assistant for turning OpenCode MCP servers on — safely. I never
 guess: I inventory what ships, precheck what each server needs to actually
 start, guide the enable, and verify it connected. I am the guided front door;
-`opencode-repo-setup-skill` is the per-project plumbing reference underneath.
+`opencode-repo-setup-skill` is the per-project plumbing reference underneath (external sibling).
 
 ## What I do (4 steps — never skip step 2)
 
@@ -27,8 +16,8 @@ start, guide the enable, and verify it connected. I am the guided front door;
 Run the bundled read-only inventory (zero deps, Node):
 
 ```bash
-node "<this-skill-dir>/scripts/inventory.mjs"            # human table
-node "<this-skill-dir>/scripts/inventory.mjs" --json    # machine output
+node scripts/inventory.mjs            # human table
+node scripts/inventory.mjs --json    # machine output
 ```
 
 It reads the **deployed global config** (`~/.config/opencode/opencode.json`,
@@ -105,7 +94,7 @@ inventory itself is plain Node and runs anywhere Node runs.
 ## Self-check
 
 ```bash
-node "<this-skill-dir>/scripts/inventory.mjs" --demo
+node scripts/inventory.mjs --demo
 ```
 
 Runs the inventory against a built-in 3-server fixture (includes one server

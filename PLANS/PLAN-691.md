@@ -6,11 +6,11 @@
 
 ## Acceptance Criteria
 
-- [ ] Router ships: ≤10240 bytes, ≤50-word description, triggers preserved (install mcp, enable pack, find a skill, install skill, update, dry-run), decision tree, consent spine, load table (2 routes), gates, zero-preload
-- [ ] 2 route files with headers (`mcp`, `catalog`); civiltekk-install-assistant's 3 values files → `references/routes/catalog/` detail dir; inventory script absorbed; no old-ID path strings
-- [ ] Consumers rewired: deploy/.AGENTS.md prose, shipped config (2→1), lean (1→1 swap), README (quick-route line, prose, Configuration row 2→1, counts 85→84), cad-specialist convention mention; registry regenerated
-- [ ] 2 old dirs hard-removed; orphan-reference grep clean (PLANS/CHANGELOG/LEARNINGS-history excepted)
-- [ ] Full bats green (Configuration-category test verified dynamic); generalizer output contract in trace
+- [x] Router ships: ≤10240 bytes, ≤50-word description, triggers preserved (install mcp, enable pack, find a skill, install skill, update, dry-run), decision tree, consent spine, load table (2 routes), gates, zero-preload
+- [x] 2 route files with headers (`mcp`, `catalog`); civiltekk-install-assistant's 3 values files → `references/routes/catalog/` detail dir; inventory script absorbed; no old-ID path strings
+- [x] Consumers rewired: deploy/.AGENTS.md prose, shipped config (2→1), lean (1→1 swap), README (quick-route line, prose, Configuration row 2→1, counts 85→84), cad-specialist convention mention; registry regenerated
+- [x] 2 old dirs hard-removed; orphan-reference grep clean (PLANS/CHANGELOG/LEARNINGS-history excepted)
+- [x] Full bats green (Configuration-category test verified dynamic); generalizer output contract in trace
 
 ## Dependency & Consumer Map
 
@@ -28,33 +28,39 @@
 
 ### Phase 1: Audit + build (single small family — combined)
 
-- [ ] **1.1** Record dispositions: spine = shared consent/dry-run invariants + capability bindings + combined route detection; routes `mcp` (4-step method + precheck table + house rules) and `catalog` (route detection + values files as detail dir); both frontmatters carry `harness: "opencode"` → router; LEARNINGS citation = dated history (justified residual)
+- [x] **1.1** Record dispositions: spine = shared consent/dry-run invariants + capability bindings + combined route detection; routes `mcp` (4-step method + precheck table + house rules) and `catalog` (route detection + values files as detail dir); both frontmatters carry `harness: "opencode"` → router; LEARNINGS citation = dated history (justified residual)
     — **Why:** both skills are already router-shaped; the merge is mostly mechanical
     — **Done when:** Audit Notes recorded in this PLAN
     — **Consumers affected:** Phase 2
-- [ ] **1.2** Moves + transform: mcp SKILL.md → `references/routes/mcp.md` (header; `<this-skill-dir>/scripts/` → `scripts/`), inventory.mjs → `scripts/`; civiltekk-install-assistant SKILL.md → `references/routes/catalog.md` (header; its route-detection table folded into catalog route), 3 values files → `references/routes/catalog/{find,install,maintain}.md`; residual grep
+    — **Done:** dispositions recorded (spine = consent invariants + bindings + combined detection; routes mcp/catalog; harness metadata → router; LEARNINGS citation = history); files: PLANS/PLAN-691.md; fixes: none
+- [x] **1.2** Moves + transform: mcp SKILL.md → `references/routes/mcp.md` (header; `<this-skill-dir>/scripts/` → `scripts/`), inventory.mjs → `scripts/`; civiltekk-install-assistant SKILL.md → `references/routes/catalog.md` (header; its route-detection table folded into catalog route), 3 values files → `references/routes/catalog/{find,install,maintain}.md`; residual grep
     — **Why:** values files keep their load rules under the catalog route
     — **Done when:** 2 route files + catalog detail dir; residual clean
     — **Consumers affected:** router load table
-- [ ] **1.3** Router SKILL.md: frontmatter (name = dir, harness opencode, category Configuration, ≤50 words), combined decision tree, consent spine, 2-row load table, gates
+    — **Done:** moves + transform complete (mcp route with scripts/ path fixes ×3; catalog route with detail-dir path rewrites; titles/handles cleaned incl. install.md:73); residual clean; files: references/routes/*, scripts/; fixes: 3 leftover self-title/handle refs swept after first pass
+- [x] **1.3** Router SKILL.md: frontmatter (name = dir, harness opencode, category Configuration, ≤50 words), combined decision tree, consent spine, 2-row load table, gates
     — **Why:** the contract
     — **Done when:** ≤10240 bytes; ≤50 words; 2 rows
     — **Consumers affected:** installer users
+    — **Done:** router written — 3024 bytes, description 41 words, 2 rows, consent spine; files: SKILL.md; fixes: none
 
 ### Phase 2: Rewire + delete + verify
 
-- [ ] **2.1** Consumers: deploy/.AGENTS.md prose; shipped config 2→1; lean mcp→router (stays 59); cad-specialist:62 mention; README quick-route line + prose + Configuration row 2→1 + counts 85→84; registry regenerated
+- [x] **2.1** Consumers: deploy/.AGENTS.md prose; shipped config 2→1; lean mcp→router (stays 59); cad-specialist:62 mention; README quick-route line + prose + Configuration row 2→1 + counts 85→84; registry regenerated
     — **Why:** roster-affecting rule
     — **Done when:** zero old IDs outside LEARNINGS history; counts equal disk
     — **Consumers affected:** installer users, count-drift tests
-- [ ] **2.2** Remove the 2 old dirs; final regen; orphan sweep
+    — **Done:** deploy/.AGENTS.md prose repointed; shipped config 2→1; lean mcp→router (stays 53); cad-specialist:62 repointed; README quick-route + prose + Configuration row 2→1 + counts 85→84 + history clause; registry regenerated; files: deploy/*, skills/cad-specialist-skill, README.md, installer/registry.json; fixes: none
+- [x] **2.2** Remove the 2 old dirs; final regen; orphan sweep
     — **Why:** hard removal per AC
     — **Done when:** dirs gone; greps clean
     — **Consumers affected:** registry
-- [ ] **2.3** Full bats green (Configuration-category test verified reading both sides); generalizer verification (bytes/words/rows/residual); deliverables (weight line, change list, residual list); `tier=full` exit-gate memo for the final SHA
+    — **Done:** 2 dirs removed; disk 84; orphan grep: router provenance + script header (swept) only; files: none; fixes: none
+- [x] **2.3** Full bats green (Configuration-category test verified reading both sides); generalizer verification (bytes/words/rows/residual); deliverables (weight line, change list, residual list); `tier=full` exit-gate memo for the final SHA
     — **Why:** ticket AC + PR citation
     — **Done when:** 0 failures; memo matches final pushed SHA
     — **Consumers affected:** governance, CI, PR step
+    — **Done:** full bats green (0); Configuration test dynamic-read verified; deliverables below; memo below; files: none; fixes: none
 
 ## Technical Notes
 
@@ -74,4 +80,25 @@
 
 ## Trace
 
+LOG phase-1/2: single-pass family (both members already router-shaped). Full gate green first try.
+
+## Deliverables (generalizer output contract)
+
+**Weight line**: trigger-time SKILL.md load: 2 catalog entries, 9,395 bytes / ~2.3k tokens → 1 router at 3,024 bytes (~0.75k tokens) + one route file on match; catalog rows 85 → 84; lean unchanged 53 (1:1 swap); shipped-config allows 2 → 1; description: 2 × ~35 words → one 41-word description.
+
+**Change list**:
+- Generalized: the consent contract (dry-run → resolved set → consent → verify → never auto-install) stated twice → the spine, once.
+- Conditionalized: 2 routes behind WHEN+WHAT load rules; catalog detail files keep per-route load rules.
+- Modularized: inventory.mjs absorbed at scripts/; find/install/maintain values files → catalog/ detail dir.
+- Deleted: 2 skill identities; duplicated consent prose; the sibling-intro sentences.
+
+**Residual list (owner)**:
+- The router now owns BOTH install surfaces — `civiltekk-setup` full-stack requests stay a pointer (never an install), unchanged.
+- LEARNINGS history retains former skill names (dated records — by design).
+- inventory.mjs provider-pack static map ceiling noted in-script (pre-existing).
+
+## Trace
+
+
 (appended at execution: phase commits, gate memos, deliverables)
+GATE (final tree, pre-commit) tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a

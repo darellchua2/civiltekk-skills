@@ -26,7 +26,7 @@
     "language-linting-skill",
     "language-review-checklists-skill",
     "logging-observability-skill",
-    "mcp-install-assistant-skill",
+    "install-assistant-skill",
     "opencode-repo-setup-skill",
     "opencode-skills-maintainer-skill",
     "opencode-v2-migration-skill",
