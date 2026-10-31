@@ -5,17 +5,17 @@
 **Base**: main
 
 ## Acceptance Criteria
-- [ ] `s3://silentx-opencode-dataset/memory/memories.jsonl` contains exactly 234 lines, one `_type: "memory"` entry each, embeddings preserved
-- [ ] `s3://silentx-opencode-dataset/memory/superlocalmemory-raw-2026-10-31.json` is a byte-identical copy of `~/.superlocalmemory/memories.json`
-- [ ] `manifest.jsonl` gains a `_type: "memories-archive"` entry naming both keys; all 2,825 pre-existing session entries intact
-- [ ] Manifest `memories-archive` entry records `"embedding_model": "xenova/all-MiniLM-L6-v2 (384-dim; inferred from vector width + plugin default config — not recorded in source)"`
-- [ ] Post-upload verification passes: S3 object sizes + line counts match local sources
-- [ ] `~/.superlocalmemory/` deleted only after verification passes
-- [ ] `plugins/opencode-learnings-autoinject.README.md` rewritten to stand alone (no plugin mention, lines 12/70)
-- [ ] `deploy/.AGENTS.md` watch-note dropped; the memory-hygiene line still explains the markdown LEARNINGS system
-- [ ] `README.md:361` stale pointer fixed
-- [ ] `CHANGELOG.md` untouched (immutable history)
-- [ ] Deployed user-space copies (`~/.config/opencode/AGENTS.md`, `~/.config/opencode/plugins/opencode-learnings-autoinject.README.md`) synced from updated source
+- [x] `s3://silentx-opencode-dataset/memory/memories.jsonl` contains exactly 234 lines, one `_type: "memory"` entry each, embeddings preserved
+- [x] `s3://silentx-opencode-dataset/memory/superlocalmemory-raw-2026-10-31.json` is a byte-identical copy of `~/.superlocalmemory/memories.json`
+- [x] `manifest.jsonl` gains a `_type: "memories-archive"` entry naming both keys; all 2,825 pre-existing session entries intact
+- [x] Manifest `memories-archive` entry records `"embedding_model": "xenova/all-MiniLM-L6-v2 (384-dim; inferred from vector width + plugin default config — not recorded in source)"`
+- [x] Post-upload verification passes: S3 object sizes + line counts match local sources
+- [x] `~/.superlocalmemory/` deleted only after verification passes
+- [x] `plugins/opencode-learnings-autoinject.README.md` rewritten to stand alone (no plugin mention, lines 12/70)
+- [x] `deploy/.AGENTS.md` watch-note dropped; the memory-hygiene line still explains the markdown LEARNINGS system
+- [x] `README.md:361` stale pointer fixed
+- [x] `CHANGELOG.md` untouched (immutable history)
+- [x] Deployed user-space copies (`~/.config/opencode/AGENTS.md`, `~/.config/opencode/plugins/opencode-learnings-autoinject.README.md`) synced from updated source
 
 ## Dependency & Consumer Map
 
@@ -95,6 +95,7 @@
 
 ## Trace
 GATE 29e3961 tier=light lint=n.a typecheck=n.a build=n.a unit=n.a e2e=n.a — docs/ops-only phase, no tracked-file diff; gate evidence = the four Done-when verifications (all pass)
+GATE 91b98a6 tier=full lint=n.a typecheck=n.a build=n.a unit=n.a e2e=n.a — ticket exit gate: 11/11 ACs verified (4 S3 checks, 4 grep checks, checksummed deploy sync, gated deletion); composite re-run on final tree all green
 GATE 8d8ba75+phase2-worktree tier=light lint=n.a typecheck=n.a build=n.a unit=n.a e2e=n.a — docs-only diff (3 files, greps ran on the identical working-tree content this commit carries); SKIP 2.4 repo-scope: PLANS/PLAN-681.md self-reference is a historical run record, same class as CHANGELOG.md
 
 ## Technical Notes
