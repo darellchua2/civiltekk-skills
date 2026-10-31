@@ -3141,17 +3141,6 @@ install_pack_runtime() {
         return 0
     fi
 
-    # Legacy uninstall migration (pack-declared, best-effort — absent is fine).
-    # PEP 668 blocks plain uninstalls on externally-managed systems — retry
-    # once with --break-system-packages (mirrors the install path below).
-    local legacy
-    for legacy in "${unis[@]:-}"; do
-        [ -z "$legacy" ] && continue
-        $PYTHON_BIN -m pip uninstall -y "$legacy" >/dev/null 2>&1 \
-            || $PYTHON_BIN -m pip uninstall -y --break-system-packages "$legacy" >/dev/null 2>&1 \
-            || true
-    done
-
     if [ "$runtime" = "npm" ]; then
         if ! command_exists npm; then
             log_warn "npm not found — skipping ${pack_name} runtime install"
@@ -3174,6 +3163,19 @@ install_pack_runtime() {
         log_warn "install_pack_runtime: pip runtime with no packages in ${pack_file} — skipping"
         return 0
     fi
+
+    # Legacy uninstall migration (pack-declared, best-effort — absent is
+    # fine). Runs AFTER resolve_python: PYTHON_BIN must be live here or the
+    # uninstall silently no-ops (code-review Major, #677). PEP 668 blocks
+    # plain uninstalls on externally-managed systems — retry once with
+    # --break-system-packages (mirrors the install path below).
+    local legacy
+    for legacy in "${unis[@]:-}"; do
+        [ -z "$legacy" ] && continue
+        $PYTHON_BIN -m pip uninstall -y "$legacy" >/dev/null 2>&1 \
+            || $PYTHON_BIN -m pip uninstall -y --break-system-packages "$legacy" >/dev/null 2>&1 \
+            || true
+    done
 
     # Idempotency: skip the network round-trip when the declared version (or
     # any version, when the pack declares none) is already installed AND the
