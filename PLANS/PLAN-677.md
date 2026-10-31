@@ -34,10 +34,10 @@ Phase order: P1 → P2 (listings read pack data); P3, P4 independent; P5 after P
 
 ### Phase 1: Self-describing pack installs
 
-- [ ] **1.1** Add optional `install` block to `deploy/packs/pack-markitdown.json` and `pack-docling.json` (`runtime: "pip"`, `packages: [...]`, `idempotent: {pipShow, version, import}`); move the pin-rationale prose into each pack's `$comment`/`install.notes`
-    — **Why:** the pack file becomes the single source for both config merge AND runtime install; pin bumps stop requiring setup.sh edits
-    — **Done when:** `node merge-packs.mjs --config <tmp> --packs-dir deploy/packs --packs markitdown` still produces the identical mcp+permissions merge (unknown `install` key ignored); `jq .install deploy/packs/pack-markitdown.json` parses
-    — **Consumers affected:** `merge-packs.mjs` (verify-only, no change expected), `setup.sh` install call sites (1.3)
+- [ ] **1.1** Add optional `install` block to `deploy/packs/pack-markitdown.json` and `pack-docling.json` (`runtime: "pip"`, `packages: [...]`, `idempotent: {pipShow, version, import}`); move the pin-rationale prose into each pack's `$comment`/`install.notes`; teach `deploy/merge-packs.mjs` to strip `install` alongside `$comment` in the reserved-key destructure (`const { mcp, permissions, $comment, install, ...restPack } = pack`) — unknown pack keys are deep-merged into the deployed config today (`merge-packs.mjs:182-183`), so without this the install blob would land in every deployed opencode.json
+    — **Why:** the pack file becomes the single source for both config merge AND runtime install; pin bumps stop requiring setup.sh edits; the merger must never write non-config keys into the deployed config
+    — **Done when:** `node merge-packs.mjs --config <tmp> --packs-dir deploy/packs --packs markitdown` produces output byte-identical to the pre-change merger (no `install` key in output); `jq .install deploy/packs/pack-markitdown.json` parses
+    — **Consumers affected:** `merge-packs.mjs` (reserved-key strip), `setup.sh` install call sites (1.3)
 - [ ] **1.2** Add generic `install_pack_runtime <name>` to `deploy/setup.sh` (reads the pack JSON via node, dispatches `pip` — user install, PEP 668 `--break-system-packages` retry, per-OS PATH check, idempotency probe from the `idempotent` block — or `npm`; `runtime: "none"`/absent block = no-op) reusing `resolve_python`
     — **Why:** one dispatcher replaces two per-pack shell functions; future runtimes are a new verb, not new functions
     — **Done when:** `install_pack_runtime markitdown` installs/skips identically to the old function on this machine (idempotent second run skips); `--dry-run` prints `[DRY-RUN] Would install pack runtime: <name>` and never spawns pip/npm
@@ -50,9 +50,9 @@ Phase order: P1 → P2 (listings read pack data); P3, P4 independent; P5 after P
     — **Why:** dead code after 1.3; deletion over addition
     — **Done when:** `grep -n "install_markitdown_mcp\|install_docling" deploy/setup.sh` returns only `install_pack_runtime` references (none)
     — **Consumers affected:** `tests/deploy_delegate.bats` line-order pin (verify first-occurrence lines still parse — removed functions sat below the pinned region)
-- [ ] **1.5** Update `test_markitdown_skill.bats` / `test_docling_skill.bats` install-function greps to `install_pack_runtime` + pack-JSON `install` block; extend `tests/test_pack_permissions.bats` with install-schema validation (`runtime` ∈ pip|npm|none, `packages` non-empty array when runtime ≠ none)
-    — **Why:** tests must guard the new contract, not the deleted one
-    — **Done when:** `bats tests/test_markitdown_skill.bats tests/test_docling_skill.bats tests/test_pack_permissions.bats tests/test_dry_run_leaks.bats` green
+- [ ] **1.5** Update `test_markitdown_skill.bats` / `test_docling_skill.bats` install-function greps to `install_pack_runtime` + pack-JSON `install` block; update `test_help_parity.bats`'s `setup_sh_markitdown_bump_comment_names_only_pin_carriers` grep — the pinned comment (`the pin lives in deploy/setup.sh only`) lives inside the deleted `install_markitdown_mcp` block, so the bump-ritual comment moves to the pack JSON `$comment` and the test greps it there; extend `tests/test_pack_permissions.bats` with install-schema validation (`runtime` ∈ pip|npm|none, `packages` non-empty array when runtime ≠ none)
+    — **Why:** tests must guard the new contract, not the deleted one; help_parity pins the bump-ritual comment by literal text
+    — **Done when:** `bats tests/test_markitdown_skill.bats tests/test_docling_skill.bats tests/test_pack_permissions.bats tests/test_dry_run_leaks.bats tests/test_help_parity.bats` green
     — **Consumers affected:** none
 
 ### Phase 2: Derived MCP listings
@@ -171,5 +171,5 @@ None — single ticket, no `blocked-by:`. Upstream history: #376 (restructure), 
 | Dry-run contract regression (real pip/npm/provision under preview) | Dedicated `test_dry_run_leaks` cases per new arm (1.5, 3.2, 5.2) |
 | TUI/CLI drift (wizard decisions ≠ flag semantics) | `--from-plan` ≡ flags equivalence test (5.4) — the wizard never executes |
 | Rename breaks external scripts using `opencode-setup` | Compat shims kept indefinitely; grep sweep distinguishes intentional compat mentions (6.3) |
-| merge-packs silently consuming/mangling the new `install` key | Verify-only assertion in 1.1 (merge output byte-identical pre/post) |
+| merge-packs silently consuming/mangling the new `install` key | **Confirmed real** (arch review: `merge-packs.mjs:182-183` deep-merges unknown keys) — 1.1 strips `install` in the reserved-key destructure + byte-identical merge assertion |
 | Credential seeding regression loses stored keys | `seed` subcommand merge-never-clobber port is test-first (4.1 tmp-file round-trip incl. corrupt-file parking) |
