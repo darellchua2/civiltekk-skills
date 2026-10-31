@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [12.24.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.23.0...v12.24.0) (2026-10-31)
+
+### Features
+
+* **setup:** decouple deploy/setup.sh — data-driven MCP packs, TUI installer, CivilTekk rename ([#678](https://github.com/darellchua2/civiltekk-skills/issues/678)) ([f046566](https://github.com/darellchua2/civiltekk-skills/commit/f0465664772b386ddea0739f71ad5678cef60b50)), closes [#677](https://github.com/darellchua2/civiltekk-skills/issues/677) [#677](https://github.com/darellchua2/civiltekk-skills/issues/677) [487/#673](https://github.com/487/civiltekk-skills/issues/673) [#677](https://github.com/darellchua2/civiltekk-skills/issues/677) [#677](https://github.com/darellchua2/civiltekk-skills/issues/677) [#677](https://github.com/darellchua2/civiltekk-skills/issues/677) [#677](https://github.com/darellchua2/civiltekk-skills/issues/677) [#677](https://github.com/darellchua2/civiltekk-skills/issues/677) [#677](https://github.com/darellchua2/civiltekk-skills/issues/677) [#677](https://github.com/darellchua2/civiltekk-skills/issues/677) [#677](https://github.com/darellchua2/civiltekk-skills/issues/677)
+
 ## [12.23.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.22.0...v12.23.0) (2026-10-22)
 
 ### Features
