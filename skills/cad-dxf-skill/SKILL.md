@@ -27,7 +27,7 @@ Two source shapes are supported:
 
 Use this skill when the user asks for DXF files, 2D drawings, profiles, outlines, templates, gaskets, panels, flat patterns, or cut layouts for laser, plasma, waterjet, or CNC routing.
 
-Use `the cad-generation-skill (load via skill tool)` for the 3D part or assembly a DXF derives from. Use `the cad-sendcutsend-skill (load via skill tool)` for SendCutSend-specific upload preflight.
+Use `the cad-generation-skill (load via skill tool)` for the 3D part or assembly a DXF derives from. For SendCutSend-specific upload preflight, load `cad-specialist-skill` and follow its `sendcutsend` route.
 
 ## Defaults
 

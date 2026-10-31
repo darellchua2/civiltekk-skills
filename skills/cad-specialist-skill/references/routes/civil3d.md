@@ -1,13 +1,7 @@
----
-name: civil-3d-skill
-description: >-
-  Autodesk Civil 3D workflows — corridors, surfaces, alignments/profiles, pipe
-  networks, grading, survey; COM and .NET APIs. Version detection before API
-  advice.
-license: Apache-2.0
-compatibility: opencode
-category: CAD & Hardware Design
----
+# Route: CIVIL3D — Autodesk Civil 3D workflows
+
+**Load when:** the task involves Civil 3D corridors, surfaces, alignments/profiles, pipe networks, grading, or survey (COM/.NET APIs).
+**Skip when:** the task is APS cloud APIs (Route: APS).
 
 # Civil 3D Workflow Guidance
 

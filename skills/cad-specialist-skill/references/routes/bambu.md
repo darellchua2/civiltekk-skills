@@ -1,10 +1,8 @@
----
-name: cad-bambu-labs-skill
-description: Dry-run, upload, and cautiously initiate local Bambu Lab print jobs from validated plain `.gcode`, using Bambu LAN FTPS/MQTT handoffs.
-license: Apache-2.0
-compatibility: opencode
-category: CAD & Hardware Design
----
+# Route: BAMBU — Bambu Lab LAN print handoff
+
+**Load when:** the task dry-runs, uploads, or (cautiously) starts a local Bambu Lab print from validated plain `.gcode`.
+**Skip when:** the task is slicing itself (Route: GCODE).
+**Route dir:** `bambu/` beside this file — read on demand.
 
 # Bambu Labs
 
@@ -33,15 +31,17 @@ file already exists and has been validated. This skill does not slice models.
 
 ## CAD Viewer Handoff
 
-After completing Bambu work that creates or modifies a local supported print artifact such as `.gcode` or `.3mf`, you must ALWAYS hand the explicit file path to `the cad-viewer-skill (load via skill tool)` when that skill is installed. `the cad-viewer-skill (load via skill tool)` must start CAD Viewer if it is not already running and return link(s) to the relevant created or updated file(s); if `the cad-viewer-skill (load via skill tool)` is unavailable or startup fails, report that instead of silently omitting the handoff.
+Per the router viewer-handoff rule: hand the created/updated file path(s) to the
+`cad-viewer-skill` sibling (install-if-missing). Report when it is unavailable —
+never silently omit the handoff.
 
 ## Workflow
 
-1. Generate and validate plain G-code with `the cad-gcode-skill (load via skill tool)`.
+1. Generate and validate plain G-code with Route: GCODE.
    If no slicer is installed, install OrcaSlicer and retry; do not treat the missing slicer as a blocker. On macOS, prefer `brew install --cask orcaslicer`.
 2. Configure the printer. The user can either give the IP/access code in the thread and let the agent write JSON, or edit `bambu-printers.json` directly.
    For a new printer setup or onboarding request, read
-   `references/new-printer-onboarding.md` first. Walk the user through the
+   `bambu/new-printer-onboarding.md` first. Walk the user through the
    model-specific touchscreen steps to find the IP and LAN access code, and make
    **Enable LAN Only** plus **Enable Developer Mode** explicit before running
    local start workflows.
@@ -209,6 +209,6 @@ python scripts/bambu_lan_print.py cancel \
 - FTPS login works but upload fails with `553` or missing `cache/`: check printer storage/SD card status before MQTT start.
 - MQTT status works but start does not: confirm serial, access code, Developer Mode/LAN Only status, and the exact handoff payload before retrying.
 
-Read `references/new-printer-onboarding.md` for new printer setup,
-`references/local-lan-protocol.md` for protocol details, and
-`references/real-printer-checklist.md` before first live use on a new printer.
+Read `bambu/new-printer-onboarding.md` for new printer setup,
+`bambu/local-lan-protocol.md` for protocol details, and
+`bambu/real-printer-checklist.md` before first live use on a new printer.

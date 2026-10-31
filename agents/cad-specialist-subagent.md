@@ -1,8 +1,9 @@
 ---
 description: >-
-  CAD/engineering/robotics specialist orchestrating 15 skills — parametric CAD
-  (STEP/STL/3MF/GLB), DXF, drawing redraw (DWG/DXF/PDF/image), URDF/SRDF/SDF,
-  G-code slicing, 3D printing, SendCutSend, Civil 3D. Routes by task type.
+  CAD/engineering/robotics specialist driving the cad-specialist-skill router —
+  parametric CAD (STEP/STL/3MF/GLB), DXF, drawing redraw (DWG/DXF/PDF/image),
+  URDF/SRDF/SDF, G-code slicing, 3D printing, SendCutSend, Civil 3D, APS,
+  Open3D. Routes internally or installs capability siblings on demand.
 mode: subagent
 steps: 30
 permissions:
@@ -31,49 +32,7 @@ permissions:
     resource: '*'
     effect: allow
   - action: skill
-    resource: cad-generation-skill
-    effect: allow
-  - action: skill
-    resource: cad-viewer-skill
-    effect: allow
-  - action: skill
-    resource: cad-step-parts-skill
-    effect: allow
-  - action: skill
-    resource: cad-dxf-skill
-    effect: allow
-  - action: skill
-    resource: cad-urdf-skill
-    effect: allow
-  - action: skill
-    resource: cad-srdf-skill
-    effect: allow
-  - action: skill
-    resource: cad-sdf-skill
-    effect: allow
-  - action: skill
-    resource: cad-sendcutsend-skill
-    effect: allow
-  - action: skill
-    resource: cad-gcode-skill
-    effect: allow
-  - action: skill
-    resource: cad-bambu-labs-skill
-    effect: allow
-  - action: skill
-    resource: cad-implicit-skill
-    effect: allow
-  - action: skill
-    resource: autodesk-aps-skill
-    effect: allow
-  - action: skill
-    resource: civil-3d-skill
-    effect: allow
-  - action: skill
-    resource: open3d-skill
-    effect: allow
-  - action: skill
-    resource: cad-redraw-skill
+    resource: cad-specialist-skill
     effect: allow
 category: cad
 ---
@@ -141,53 +100,56 @@ Invoke this subagent when you encounter:
 - "rgbd" / "kinect" / "realsense" / "depth camera"
 - "find part" / "step part" / "off-the-shelf" / "screw" / "bearing" / "motor"
 
-## Skill Routing Table
+## Router Routing Table
 
-Load the appropriate skill based on the task:
+Load `cad-specialist-skill` and follow its route table. Summary:
 
-| Task                                           | Skill                 |
+| Task                                           | Route (in router)     |
 | ---------------------------------------------- | --------------------- |
-| Create/edit CAD model, STEP/STL/3MF/GLB output | cad-generation-skill  |
-| Preview CAD/G-code/robot files in browser      | cad-viewer-skill      |
-| Find off-the-shelf parts (screws, bearings)    | cad-step-parts-skill  |
-| Create 2D DXF drawings                         | cad-dxf-skill         |
-| Write URDF robot description                   | cad-urdf-skill        |
-| Add MoveIt planning groups to URDF             | cad-srdf-skill        |
-| Create simulator models/worlds (Gazebo)        | cad-sdf-skill         |
-| Validate files for SendCutSend                 | cad-sendcutsend-skill |
-| Slice meshes into FDM G-code                   | cad-gcode-skill       |
-| Upload/start Bambu Lab print job               | cad-bambu-labs-skill  |
-| Create implicit SDF CAD models (experimental)  | cad-implicit-skill    |
-| Autodesk APS/Revit/Fusion/AutoCAD API          | autodesk-aps-skill    |
-| Civil 3D corridor/surface/pipe workflows       | civil-3d-skill        |
-| Open3D point cloud/mesh/reconstruction         | open3d-skill          |
+| Write URDF robot description                   | `urdf`                |
+| Add MoveIt planning groups to URDF             | `srdf`                |
+| Create simulator models/worlds (Gazebo)        | `sdf`                 |
+| Slice meshes into FDM G-code                   | `gcode`               |
+| Upload/start Bambu Lab print job               | `bambu`               |
+| Validate files for SendCutSend                 | `sendcutsend`         |
+| Find off-the-shelf parts (screws, bearings)    | `step-parts`          |
+| Civil 3D corridor/surface/pipe workflows       | `civil3d`             |
+| Autodesk APS/Revit/Fusion/AutoCAD API          | `aps`                 |
+| Open3D point cloud/mesh/reconstruction         | `open3d`              |
 
-**IMPORTANT:** The `civil-3d-skill` and `open3d-skill` contain MANDATORY version detection sections (installed-software APIs differ by version). When loading these skills, follow the STOP-and-ask-for-version instructions before providing API guidance. `autodesk-aps-skill` is a cloud API skill and does not require version detection.
+Capability siblings (install-if-missing per the router's contract — dry-run,
+consent, never auto-install): `cad-generation-skill` (parametric CAD),
+`cad-dxf-skill` (DXF authoring), `cad-redraw-skill` (drawing redraw),
+`cad-implicit-skill` (implicit CAD), `cad-viewer-skill` (browser preview).
+
+**IMPORTANT:** The router's `civil3d` and `open3d` routes carry MANDATORY
+version-detection sections (installed-software APIs differ by version). Follow
+the STOP-and-ask-for-version instructions before providing API guidance. The
+`aps` route is a cloud API route and does not require version detection.
 
 ## Pipeline Patterns
 
 ### Design-to-Manufacture
-1. Load `cad-generation-skill` — design part, generate STEP
-2. Load `cad-viewer-skill` — preview STEP in browser
-3. Load `cad-gcode-skill` — export STL, slice to G-code
-4. Load `cad-bambu-labs-skill` — upload G-code, start print
+1. Route `gcode` — slice to G-code (STEP/STL input from sibling `cad-generation-skill` if geometry must be designed)
+2. Sibling `cad-viewer-skill` (install-if-missing) — preview in browser
+3. Route `bambu` — upload G-code, start print
 
 ### Sheet Metal / Laser Cut
-1. Load `cad-generation-skill` — design part, generate STEP
-2. Load `cad-dxf-skill` — create DXF cut layout from geometry
-3. Load `cad-sendcutsend-skill` — validate for SendCutSend upload
+1. Sibling `cad-generation-skill` (install-if-missing) — design part, generate STEP
+2. Sibling `cad-dxf-skill` (install-if-missing) — create DXF cut layout
+3. Route `sendcutsend` — validate for SendCutSend upload
 
 ### Robot Description
-1. Load `cad-generation-skill` — design links, export meshes
-2. Load `cad-urdf-skill` — write URDF with joints, links, inertials
-3. Load `cad-srdf-skill` — add MoveIt planning groups
-4. Load `cad-sdf-skill` — create Gazebo simulator world
-5. Load `cad-viewer-skill` — preview URDF in browser
+1. Sibling `cad-generation-skill` (install-if-missing) — design links, export meshes
+2. Route `urdf` — write URDF with joints, links, inertials
+3. Route `srdf` — add MoveIt planning groups
+4. Route `sdf` — create Gazebo simulator world
+5. Sibling `cad-viewer-skill` (install-if-missing) — preview URDF in browser
 
 ### Assembly with Standard Parts
-1. Load `cad-step-parts-skill` — find off-the-shelf STEP parts
-2. Load `cad-generation-skill` — design custom parts, assemble
-3. Load `cad-viewer-skill` — preview assembly
+1. Route `step-parts` — find off-the-shelf STEP parts
+2. Sibling `cad-generation-skill` (install-if-missing) — design custom parts, assemble
+3. Sibling `cad-viewer-skill` (install-if-missing) — preview assembly
 
 ## Prerequisites
 
@@ -196,8 +158,8 @@ Load the appropriate skill based on the task:
 - **Slicer CLI** (PrusaSlicer or Cura) — for G-code slicing
 - **Bambu Studio** or Bambu LAN API — for printing
 - **Open3D** (`pip install open3d`) — for 3D data processing
-- **Autodesk APS credentials** — for API integration (see autodesk-aps-skill)
-- **Civil 3D installed** — for COM/.NET API usage (see civil-3d-skill)
+- **Autodesk APS credentials** — for API integration (router route `aps`)
+- **Civil 3D installed** — for COM/.NET API usage (router route `civil3d`)
 
 ## Default Assumptions
 
@@ -211,7 +173,7 @@ Use these defaults unless the user specifies otherwise:
 
 ## Autodesk MCP Servers
 
-No Autodesk MCP servers ship with this repo (**official-only policy** — the former pack pointed at non-resolving endpoints). For live model data access, use the Autodesk Platform Services REST APIs via `autodesk-aps-skill` (Data Management, Model Derivative, Design Automation). If verified official Autodesk MCP servers are installed in the user's config, prefer them.
+No Autodesk MCP servers ship with this repo (**official-only policy** — the former pack pointed at non-resolving endpoints). For live model data access, use the Autodesk Platform Services REST APIs via the router's `aps` route (Data Management, Model Derivative, Design Automation). If verified official Autodesk MCP servers are installed in the user's config, prefer them.
 
 ## CodeGraph Integration
 

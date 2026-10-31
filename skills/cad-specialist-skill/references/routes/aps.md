@@ -1,13 +1,7 @@
----
-name: autodesk-aps-skill
-description: >-
-  Autodesk Platform Services (APS/Forge) REST APIs — OAuth, Data Management,
-  Model Derivative, Viewer, Design Automation, Webhooks; Revit, Fusion 360,
-  AutoCAD add-in development.
-license: Apache-2.0
-compatibility: opencode
-category: CAD & Hardware Design
----
+# Route: APS — Autodesk Platform Services (APS/Forge) REST APIs
+
+**Load when:** the task integrates APS cloud services (OAuth, Data Management, Model Derivative, Viewer, Design Automation, Webhooks) or Revit/Fusion 360/AutoCAD add-ins.
+**Skip when:** the task is desktop-only Civil 3D design workflows (Route: CIVIL3D).
 
 # Autodesk Platform Services (APS) Integration
 

@@ -1,12 +1,8 @@
----
-name: cad-gcode-skill
-description: >-
-  Slice 3D meshes (.stl, .obj, .3mf, .ply, .glb) into printer-profiled G-code
-  via real slicer CLIs; inspect, dry-run, and validate .gcode.
-license: Apache-2.0
-compatibility: opencode
-category: CAD & Hardware Design
----
+# Route: GCODE — slicing to printer-profiled G-code (.gcode)
+
+**Load when:** the task slices meshes (.stl, .obj, unsliced .3mf, .ply, .glb) into plain G-code or validates .gcode. Printer-agnostic; never uploads or starts prints.
+**Skip when:** the task uploads/starts a Bambu print (Route: BAMBU) or produces CAD geometry (sibling `cad-generation-skill`).
+**Route dir:** `gcode/` beside this file — read on demand.
 
 # G-code
 
@@ -65,7 +61,9 @@ python scripts/gcode_tool.py validate \
 
 ## CAD Viewer Handoff
 
-After completing G-code work that creates or modifies a plain `.gcode`, you must ALWAYS hand the explicit file path to `the cad-viewer-skill (load via skill tool)` when that skill is installed. `the cad-viewer-skill (load via skill tool)` must start CAD Viewer if it is not already running and return link(s) to the relevant created or updated file(s); the preview is diagnostic only and does not replace this skill's static validation. If `the cad-viewer-skill (load via skill tool)` is unavailable or startup fails, report that instead of silently omitting the handoff.
+Per the router viewer-handoff rule: hand the created/updated file path(s) to the
+`cad-viewer-skill` sibling (install-if-missing). Report when it is unavailable —
+never silently omit the handoff.
 
 ## Profile Contract
 
@@ -129,14 +127,14 @@ Pass `.stl`, `.obj`, and unsliced `.3mf` directly to the slicer. Convert `.ply`,
 
 Reject `.step`, `.stp`, `.dxf`, `.svg`, `.urdf`, and `.sdf` in v1. Use the existing CAD/render workflows to convert those to a supported mesh format before using this skill.
 
-Read `references/slicer-backends.md` when backend behavior, profile expectations, or source links matter.
+Read `gcode/slicer-backends.md` when backend behavior, profile expectations, or source links matter.
 
 ## Validation
 
 Always validate generated G-code before handing it to printer-specific workflows. The validator checks for non-empty content, temperature commands, movement commands, extrusion moves, XYZ bounds, and unknown command warnings.
 
-Read `references/gcode-validation.md` when interpreting validation output or deciding whether a warning is acceptable.
+Read `gcode/gcode-validation.md` when interpreting validation output or deciding whether a warning is acceptable.
 
 ## Bambu Boundary
 
-This skill generates plain `.gcode` only. It does not create Bambu `.gcode.3mf` archives and does not contact printers. For Bambu upload/start workflows, hand off the validated plain `.gcode` to `the cad-bambu-labs-skill (load via skill tool)`. Let `the cad-bambu-labs-skill (load via skill tool)` choose the printer-specific LAN handoff, such as an A1 Mini template project or an explicitly enabled bambox project package.
+This skill generates plain `.gcode` only. It does not create Bambu `.gcode.3mf` archives and does not contact printers. For Bambu upload/start workflows, hand off the validated plain `.gcode` to Route: BAMBU. Let Route: BAMBU choose the printer-specific LAN handoff, such as an A1 Mini template project or an explicitly enabled bambox project package.

@@ -1,13 +1,7 @@
----
-name: open3d-skill
-description: >-
-  Open3D 3D data processing — point clouds (filtering, registration, FPFH,
-  RANSAC, ICP), mesh operations, TSDF reconstruction, visualization, Open3D-ML,
-  RGBD/Kinect/RealSense. Version detection first.
-license: Apache-2.0
-compatibility: opencode
-category: CAD & Hardware Design
----
+# Route: OPEN3D — Open3D 3D data processing
+
+**Load when:** the task processes point clouds/meshes (filtering, registration, ICP, FPFH, RANSAC, reconstruction, TSDF, visualization, Open3D-ML, RGBD/sensors).
+**Skip when:** the task is CAD geometry authoring (sibling `cad-generation-skill`) or robot descriptions (Routes: URDF/SRDF/SDF).
 
 # Open3D 3D Data Processing
 

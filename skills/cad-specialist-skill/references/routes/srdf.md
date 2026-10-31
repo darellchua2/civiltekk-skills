@@ -1,13 +1,8 @@
----
-name: cad-srdf-skill
-description: >-
-  Generate and validate .srdf MoveIt2 semantics — planning groups, virtual
-  joints, end effectors, group states, disabled collisions. Robot structure:
-  cad-urdf-skill; simulator: cad-sdf-skill; rendering: cad-viewer-skill.
-license: Apache-2.0
-compatibility: opencode
-category: CAD & Hardware Design
----
+# Route: SRDF — MoveIt2 semantics (.srdf)
+
+**Load when:** the task adds planning semantics (groups, end effectors, disabled collisions) on top of a valid URDF.
+**Skip when:** the task is URDF structure (Route: URDF) or SDF simulation (Route: SDF).
+**Route dir:** `srdf/` beside this file — read on demand.
 
 # SRDF
 
@@ -29,13 +24,15 @@ Do not place geometry, inertials, joint origins, link poses, mesh references, ph
 
 ## CAD Viewer Handoff
 
-After completing SRDF work that creates or modifies a `.srdf`, you must ALWAYS hand the explicit file path to `the cad-viewer-skill (load via skill tool)` when that skill is installed. `the cad-viewer-skill (load via skill tool)` must start CAD Viewer if it is not already running and return link(s) to the relevant created or updated file(s); include optional MoveIt2 controls in the handoff only when the user needs interactive IK or path-planning review. If `the cad-viewer-skill (load via skill tool)` is unavailable or startup fails, report that instead of silently omitting the handoff.
+Per the router viewer-handoff rule: hand the created/updated file path(s) to the
+`cad-viewer-skill` sibling (install-if-missing). Report when it is unavailable —
+never silently omit the handoff.
 
 ## Required workflow
 
 1. **Start from a valid URDF.** Generate or fix the URDF first. The SRDF generator validates against the source-relative `.urdf` path supplied by `gen_srdf()`.
 2. **Identify the planning task.** Record whether the goal is arm IK, gripper control, mobile base planning, dual-arm planning, tool use, or local smoke testing.
-3. **Create or update the planning ledger.** Use `references/planning-ledger.md` before writing XML.
+3. **Create or update the planning ledger.** Use `srdf/planning-ledger.md` before writing XML.
 4. **Define virtual and passive joints deliberately.** Use them when needed by the robot model, even though the current lightweight runtime does not fully inventory them yet.
 5. **Define planning groups from URDF topology.** Prefer chain groups for serial manipulators when base/tip form a real path. Use joint/link/subgroup definitions only when they are deliberate.
 6. **Define end effectors after group membership is known.** Avoid overlap between an end-effector group and its parent group. Record the actual target/TCP link.
@@ -47,7 +44,7 @@ After completing SRDF work that creates or modifies a `.srdf`, you must ALWAYS h
 
 ## Commands
 
-Run with the Python environment for the project or workspace. Treat `python` in examples as an interpreter placeholder; if bare `python` is unavailable, substitute `python3`, a project virtualenv interpreter, or the configured interpreter path.
+Run with the project or workspace Python environment (interpreter placeholder rule: router shared spine).
 
 From this skill directory, the SRDF launcher shape is:
 
@@ -66,18 +63,18 @@ Relative source targets and CLI output overrides are resolved from the current w
 - Group states use URDF-native units: radians for revolute/continuous, meters for prismatic.
 - Disabled collision pairs require truthful reasons and provenance.
 - End-effector groups should not share links with their parent planning group.
-- `the cad-viewer-skill (load via skill tool)` owns optional local `moveit2_server` guidance for interactive planning review.
+- `cad-viewer-skill` (install-if-missing sibling) owns optional local `moveit2_server` guidance for interactive planning review.
 - Visual rendering review is useful but cannot prove planning correctness.
 
 ## References
 
-- Generation command: `references/gen-srdf.md`
-- Generator contract: `references/generator-contract.md`
-- SRDF workflow: `references/srdf-workflow.md`
-- Planning ledger: `references/planning-ledger.md`
-- Validation scope: `references/validation.md`
-- End effectors: `references/end-effectors.md`
-- Disabled collisions: `references/disabled-collisions.md`
-- Runtime notes and current limitations: `references/implementation-notes.md`
+- Generation command: `srdf/gen-srdf.md`
+- Generator contract: `srdf/generator-contract.md`
+- SRDF workflow: `srdf/srdf-workflow.md`
+- Planning ledger: `srdf/planning-ledger.md`
+- Validation scope: `srdf/validation.md`
+- End effectors: `srdf/end-effectors.md`
+- Disabled collisions: `srdf/disabled-collisions.md`
+- Runtime notes and current limitations: `srdf/implementation-notes.md`
 
-For local MoveIt2 controls, use `the cad-viewer-skill (load via skill tool)`; in that skill, read `references/moveit2-server.md`.
+For local MoveIt2 controls, use `cad-viewer-skill` (install-if-missing sibling); that skill ships its own MoveIt2 server reference — consult its references directory after install.

@@ -2140,4 +2140,15 @@
 - **Confidence**: 1.0
 - **Scope**: project
 - **Summary**: PLAN tick/Done-line backfills driven by "nearest preceding step line" scans misattribute evidence across phase boundaries — key each emitted line on the parsed step ID (N.M) and assert Done-line count == done-set size before committing (#681 Phase 1; reverted and redone keyed)
+
+### Surviving-sibling references dangle after family consolidation
+
+- **Folder**: `anti-patterns/`
+- **Summary**: consolidating/merging catalog entries leaves persisting neighbors referencing absorbed IDs; grep the SURVIVING files for every removed ID before the deletion step (#679: cad-generation:72 → cad-step-parts, cad-dxf:30 → cad-sendcutsend)
+- **Date**: 2026-10-31
+
+### Skill-tree moves are roster changes — carry registry regen + count literals in the same commit
+
+- **Folder**: `anti-patterns/`
+- **Summary**: any commit adding/removing/moving skill or agent dirs must regenerate installer/registry.json and update README count literals in the same commit (count-drift tests enforce agreement at every commit); never `git checkout` a generated artifact to clean up before a gate — the Phase-3 regen revert resurfaced as stale 15-entry requiresSkills at exit-gate time (#679)
 - **Date**: 2026-10-31
