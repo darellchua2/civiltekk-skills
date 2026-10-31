@@ -157,20 +157,57 @@ EOF
 # =============================================================================
 
 @test "setup_sh_installer_has_installed_check" {
-  grep -q 'pip show markitdown-mcp' "$SETUP"
-  # #487: the install command must carry the exact alpha pin AND the
-  # mcp[cli] co-install (docling-mcp shares the mcp 2.x SDK).
-  grep -qF 'markitdown-mcp==0.0.1a7' "$SETUP"
-  grep -qF 'mcp[cli]>=2.1.1,<3.0.0' "$SETUP"
+  # #677: pins live in the pack JSON install block now — setup.sh carries the
+  # generic installer only. The exact alpha pin AND the mcp[cli] co-install
+  # (docling-mcp shares the mcp 2.x SDK) are pack data.
+  grep -qF '"pipShow": "markitdown-mcp"' deploy/packs/pack-markitdown.json
+  grep -qF '"markitdown-mcp==0.0.1a7"' deploy/packs/pack-markitdown.json
+  grep -qF '"mcp[cli]>=2.1.1,<3.0.0"' deploy/packs/pack-markitdown.json
+  grep -q 'install_pack_runtime' "$SETUP"
 }
 
 @test "setup_sh_run_pack_merger_gates_install_on_enable_pack" {
-  # hook must be dry-run-safe and keyed to the markitdown pack
-  grep -q 'grep -qw "markitdown"' "$SETUP"
-  grep -q 'install_markitdown_mcp' "$SETUP"
+  # #677: the hook is dry-run-safe and pack-agnostic — iterates requested
+  # packs through install_pack_runtime (which no-ops for config-only packs).
   local hook
-  hook="$(sed -n '/run_pack_merger()/,/^}/p' "$SETUP" | grep -A2 'grep -qw "markitdown"')"
+  hook="$(sed -n '/run_pack_merger()/,/^}/p' "$SETUP")"
+  [[ "$hook" == *'install_pack_runtime'* ]]
   [[ "$hook" == *'DRY_RUN'* ]]
+}
+
+@test "pack_install_blocks_are_schema_valid" {
+  # #677 install-block contract: runtime ∈ pip|npm|none; packages non-empty
+  # when runtime ≠ none; idempotent probes reference a pipShow package.
+  python3 - << 'PYEOF'
+import json, glob, sys
+for f in glob.glob("deploy/packs/pack-*.json"):
+    p = json.load(open(f))
+    inst = p.get("install")
+    if inst is None:
+        continue
+    rt = inst.get("runtime")
+    assert rt in ("pip", "npm", "none"), f"{f}: bad runtime {rt!r}"
+    if rt != "none":
+        pkgs = inst.get("packages")
+        assert isinstance(pkgs, list) and pkgs, f"{f}: packages must be a non-empty array"
+    idem = inst.get("idempotent") or {}
+    if idem:
+        assert idem.get("pipShow"), f"{f}: idempotent requires pipShow"
+print("ok")
+PYEOF
+}
+
+@test "merge_packs_never_writes_install_block_into_config" {
+  # #677 (arch review): merge-packs deep-merges unknown pack keys — the
+  # reserved-key strip must keep `install` / `$*` metadata out of the
+  # deployed config.
+  local tmp
+  tmp="$(mktemp)"
+  cp deploy/opencode.json "$tmp"
+  node "$MERGE_SCRIPT" --config "$tmp" --packs-dir deploy/packs --packs markitdown >/dev/null 2>&1
+  ! grep -q '"install"' "$tmp"
+  ! grep -q '"\$install-notes"' "$tmp"
+  rm -f "$tmp"
 }
 
 @test "setup_ps1_is_thin_launcher_hook_inherited_from_bash" {

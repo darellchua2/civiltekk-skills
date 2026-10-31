@@ -21,8 +21,14 @@ INIT_MJS="installer/init.mjs"
 @test "setup_sh_markitdown_bump_comment_names_only_pin_carriers" {
   # The ps1 carries no pin since #474; the ritual comment must not instruct
   # writing one there (test_setup_ps1_vars.bats fails the ps1 if it appears).
-  # #607: the Dockerfile surface is gone — the pin lives in setup.sh only.
-  grep -qF 'the pin lives in deploy/setup.sh only' "$SETUP_SH"
+  # #607: the Dockerfile surface is gone. #677: the pin + bump ritual moved
+  # into the pack JSON install block ($install-notes) — grep it there.
+  grep -qF 'Bump ritual: bump the pin here' deploy/packs/pack-markitdown.json
+  grep -qF 'this block is the only pin carrier' deploy/packs/pack-markitdown.json
+  # setup.sh must no longer carry the pip pin (the generic installer is
+  # pack-agnostic — pins are data).
+  run grep -qF 'markitdown-mcp==0.0.1a7' "$SETUP_SH"
+  [ "$status" -ne 0 ]
 }
 
 # ── installer/init.mjs help UX (#571 AC2/AC3) ──

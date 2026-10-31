@@ -1,5 +1,16 @@
 {
-  "$comment": "Provider pack: markitdown MCP (PDF/DOCX/PPTX/XLSX -> Markdown) — upstream markitdown-mcp from PyPI (#487), stdio by default, MARKITDOWN_ENABLE_PLUGINS=false kept in the server env. Deep-merged by deploy/merge-packs.mjs when the user passes --enable-pack markitdown (v2 shape: mcp.servers.<name>.disabled:false + permissions array rule). --enable-pack markitdown also pip-installs the pinned PyPI package (install_markitdown_mcp; the Docker image bakes it in the python-deps stage). Appends the permissions rule {\"action\": \"markitdown*\", \"resource\": \"*\", \"effect\": \"allow\"} to flip the shipped deny.",
+  "$comment": "Provider pack: markitdown MCP (PDF/DOCX/PPTX/XLSX -> Markdown) — upstream markitdown-mcp from PyPI (#487), stdio by default, MARKITDOWN_ENABLE_PLUGINS=false kept in the server env. Deep-merged by deploy/merge-packs.mjs when the user passes --enable-pack markitdown (v2 shape: mcp.servers.<name>.disabled:false + permissions array rule). --enable-pack markitdown also installs the runtime declared in the install block below (generic install_pack_runtime). Appends the permissions rule {\"action\": \"markitdown*\", \"resource\": \"*\", \"effect\": \"allow\"} to flip the shipped deny.",
+  "$install-notes": "Why the exact pin: upstream publishes only alpha releases (0.0.1a1-0.0.1a7); plain `pip install markitdown-mcp` fails (pip skips pre-releases), so an exact pre-release pin installs without --pre. Why the mcp[cli] co-install: docling-mcp>=3.0 requires mcp[cli]>=2.0,<3.0 and markitdown-mcp requires mcp>=2.1.1,<3.0.0 — installing both specs in one resolve keeps the shared MCP SDK at 2.x for both servers. Bump ritual: bump the pin here (packages + idempotent.version) — this block is the only pin carrier (#677; formerly deploy/setup.sh).",
+  "install": {
+    "runtime": "pip",
+    "packages": ["markitdown-mcp==0.0.1a7", "mcp[cli]>=2.1.1,<3.0.0"],
+    "uninstall": ["markitdown-local-mcp"],
+    "idempotent": {
+      "pipShow": "markitdown-mcp",
+      "version": "0.0.1a7",
+      "import": "from markitdown_mcp.__main__ import main"
+    }
+  },
   "mcp": {
     "servers": {
       "markitdown": { "disabled": false }

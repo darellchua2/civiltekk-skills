@@ -1,5 +1,13 @@
 {
-  "$comment": "Provider pack: docling layout-aware document extraction (complex tables, multi-column, scanned PDFs where markitdown returns garbage). Deep-merged by deploy/merge-packs.mjs when the user passes --enable-pack docling (v2 shape: mcp.servers.<name>.disabled:false + permissions array rule). NOTE: docling-mcp[local] must be installed first (setup.sh does this via install_docling; ~3-4 GB with models from huggingface.co on first convert). Appends the permissions rule {\"action\": \"docling*\", \"resource\": \"*\", \"effect\": \"allow\"} so the merge flips the shipped deny.",
+  "$comment": "Provider pack: docling layout-aware document extraction (complex tables, multi-column, scanned PDFs where markitdown returns garbage). Deep-merged by deploy/merge-packs.mjs when the user passes --enable-pack docling (v2 shape: mcp.servers.<name>.disabled:false + permissions array rule). --enable-pack docling also installs the runtime declared in the install block below (generic install_pack_runtime; ~3-4 GB with models from huggingface.co on first convert). Appends the permissions rule {\"action\": \"docling*\", \"resource\": \"*\", \"effect\": \"allow\"} so the merge flips the shipped deny.",
+  "$install-notes": "docling-mcp[local] pins local conversion (DOCLING_CONVERSION_MODE=local in the server env). First convert downloads ~hundreds of MB of models from huggingface.co, cached thereafter. Install is heavy (~3-4 GB) — only runs when the pack is explicitly requested.",
+  "install": {
+    "runtime": "pip",
+    "packages": ["docling-mcp[local]"],
+    "idempotent": {
+      "pipShow": "docling-mcp"
+    }
+  },
   "mcp": {
     "servers": {
       "docling": { "disabled": false }

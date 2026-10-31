@@ -2797,17 +2797,19 @@ setup_config() {
             # jsonc-only machine): restore the one-live-config end state.
             park_jsonc_sibling
 
-            # Install the upstream markitdown MCP server (#487: markitdown-mcp from PyPI)
-            # only when the pack is requested — the server ships disabled:true, and
-            # markitdown[all] is a large install, so never on a plain deploy.
-            # Best-effort — non-fatal on offline/pip-missing.
-            if echo "$ENABLE_PACK" | grep -qw "markitdown"; then
-                install_markitdown_mcp
+            # Install runtimes for requested packs (#677): each pack's install
+            # block (deploy/packs/pack-<name>.json) declares its own runtime —
+            # config-only packs no-op inside install_pack_runtime. Best-effort —
+            # non-fatal on offline/pip-missing.
+            if [ -n "$ENABLE_PACK" ]; then
+                local _pack _pack_list
+                IFS=',' read -ra _pack_list <<< "$ENABLE_PACK" || true
+                for _pack in "${_pack_list[@]:-}"; do
+                    _pack=$(echo "$_pack" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                    [ -z "$_pack" ] && continue
+                    install_pack_runtime "$_pack"
+                done
             fi
-
-            # Install docling-mcp if --enable-pack docling was requested (PLAN-GIT-308).
-            # Heavy (~3-4 GB) — only runs when explicitly opted in.
-            install_docling
 
             # Provision the laya-guard sidecar (#671); model pre-pull is opt-in (prompt at deploy time, or LAYA_GUARD_WARM=1).
             provision_laya_guard
@@ -2940,128 +2942,152 @@ detect_runtime_context() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MARKITDOWN MCP INSTALL (#487 — upstream markitdown-mcp from PyPI)
+# PACK RUNTIME INSTALLS (#677 — data-driven, per deploy/packs/pack-<name>.json)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Install the official markitdown-mcp MCP server (microsoft/markitdown) from
-# PyPI onto the user's PATH so OpenCode can spawn it via the `command` field in
-# opencode.json. Replaces the former in-repo vendored launcher
-# (markitdown-local-mcp) — #487. Uses pip (already a soft dep via
-# codegraph/python tooling).
-#
-# Why the exact pin: upstream publishes only alpha releases (0.0.1a1–0.0.1a7);
-# plain `pip install markitdown-mcp` fails ("no matching distribution") because
-# pip skips pre-releases. An exact pre-release pin installs without --pre and
-# keeps pre-release candidates out of transitive resolution. Bump ritual:
-# the pin lives in deploy/setup.sh only (deploy/setup.ps1 is a thin launcher
-# since #474 and carries no pin; tests/test_setup_ps1_vars.bats enforces its
-# absence there).
-#
-# Why the mcp[cli] co-install: docling-mcp>=3.0 requires mcp[cli]>=2.0,<3.0 and
-# upstream markitdown-mcp requires mcp>=2.1.1,<3.0.0 — installing both specs in
-# one resolve keeps the shared MCP SDK at 2.x for both servers (the retired
-# vendored pin mcp<2.0 was mutually exclusive with docling and broke both).
-#
-# Why --user: avoids polluting system site-packages; console-script lands in
-# ~/.local/bin (Linux/macOS). Python 3.12+ auto-adds ~/.local/bin to PATH on
-# most distros.
-install_markitdown_mcp() {
-    echo ""
-
-    # Dry-run contract (#467): the pip uninstall/install below mutate the
-    # user's site-packages — never during a preview.
-    if [ "$DRY_RUN" = true ]; then
-        echo "[DRY-RUN] Would ensure markitdown-mcp==0.0.1a7 (pip --user)"
+# Generic pack-runtime installer: reads the pack JSON's `install` block and
+# dispatches on `runtime`. All per-pack knowledge (pins, packages, idempotency
+# probes, legacy uninstalls) lives in the pack file — this function is
+# pack-agnostic, so adding a pack with a runtime never edits setup.sh.
+#   runtime "pip"  — pip --user install with PEP 668 --break-system-packages
+#                    fallback (#487/#673 semantics preserved verbatim)
+#   runtime "npm"  — reserved (no pack ships it yet); plain global install
+#   absent/none    — config-only pack, nothing to install
+# Dry-run contract (#467): installs mutate site-packages — preview only prints.
+install_pack_runtime() {
+    local pack_name="$1"
+    local pack_file="${PACKS_DIR}/pack-${pack_name}.json"
+    if [ ! -f "$pack_file" ]; then
+        log_warn "install_pack_runtime: pack spec not found: ${pack_file}"
         return 0
     fi
 
-    log_info "Installing markitdown-mcp (upstream, PyPI)..."
+    if [ "$DRY_RUN" = true ]; then
+        echo "[DRY-RUN] Would install pack runtime: ${pack_name} (per its install block)"
+        return 0
+    fi
 
-    # Working-python gate (#673): functional probe replaces the old
-    # command_exists python3 + pip probes that silently skipped on
-    # Windows Store-stub installs.
+    # One node read prints KEY<value> lines — package specs carry commas and
+    # brackets (mcp[cli]>=2.1.1,<3.0.0), so never comma-split in bash.
+    local spec
+    spec="$(node -e '
+        const fs = require("fs");
+        let pack;
+        try { pack = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); }
+        catch { process.exit(1); }
+        const inst = pack.install;
+        if (!inst || !inst.runtime || inst.runtime === "none") { console.log("RUNTIME<none>"); process.exit(0); }
+        console.log("RUNTIME<" + inst.runtime + ">");
+        for (const p of inst.uninstall || []) console.log("UNINSTALL<" + p + ">");
+        for (const p of inst.packages || []) console.log("PKG<" + p + ">");
+        const id = inst.idempotent || {};
+        if (id.pipShow) console.log("IDEMP_SHOW<" + id.pipShow + ">");
+        if (id.version) console.log("IDEMP_VERSION<" + id.version + ">");
+        if (id["import"]) console.log("IDEMP_IMPORT<" + id["import"] + ">");
+    ' "$pack_file" 2>/dev/null)"
+    if [ -z "$spec" ]; then
+        log_warn "install_pack_runtime: could not parse ${pack_file} — skipping runtime install"
+        return 0
+    fi
+
+    local line runtime="" show="" ver="" imp=""
+    local pkgs=() unis=()
+    while IFS= read -r line; do
+        case "$line" in
+            'RUNTIME<'*)     runtime="${line#RUNTIME<}";  runtime="${runtime%>}" ;;
+            'UNINSTALL<'*)   line="${line#UNINSTALL<}";   unis+=("${line%>}") ;;
+            'PKG<'*)         line="${line#PKG<}";         pkgs+=("${line%>}") ;;
+            'IDEMP_SHOW<'*)  show="${line#IDEMP_SHOW<}";  show="${show%>}" ;;
+            'IDEMP_VERSION<'*) ver="${line#IDEMP_VERSION<}"; ver="${ver%>}" ;;
+            'IDEMP_IMPORT<'*)  imp="${line#IDEMP_IMPORT<}";  imp="${imp%>}" ;;
+        esac
+    done <<< "$spec"
+
+    if [ "$runtime" = "none" ]; then
+        log_debug "pack ${pack_name} is config-only (no install block) — nothing to install"
+        return 0
+    fi
+
+    if [ "$runtime" != "pip" ] && [ "$runtime" != "npm" ]; then
+        log_warn "install_pack_runtime: unknown runtime '${runtime}' in ${pack_file} (supported: pip|npm) — skipping"
+        return 0
+    fi
+
+    # Legacy uninstall migration (pack-declared, best-effort — absent is fine).
+    # PEP 668 blocks plain uninstalls on externally-managed systems — retry
+    # once with --break-system-packages (mirrors the install path below).
+    local legacy
+    for legacy in "${unis[@]:-}"; do
+        [ -z "$legacy" ] && continue
+        $PYTHON_BIN -m pip uninstall -y "$legacy" >/dev/null 2>&1 \
+            || $PYTHON_BIN -m pip uninstall -y --break-system-packages "$legacy" >/dev/null 2>&1 \
+            || true
+    done
+
+    if [ "$runtime" = "npm" ]; then
+        if ! command_exists npm; then
+            log_warn "npm not found — skipping ${pack_name} runtime install"
+            return 0
+        fi
+        log_info "npm install -g ${pkgs[*]}"
+        if npm install -g "${pkgs[@]}" >/dev/null 2>&1; then
+            log_success "pack runtime installed: ${pack_name}"
+        else
+            log_warn "npm install failed for ${pack_name} (offline?) — the pack is opt-in, OpenCode works without it"
+        fi
+        return 0
+    fi
+
+    # pip path — working-python gate (#673): functional probe, per-OS hint.
     if ! resolve_python; then
         return 0
     fi
-
-    # Migrate old installs: the retired vendored launcher must not linger on
-    # PATH beside the new entry point (best-effort — absent is fine). PEP 668
-    # blocks plain uninstalls on externally-managed systems — retry once with
-    # --break-system-packages (mirrors the install path below).
-    $PYTHON_BIN -m pip uninstall -y markitdown-local-mcp >/dev/null 2>&1 \
-        || $PYTHON_BIN -m pip uninstall -y --break-system-packages markitdown-local-mcp >/dev/null 2>&1 \
-        || true
-
-    # Idempotency: skip the network round-trip when the PINNED version is
-    # already installed AND importable. Version-aware on purpose: a plain
-    # `pip show` + import probe passes for ANY installed version, so pin
-    # bumps would never reach machines with a working older alpha. `pip
-    # show` alone hides broken installs (e.g. the mcp SDK dependency
-    # missing), which surfaces later as "MCP error -32000: Connection
-    # closed" when the server crashes on import.
-    if $PYTHON_BIN -m pip show markitdown-mcp 2>/dev/null | grep -qF "Version: 0.0.1a7" \
-        && $PYTHON_BIN -c "from markitdown_mcp.__main__ import main" >/dev/null 2>&1; then
-        log_success "markitdown-mcp 0.0.1a7 already installed — skipping pip install"
+    if [ "${#pkgs[@]}" -eq 0 ]; then
+        log_warn "install_pack_runtime: pip runtime with no packages in ${pack_file} — skipping"
         return 0
+    fi
+
+    # Idempotency: skip the network round-trip when the declared version (or
+    # any version, when the pack declares none) is already installed AND the
+    # import probe (when declared) passes. `pip show` alone hides broken
+    # installs, which surface later as "MCP error -32000: Connection closed".
+    if [ -n "$show" ]; then
+        local idem=false
+        if [ -n "$ver" ]; then
+            $PYTHON_BIN -m pip show "$show" 2>/dev/null | grep -qF "Version: ${ver}" && idem=true
+        else
+            $PYTHON_BIN -m pip show "$show" >/dev/null 2>&1 && idem=true
+        fi
+        if [ "$idem" = true ] && [ -n "$imp" ]; then
+            $PYTHON_BIN -c "$imp" >/dev/null 2>&1 || idem=false
+        fi
+        if [ "$idem" = true ]; then
+            log_success "${show} already installed — skipping pip install (${pack_name})"
+            return 0
+        fi
     fi
 
     # Install (network required; non-fatal if offline). PEP 668
     # (externally-managed-environment, Debian 12+/Ubuntu 23.04+) blocks plain
     # `pip install --user` — retry once with --break-system-packages; --user
     # keeps the install isolated to ~/.local, which is the risk PEP 668 guards.
-    log_info 'pip install --user "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0"'
+    log_info "pip install --user ${pkgs[*]}"
     local pip_err
     pip_err="$(mktemp)"
-    if $PYTHON_BIN -m pip install --user --no-warn-script-location "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0" >/dev/null 2>"$pip_err" \
+    if $PYTHON_BIN -m pip install --user --no-warn-script-location "${pkgs[@]}" >/dev/null 2>"$pip_err" \
         || { grep -q "externally-managed-environment" "$pip_err" \
-            && $PYTHON_BIN -m pip install --user --break-system-packages --no-warn-script-location "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0" >/dev/null 2>>"$pip_err"; }; then
+            && $PYTHON_BIN -m pip install --user --break-system-packages --no-warn-script-location "${pkgs[@]}" >/dev/null 2>>"$pip_err"; }; then
         rm -f "$pip_err"
-        log_success "markitdown-mcp installed"
-
+        log_success "pack runtime installed: ${pack_name}"
         # Scripts-dir PATH check (#673) — per-OS, warn only
         check_user_scripts_path || true
     else
-        log_warn "pip install failed for markitdown-mcp (offline?). The server is opt-in (disabled: true) — OpenCode will work without it. Re-run setup when online to enable."
+        log_warn "pip install failed for ${pack_name} (offline?). The pack is opt-in (disabled: true) — OpenCode will work without it. Re-run setup when online to enable."
         log_warn "pip stderr (last 3 lines):"
         tail -n 3 "$pip_err" >&2
         rm -f "$pip_err"
     fi
-}
-
-# Install docling-mcp (heavy ~3-4 GB) — only when --enable-pack docling is
-# requested. Like markitdown, docling-mcp comes from
-# PyPI. First convert downloads ~hundreds of MB of models from huggingface.co.
-install_docling() {
-    if ! echo "$ENABLE_PACK" | grep -qw "docling"; then
-        return 0
-    fi
-
-    echo ""
-    log_info "Installing docling-mcp[local] (~3-4 GB with models)..."
-
-    # Working-python gate (#673): functional probe, per-OS hint on miss.
-    if ! resolve_python; then
-        return 0
-    fi
-
-    # PEP 668 (externally-managed-environment, Debian 12+/Ubuntu 23.04+)
-    # blocks plain `pip install --user` — retry once with
-    # --break-system-packages; --user keeps it isolated to ~/.local.
-    log_info "pip install --user docling-mcp[local]"
-    local pip_err
-    pip_err="$(mktemp)"
-    if $PYTHON_BIN -m pip install --user --no-warn-script-location "docling-mcp[local]" >/dev/null 2>"$pip_err" \
-        || { grep -q "externally-managed-environment" "$pip_err" \
-            && $PYTHON_BIN -m pip install --user --break-system-packages --no-warn-script-location "docling-mcp[local]" >/dev/null 2>>"$pip_err"; }; then
-        rm -f "$pip_err"
-        log_success "docling-mcp installed"
-
-        # Scripts-dir PATH check (#673) — per-OS, warn only
-        check_user_scripts_path || true
-        log_info "NOTE: first 'docling convert' will download ~hundreds of MB of models from huggingface.co (cached thereafter)."
-    else
-        log_warn "pip install failed for docling-mcp (offline, OOM, or PEP 668?). The pack is opt-in — OpenCode will work without it. Re-run setup when online to enable."
-    fi
+    return 0
 }
 
 # Provision the laya-guard Node sidecar (#671): copies the sidecar scripts +
@@ -3326,14 +3352,18 @@ run_pack_merger() {
         return 1
     fi
 
-    # Install-on-enable: markitdown's Python server is pip-installed from PyPI,
-    # not baked into the target config — without this the enabled server fails
-    # to spawn. Mirrors install_docling gating. Skipped in dry-run
-    # (nothing real is deployed) and when the pack wasn't requested.
-    # grep -qw (not anchored) is safe: validate_enable_pack fail-fast restricts
-    # --enable-pack to real pack names, so no 'markitdown2' false positives.
-    if [ "$DRY_RUN" != true ] && echo "$ENABLE_PACK" | grep -qw "markitdown"; then
-        install_markitdown_mcp
+    # Install-on-enable (#677): each requested pack's install block runs —
+    # a Python/npm runtime is not baked into the target config, so without
+    # this the enabled server fails to spawn. install_pack_runtime no-ops for
+    # config-only packs. Skipped in dry-run (nothing real is deployed).
+    if [ "$DRY_RUN" != true ] && [ -n "$ENABLE_PACK" ]; then
+        local _pack _pack_list
+        IFS=',' read -ra _pack_list <<< "$ENABLE_PACK" || true
+        for _pack in "${_pack_list[@]:-}"; do
+            _pack=$(echo "$_pack" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            [ -z "$_pack" ] && continue
+            install_pack_runtime "$_pack"
+        done
     fi
     return 0
 }

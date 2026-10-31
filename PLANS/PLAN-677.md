@@ -32,28 +32,33 @@ Phase order: P1 → P2 (listings read pack data); P3, P4 independent; P5 after P
 
 ## Implementation Phases
 
-### Phase 1: Self-describing pack installs
+### Phase 1: Self-describing pack installs ✅
 
-- [ ] **1.1** Add optional `install` block to `deploy/packs/pack-markitdown.json` and `pack-docling.json` (`runtime: "pip"`, `packages: [...]`, `idempotent: {pipShow, version, import}`); move the pin-rationale prose into each pack's `$comment`/`install.notes`; teach `deploy/merge-packs.mjs` to strip `install` alongside `$comment` in the reserved-key destructure (`const { mcp, permissions, $comment, install, ...restPack } = pack`) — unknown pack keys are deep-merged into the deployed config today (`merge-packs.mjs:182-183`), so without this the install blob would land in every deployed opencode.json
+- [x] **1.1** Add optional `install` block to `deploy/packs/pack-markitdown.json` and `pack-docling.json` (`runtime: "pip"`, `packages: [...]`, `idempotent: {pipShow, version, import}`); move the pin-rationale prose into each pack's `$comment`/`install.notes`; teach `deploy/merge-packs.mjs` to strip `install` alongside `$comment` in the reserved-key destructure (`const { mcp, permissions, $comment, install, ...restPack } = pack`) — unknown pack keys are deep-merged into the deployed config today (`merge-packs.mjs:182-183`), so without this the install blob would land in every deployed opencode.json
     — **Why:** the pack file becomes the single source for both config merge AND runtime install; pin bumps stop requiring setup.sh edits; the merger must never write non-config keys into the deployed config
     — **Done when:** `node merge-packs.mjs --config <tmp> --packs-dir deploy/packs --packs markitdown` produces output byte-identical to the pre-change merger (no `install` key in output); `jq .install deploy/packs/pack-markitdown.json` parses
     — **Consumers affected:** `merge-packs.mjs` (reserved-key strip), `setup.sh` install call sites (1.3)
-- [ ] **1.2** Add generic `install_pack_runtime <name>` to `deploy/setup.sh` (reads the pack JSON via node, dispatches `pip` — user install, PEP 668 `--break-system-packages` retry, per-OS PATH check, idempotency probe from the `idempotent` block — or `npm`; `runtime: "none"`/absent block = no-op) reusing `resolve_python`
+    — **Done:** install blocks added to pack-markitdown/pack-docling (pip runtime, packages, idempotent probes, uninstall legacy, $install-notes bump ritual); merge-packs reserved-key strip — old-merger leak ($install-notes+install at :884-885) vs new-merger clean output proven; files: deploy/packs/pack-markitdown.json, deploy/packs/pack-docling.json, deploy/merge-packs.mjs; fixes: none
+- [x] **1.2** Add generic `install_pack_runtime <name>` to `deploy/setup.sh` (reads the pack JSON via node, dispatches `pip` — user install, PEP 668 `--break-system-packages` retry, per-OS PATH check, idempotency probe from the `idempotent` block — or `npm`; `runtime: "none"`/absent block = no-op) reusing `resolve_python`
     — **Why:** one dispatcher replaces two per-pack shell functions; future runtimes are a new verb, not new functions
     — **Done when:** `install_pack_runtime markitdown` installs/skips identically to the old function on this machine (idempotent second run skips); `--dry-run` prints `[DRY-RUN] Would install pack runtime: <name>` and never spawns pip/npm
     — **Consumers affected:** call sites in 1.3; `test_dry_run_leaks.bats` (add case)
-- [ ] **1.3** Rewire both call sites: the inline `grep -qw markitdown → install_markitdown_mcp` block in `setup_config` and the install-on-enable block in `run_pack_merger` call `install_pack_runtime "$pack"` per requested pack
+    — **Done:** generic install_pack_runtime added (pip user-install + PEP668 fallback + npm verb + idempotency probe + legacy uninstall); verified: dry-run prints only, config-only no-op, idempotent skip via pipShow=pip, unparseable/missing warn; files: deploy/setup.sh; fixes: case-pattern quoting (< is a metachar), trailing-> strip in KEY<val> parser
+- [x] **1.3** Rewire both call sites: the inline `grep -qw markitdown → install_markitdown_mcp` block in `setup_config` and the install-on-enable block in `run_pack_merger` call `install_pack_runtime "$pack"` per requested pack
     — **Why:** call sites become pack-agnostic — adding a pack with an install block needs zero setup.sh edits
     — **Done when:** `grep -c install_pack_runtime deploy/setup.sh` ≥ 3; no remaining direct `install_markitdown_mcp|install_docling` call sites
     — **Consumers affected:** `tests/test_markitdown_skill.bats`, `tests/test_docling_skill.bats` (grep targets move)
-- [ ] **1.4** Delete `install_markitdown_mcp` and `install_docling` from `deploy/setup.sh`
+    — **Done:** both call sites rewired to pack-agnostic loops (setup_config + run_pack_merger) with IFS=',' split + trim; files: deploy/setup.sh; fixes: junk drafting line removed, _pack_list localized
+- [x] **1.4** Delete `install_markitdown_mcp` and `install_docling` from `deploy/setup.sh`
     — **Why:** dead code after 1.3; deletion over addition
     — **Done when:** `grep -n "install_markitdown_mcp\|install_docling" deploy/setup.sh` returns only `install_pack_runtime` references (none)
     — **Consumers affected:** `tests/deploy_delegate.bats` line-order pin (verify first-occurrence lines still parse — removed functions sat below the pinned region)
-- [ ] **1.5** Update `test_markitdown_skill.bats` / `test_docling_skill.bats` install-function greps to `install_pack_runtime` + pack-JSON `install` block; update `test_help_parity.bats`'s `setup_sh_markitdown_bump_comment_names_only_pin_carriers` grep — the pinned comment (`the pin lives in deploy/setup.sh only`) lives inside the deleted `install_markitdown_mcp` block, so the bump-ritual comment moves to the pack JSON `$comment` and the test greps it there; extend `tests/test_pack_permissions.bats` with install-schema validation (`runtime` ∈ pip|npm|none, `packages` non-empty array when runtime ≠ none)
+    — **Done:** install_markitdown_mcp + install_docling deleted (splice of lines 2942-3066); deploy_delegate structure pin re-verified green (deploy_content/deploy_agents order intact); files: deploy/setup.sh; fixes: none
+- [x] **1.5** Update `test_markitdown_skill.bats` / `test_docling_skill.bats` install-function greps to `install_pack_runtime` + pack-JSON `install` block; update `test_help_parity.bats`'s `setup_sh_markitdown_bump_comment_names_only_pin_carriers` grep — the pinned comment (`the pin lives in deploy/setup.sh only`) lives inside the deleted `install_markitdown_mcp` block, so the bump-ritual comment moves to the pack JSON `$comment` and the test greps it there; extend `tests/test_pack_permissions.bats` with install-schema validation (`runtime` ∈ pip|npm|none, `packages` non-empty array when runtime ≠ none)
     — **Why:** tests must guard the new contract, not the deleted one; help_parity pins the bump-ritual comment by literal text
     — **Done when:** `bats tests/test_markitdown_skill.bats tests/test_docling_skill.bats tests/test_pack_permissions.bats tests/test_dry_run_leaks.bats tests/test_help_parity.bats` green
     — **Consumers affected:** none
+    — **Done:** tests updated: pack_permissions (3 pins moved to pack JSON + 2 new tests: schema validation, merge-strip guard), help_parity (bump-ritual grep → pack JSON + setup.sh pin-absence), ps1_vars (pin greps → pack JSON), dry_run_leaks (+install_pack_runtime preview case); files: tests/test_pack_permissions.bats, tests/test_help_parity.bats, tests/test_setup_ps1_vars.bats, tests/test_dry_run_leaks.bats; fixes: undefined $CONFIG/$PACKS_DIR in pack_permissions test → literal paths
 
 ### Phase 2: Derived MCP listings
 
@@ -148,6 +153,12 @@ Phase order: P1 → P2 (listings read pack data); P3, P4 independent; P5 after P
     — **Why:** the exit gate is full-tier by contract; suite-wide green is the merge precondition
     — **Done when:** full `bats tests/` exit 0; gate memo `tier=full` recorded
     — **Consumers affected:** PR (Step 10 citation)
+
+## Trace
+
+GATE bc5e069+phase1 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — 67/67 green across test_pack_permissions, test_help_parity, test_dry_run_leaks, deploy_delegate, test_setup_ps1_vars, test_markitdown_skill, test_docling_skill
+LOG fix1: test_setup_ps1_vars pin grep moved to pack JSON (pin relocated by design)
+LOG fix2: pack_permissions merge-strip test used undefined $CONFIG/$PACKS_DIR → literal deploy/opencode.json + deploy/packs
 
 ## Technical Notes
 

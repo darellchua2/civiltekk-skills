@@ -178,8 +178,12 @@ async function main() {
     if (!pack || typeof pack !== "object") {
       die(`Pack ${name} is not a JSON object: ${file}`);
     }
-    // $comment is pack metadata — never merge it into the deployed config
-    const { mcp, permissions, $comment, ...restPack } = pack;
+    // $comment / $* are pack metadata and `install` is the runtime-installer
+    // spec (#677) — pack metadata is never merged into the deployed config.
+    const reserved = (k) => k === "install" || k.startsWith("$");
+    const { mcp, permissions, ...restPack } = Object.fromEntries(
+      Object.entries(pack).filter(([k]) => !reserved(k))
+    );
     if (Object.keys(restPack).length > 0) deepMerge(config, restPack);
     if (mcp && typeof mcp === "object") {
       // v2 pack fragments are { servers: { name: {...} } }; merge into config.mcp.

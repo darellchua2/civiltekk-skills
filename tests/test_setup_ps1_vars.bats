@@ -26,10 +26,13 @@ SETUP_SH="deploy/setup.sh"
 }
 
 @test "setup_ps1_delegates_the_487_pinned_install_to_bash" {
-  # #487's exact PyPI pin + mcp[cli] co-install live in setup.sh now (the
-  # Linux pip gate covers them there); the launcher keeps no pip logic.
-  grep -qF 'markitdown-mcp==0.0.1a7' "$SETUP_SH"
+  # #487's exact PyPI pin + mcp[cli] co-install moved to the pack JSON
+  # install block (#677 — the pack is the only pin carrier); the launcher
+  # keeps no pip logic and setup.sh carries only the generic installer.
+  grep -qF 'markitdown-mcp==0.0.1a7' deploy/packs/pack-markitdown.json
   run grep -qF 'markitdown-mcp==0.0.1a7' "$SETUP_PS1"
+  [ "$status" -ne 0 ]
+  run grep -qF 'markitdown-mcp==0.0.1a7' "$SETUP_SH"
   [ "$status" -ne 0 ]
 }
 
