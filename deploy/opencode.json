@@ -377,42 +377,7 @@
     },
     {
       "action": "skill",
-      "resource": "gsap-core",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "gsap-timeline",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "gsap-scrolltrigger",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "gsap-plugins",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "gsap-utils",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "gsap-react",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "gsap-performance",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "gsap-frameworks",
+      "resource": "gsap-skill",
       "effect": "allow"
     },
     {

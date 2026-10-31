@@ -2039,7 +2039,7 @@ EXAMPLES (npx invocation — copy-paste)
   npx github:darellchua2/civiltekk-opencode-claude-skills add civiltekk-api-spec-skill
   npx github:darellchua2/civiltekk-opencode-claude-skills add office-document-router-skill --dry-run
   npx github:darellchua2/civiltekk-opencode-claude-skills add code-review-subagent --project .
-  npx github:darellchua2/civiltekk-opencode-claude-skills add gsap-core --target claude
+  npx github:darellchua2/civiltekk-opencode-claude-skills add gsap-skill --target claude
 
 SCOPE
   User scope (default for 'add'): drops files into ~/.config/opencode/{agents,skills}/.

@@ -1,18 +1,15 @@
----
-name: gsap-plugins
-description: Official GSAP skill for GSAP plugins — registration, ScrollToPlugin, ScrollSmoother, Flip, Draggable, Inertia, Observer, SplitText, ScrambleText, SVG and physics plugins, CustomEase, EasePack, CustomWiggle, CustomBounce, GSDevTools. Use when the user asks about a GSAP plugin, scroll-to, flip animations, draggable, SVG drawing, or plugin registration.
-license: MIT
-compatibility: opencode
-category: Frontend Animation
----
+# Route: PLUGINS
+
+**Load when:** the task uses or registers a named GSAP plugin — ScrollTo, ScrollSmoother, Flip, Draggable, Inertia, Observer, SplitText, ScrambleText, DrawSVG, MorphSVG, MotionPath, physics, CustomEase/EasePack/CustomWiggle/CustomBounce, GSDevTools, Pixi. **Skip when:** ScrollTrigger itself (Route: `scrolltrigger`).
+
 
 # GSAP Plugins
 
 ## When to Use This Skill
 
-Apply when using or reviewing code that uses GSAP plugins: registering plugins, scroll-to, flip/FLIP animations, draggable elements, SVG (DrawSVG, MorphSVG, MotionPath), text (SplitText, ScrambleText), physics, easing plugins (CustomEase, EasePack, CustomWiggle, CustomBounce), or GSDevTools. ScrollTrigger has its own skill (gsap-scrolltrigger).
+Apply when using or reviewing code that uses GSAP plugins: registering plugins, scroll-to, flip/FLIP animations, draggable elements, SVG (DrawSVG, MorphSVG, MotionPath), text (SplitText, ScrambleText), physics, easing plugins (CustomEase, EasePack, CustomWiggle, CustomBounce), or GSDevTools. ScrollTrigger has its own route (`scrolltrigger`).
 
-**Related skills:** For core tweens use **gsap-core**; for ScrollTrigger use **gsap-scrolltrigger**; for React use **gsap-react**.
+**Related routes:** For core tweens use `core`; for ScrollTrigger use `scrolltrigger`; for React use `react`.
 
 ## Licensing & Install (important)
 
@@ -340,7 +337,7 @@ const helper = MotionPathHelper.create(".dot", "#path", { end: 0.5 });
 
 ### CustomEase
 
-Custom easing curves (cubic-bezier or SVG path). Use when a built-in ease is not enough. Basic usage is covered in gsap-core; register when using:
+Custom easing curves (cubic-bezier or SVG path). Use when a built-in ease is not enough. Basic usage is covered in the `core` route; register when using:
 
 ```javascript
 gsap.registerPlugin(CustomEase);
