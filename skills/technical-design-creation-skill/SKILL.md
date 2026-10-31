@@ -42,7 +42,7 @@ The TDD is **for engineers, architects, and tech leads** — the people who will
 
 - **`technical-design-specialist-subagent`** — the agent that authors the TDD (this skill is its template)
 - **`civiltekk-requirements-specs-skill`** — upstream requirements docs: route `srs` — the SRS's functional requirements feed INTO the TDD; route `brd` — the sponsor-level Solution Requirements Summary informs the TDD scope
-- **`interactive-document-rendering-skill`** — shared HTML + DOCX rendering standard (snapshot HTML for TDD)
+- **`office-document-router-skill` route `rendering`** — shared HTML + DOCX rendering standard (snapshot HTML for TDD)
 - **`civiltekk-api-spec-skill`** (`author` route) — referenced for detailed OpenAPI/REST patterns in the API Surface section
 - **`domain-modeling-skill`** — sharpens domain terminology for the Data Model section
 
@@ -357,7 +357,7 @@ If `.codegraph/` does not exist, fall back to `explore` (Task tool) + grep/glob/
 
 ## Rendering
 
-**Render dual outputs per `interactive-document-rendering-skill` (snapshot for TDD):**
+**Render dual outputs per the `rendering` route of `office-document-router-skill` (snapshot for TDD):**
 - **Interactive HTML** — rendered once at wrap (`docs/technical-design/{key}/TDD-{key}.interactive.html`), snapshot (not living)
 - **Word .docx** — formal deliverable for engineering review & sign-off (`docs/technical-design/TDD-{key}.docx`), auto-TOC + hyperlinked headers + section page-breaks
 

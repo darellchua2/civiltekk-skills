@@ -28,25 +28,7 @@ permissions:
     resource: xlsx-specialist-subagent
     effect: allow
   - action: skill
-    resource: pptx-generate-slide-skill
-    effect: allow
-  - action: skill
-    resource: pptx-generate-template-skill
-    effect: allow
-  - action: skill
-    resource: pptx-template-modifier-skill
-    effect: allow
-  - action: skill
-    resource: docx-creation-skill
-    effect: allow
-  - action: skill
-    resource: xlsx-specialist-skill
-    effect: allow
-  - action: skill
-    resource: markitdown-mcp-skill
-    effect: allow
-  - action: skill
-    resource: docling-mcp-skill
+    resource: office-document-router-skill
     effect: allow
 category: docs
 ---
@@ -81,7 +63,7 @@ Activate when user mentions:
 - "extract text from .docx", "summarize PowerPoint", "read PPTX content", "find in spreadsheet"
 - File paths ending in .docx, .pptx, .xlsx
 
-> **PDF routing note:** This agent does NOT claim `.pdf` — that's owned by `pdf-specialist-skill` for structured extraction / forms / OCR-as-purpose / editing. For fast text dumps of born-digital PDFs, `markitdown-mcp-skill` is acceptable after enabling.
+> **PDF routing note:** This agent does NOT claim `.pdf` — that's owned by `office-document-router-skill route `pdf`` for structured extraction / forms / OCR-as-purpose / editing. For fast text dumps of born-digital PDFs, `office-document-router-skill route `markitdown`` is acceptable after enabling.
 
 ## Routing Matrix
 
@@ -89,9 +71,9 @@ Activate when user mentions:
 |----------------|-------------|
 | `.pptx` general | `pptx-specialist-subagent` |
 | `.pptx` startup/pitch/investor | `startup-ceo-subagent` |
-| `.docx` creation/edit | `docx-creation-subagent` + `docx-creation-skill` |
+| `.docx` creation/edit | `docx-creation-subagent` + `office-document-router-skill route `docx`` |
 | `.xlsx` / `.csv` | `xlsx-specialist-subagent` |
-| READ/EXTRACT text from `.docx`/`.pptx`/`.xlsx` (born-digital) | Load `markitdown-mcp-skill` → call `markitdown` MCP |
+| READ/EXTRACT text from `.docx`/`.pptx`/`.xlsx` (born-digital) | Load `office-document-router-skill route `markitdown`` → call `markitdown` MCP |
 
 > **MCP tool access is session-inherited** from the deployed config's root-level `permission` pattern (`"markitdown*": "allow"`) — do NOT add `markitdown*` to this agent's `permission` block (no precedent; decided in #262). To enable markitdown calls, run `./deploy/setup.sh --enable-pack markitdown` (installs the upstream `markitdown-mcp` server from PyPI and appends `permission."markitdown*": "allow"`), then restart opencode.
 
@@ -106,9 +88,9 @@ Activate when user mentions:
 ## What NOT to Handle
 
 - Code generation tasks → use build agent
-- PDF creation/editing → use `pdf-specialist-skill`
-- PDF structured extraction (forms, tables as data, OCR-as-purpose) → use `pdf-specialist-skill`
-- PDF fast text dump of born-digital content → load `markitdown-mcp-skill` (this agent, when enabled)
+- PDF creation/editing → use `office-document-router-skill route `pdf``
+- PDF structured extraction (forms, tables as data, OCR-as-purpose) → use `office-document-router-skill route `pdf``
+- PDF fast text dump of born-digital content → load `office-document-router-skill route `markitdown`` (this agent, when enabled)
 - General questions unrelated to office documents
 
 ## Return Contract

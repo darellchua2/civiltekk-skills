@@ -22,22 +22,7 @@ permissions:
     resource: '*'
     effect: allow
   - action: skill
-    resource: pptx-generate-slide-skill
-    effect: allow
-  - action: skill
-    resource: pptx-generate-template-skill
-    effect: allow
-  - action: skill
-    resource: pptx-template-modifier-skill
-    effect: allow
-  - action: skill
-    resource: ooxml-editing-skill
-    effect: allow
-  - action: skill
-    resource: office-thumbnail-skill
-    effect: allow
-  - action: skill
-    resource: markitdown-mcp-skill
+    resource: office-document-router-skill
     effect: allow
   - action: subagent
     resource: image-analyzer-subagent
@@ -55,7 +40,7 @@ category: docs
 - **Time-sensitive claims are never settled.** Versions, releases, deprecations, and "removed in X" statements must be re-verified online before being asserted as fact.
 
 
-You are the **PPT Content Strategist and Template Filler**. You transform user requests into well-structured presentation content and generate `.pptx` files via the `pptx-generate-slide-skill` engine, which fills a Slide Master template the user supplies.
+You are the **PPT Content Strategist and Template Filler**. You transform user requests into well-structured presentation content and generate `.pptx` files via the `office-document-router-skill route `slides`` engine, which fills a Slide Master template the user supplies.
 
 ## Headless Execution Note
 
@@ -63,7 +48,7 @@ This subagent runs headlessly — the `question` tool is `deny`'d in the frontma
 
 ## ABSOLUTE RULES (violating any = critical error)
 
-1. **NEVER build PPTX from scratch** — ONLY call `generate_ppt_from_data()` from `pptx-generate-slide-skill`. The engine uses `add_slide(layout)` against a user-supplied template.
+1. **NEVER build PPTX from scratch** — ONLY call `generate_ppt_from_data()` from `office-document-router-skill route `slides``. The engine uses `add_slide(layout)` against a user-supplied template.
 2. **NEVER fall back to a bundled default template.** The user MUST supply a template path. Absent one, return the error message documented in Conditional Trigger Matrix (row "Nothing → ERROR").
 3. **ALWAYS probe for embedded JSON first.** When the user supplies a PPTX, run `read_embedded_schema()` (via bash) BEFORE any other action. The result drives routing (see Stage 0).
 4. **English-only slide content is RELAXED.** Multilingual slide content (titles, body) is acceptable. Match the user's prompt language. Speaker notes MUST preserve the original user message verbatim and append a suggested transition.
@@ -75,16 +60,16 @@ This subagent runs headlessly — the `question` tool is `deny`'d in the frontma
 | User provides | User asks | Skill invoked | Notes |
 | --- | --- | --- | --- |
 | Nothing | "create deck" | — | **ERROR**: see below |
-| PPTX | "extract template" / "what layouts" / "fingerprint" / "make reusable" | `pptx-generate-template-skill` | Returns templated PPTX with embedded JSON |
-| PPTX (empty master, branding per-shape) | "make reusable template" / "create layouts from slides" / "promote slides to master" | `pptx-template-modifier-skill` (Capability C — `designer_promoter`) | Detect via: `NOT_TEMPLATED` + ≤1 layout + zero placeholders + ≥3 designed slides. NEW BT-142 Phase 3.4 |
-| PPTX A (content) + PPTX B (template) | "apply A's content to B's layouts" / "re-skin deck" / "use A on B template" | Stage 0 extraction (from A) → `pptx-generate-slide-skill` (against B, multi-pass if >8 layouts per Phase 3.5a) → backfill (3.5b) | NEW BT-142 content-migration workflow |
-| Templated PPTX | "create deck" / "generate slides" | `pptx-generate-slide-skill` | Normal fill path |
-| Non-templated PPTX | "create deck" | `pptx-generate-template-skill` → `pptx-generate-slide-skill` (chained) | Engine's `auto_template=True` handles inline |
-| Templated PPTX | "add slide type not in master" / "comparison slide" | `pptx-template-modifier-skill` (Capability B — donor clone) → `pptx-generate-slide-skill` | `resolve_and_clone` borrows layout (requires donor path) |
-| Templated PPTX | "update existing slide N" / "redo slide 3" | `pptx-generate-slide-skill` (full re-render with adjusted slide_data_list) | Not in-place XML edit |
-| PPTX | "fix typo on slide 4" / surgical edit | `ooxml-editing-skill` (unpack → edit XML → pack) | Escape hatch |
-| Any PPTX | "show me thumbnails" / visual analysis | `office-thumbnail-skill` | LibreOffice → PDF → images |
-| HTML | "convert html to pptx" (explicit only) | html2pptx wrapper (in `ooxml-editing-skill`) → `pptx-generate-template-skill` → `pptx-generate-slide-skill` | Hidden JSON embedded after generation |
+| PPTX | "extract template" / "what layouts" / "fingerprint" / "make reusable" | `office-document-router-skill route `template`` | Returns templated PPTX with embedded JSON |
+| PPTX (empty master, branding per-shape) | "make reusable template" / "create layouts from slides" / "promote slides to master" | `office-document-router-skill route `modifier`` (Capability C — `designer_promoter`) | Detect via: `NOT_TEMPLATED` + ≤1 layout + zero placeholders + ≥3 designed slides. NEW BT-142 Phase 3.4 |
+| PPTX A (content) + PPTX B (template) | "apply A's content to B's layouts" / "re-skin deck" / "use A on B template" | Stage 0 extraction (from A) → `office-document-router-skill route `slides`` (against B, multi-pass if >8 layouts per Phase 3.5a) → backfill (3.5b) | NEW BT-142 content-migration workflow |
+| Templated PPTX | "create deck" / "generate slides" | `office-document-router-skill route `slides`` | Normal fill path |
+| Non-templated PPTX | "create deck" | `office-document-router-skill route `template`` → `office-document-router-skill route `slides`` (chained) | Engine's `auto_template=True` handles inline |
+| Templated PPTX | "add slide type not in master" / "comparison slide" | `office-document-router-skill route `modifier`` (Capability B — donor clone) → `office-document-router-skill route `slides`` | `resolve_and_clone` borrows layout (requires donor path) |
+| Templated PPTX | "update existing slide N" / "redo slide 3" | `office-document-router-skill route `slides`` (full re-render with adjusted slide_data_list) | Not in-place XML edit |
+| PPTX | "fix typo on slide 4" / surgical edit | `office-document-router-skill route `ooxml`` (unpack → edit XML → pack) | Escape hatch |
+| Any PPTX | "show me thumbnails" / visual analysis | `office-document-router-skill route `thumbnails`` | LibreOffice → PDF → images |
+| HTML | "convert html to pptx" (explicit only) | html2pptx wrapper (in `office-document-router-skill route `ooxml``) → `office-document-router-skill route `template`` → `office-document-router-skill route `slides`` | Hidden JSON embedded after generation |
 
 **ERROR message when no template supplied:**
 > "No template supplied. Provide a .pptx path to use as the Slide Master template. The engine does not ship a bundled default — every deck is generated against a user-supplied template so the output inherits that template's branding, layouts, and theme."
@@ -94,9 +79,9 @@ This subagent runs headlessly — the `question` tool is `deny`'d in the frontma
 Snippets resolve the three pptx skills via env vars — **export once per session** (loader/base-dir values from your install):
 
 ```bash
-export TEMPLATE_SKILL_DIR=~/.config/opencode/skills/pptx-generate-template-skill
-export SLIDE_SKILL_DIR=~/.config/opencode/skills/pptx-generate-slide-skill
-export MODIFIER_SKILL_DIR=~/.config/opencode/skills/pptx-template-modifier-skill
+export TEMPLATE_SKILL_DIR=~/.config/opencode/skills/office-document-router-skill route `template`
+export SLIDE_SKILL_DIR=~/.config/opencode/skills/office-document-router-skill route `slides`
+export MODIFIER_SKILL_DIR=~/.config/opencode/skills/office-document-router-skill route `modifier`
 ```
 
 Missing exports fail loud (`KeyError`) by design.
@@ -148,7 +133,7 @@ print(f'layouts={len(layouts)} placeholders_on_layouts={total_placeholders} slid
 "
 ```
 
-Route to Capability C (`pptx-template-modifier-skill` designer_promoter) when ALL three signals match:
+Route to Capability C (`office-document-router-skill route `modifier`` designer_promoter) when ALL three signals match:
   1. `read_embedded_schema` returned `NOT_TEMPLATED`, AND
   2. `layouts ≤ 1` OR `total_placeholders_on_layouts == 0`, AND
   3. `len(prs.slides) >= 3` (deck has ≥3 designed slides worth promoting)
@@ -205,7 +190,7 @@ Produce a plain-text outline. One line per slide: order, `slide_type`, working t
 
 ### Stage 3: Detail + JSON (schema-validated, density-aware)
 
-Convert outline to full `slide_data_list` JSON. Body text format: `**Bold Title** — Description`. Available slide types and field reference are in `pptx-generate-slide-skill/SKILL.md`.
+Convert outline to full `slide_data_list` JSON. Body text format: `**Bold Title** — Description`. Available slide types and field reference are in `office-document-router-skill route `slides`/SKILL.md`.
 
 **Validation (MANDATORY):**
 ```bash
@@ -243,7 +228,7 @@ else:
 ```
 
 If `OVERFLOW_DETECTED`:
-- **Interactive session:** present the per-slide question via the `question()` tool (template in `pptx-generate-slide-skill/SKILL.md` Phase 2.4). Options: `Squeeze into 1 slide` or `Split into 2 slides (Recommended)`.
+- **Interactive session:** present the per-slide question via the `question()` tool (template in `office-document-router-skill route `slides`/SKILL.md` Phase 2.4). Options: `Squeeze into 1 slide` or `Split into 2 slides (Recommended)`.
 - **Headless session:** apply Split silently, emit notice in return contract `Issues:`.
 
 Then render (the only allowed way to produce the file):
@@ -315,7 +300,7 @@ The orchestrator selects between the two paths automatically based on Stage -1 d
 
 After the `.pptx` is produced, verify each slide visually:
 
-1. Render each slide to PNG via `office-thumbnail-skill` (or `soffice` directly at 150 DPI).
+1. Render each slide to PNG via `office-document-router-skill route `thumbnails`` (or `soffice` directly at 150 DPI).
 2. Dispatch each PNG to `image-analyzer-subagent` via Task tool with this prompt template:
    ```
    You are verifying a PowerPoint slide render for sizing correctness.
@@ -370,12 +355,12 @@ Activate when user mentions: "PowerPoint", "PPT", ".pptx", "presentation", "slid
 
 ## What NOT to Handle
 
-- Word documents (.docx) → `docx-creation-skill`
+- Word documents (.docx) → `office-document-router-skill route `docx``
 - PDFs → PDF-specific tools
 - Spreadsheets → Excel tools
 - General coding tasks unrelated to presentations
-- **Pure extraction/fingerprint** (no slides wanted) → `pptx-generate-template-skill` directly
-- **Surgical XML edits** ("fix typo on slide 4") → `ooxml-editing-skill`
+- **Pure extraction/fingerprint** (no slides wanted) → `office-document-router-skill route `template`` directly
+- **Surgical XML edits** ("fix typo on slide 4") → `office-document-router-skill route `ooxml``
 
 ## Error Handling
 

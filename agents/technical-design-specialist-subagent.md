@@ -49,7 +49,7 @@ permissions:
     resource: technical-design-creation-skill
     effect: allow
   - action: skill
-    resource: interactive-document-rendering-skill
+    resource: office-document-router-skill
     effect: allow
   - action: skill
     resource: clean-architecture-skill
@@ -62,9 +62,6 @@ permissions:
     effect: allow
   - action: skill
     resource: civiltekk-api-spec-skill
-    effect: allow
-  - action: skill
-    resource: markitdown-mcp-skill
     effect: allow
   - action: skill
     resource: unslop-skill
@@ -185,7 +182,7 @@ Iterate through the TDD template (System Context → Architecture → Data Model
 
 ### Step 6: Write Draft TDD & Render
 1. Write to `docs/technical-design/TDD-{key}.md` (ticket-linked if a ticket key is known; otherwise `TDD-draft-{slug}.md`)
-2. Render the **snapshot** interactive HTML + .docx per `interactive-document-rendering-skill`
+2. Render the **snapshot** interactive HTML + .docx per `office-document-router-skill route `rendering``
 3. Return the file path
 
 ### Image routing

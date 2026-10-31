@@ -42,6 +42,6 @@ ML results report per-class metrics (precision/recall/F1), never accuracy-only. 
 
 Methods-first writing · unmirrored contributions · orphan RQs · new content in Conclusion · missing Practical Applications/Highlights when required · accuracy-only reporting · no limitations subsection · vague implications · overstated generalization.
 
-**Related:** `research-paper-generation-skill` (generation pipeline from codebases) · `docx-creation-skill` (DOCX conversion) · `civiltekk-diagram-skill` (mermaid route).
+**Related:** `research-paper-generation-skill` (generation pipeline from codebases) · the `docx` route of `office-document-router-skill` (DOCX conversion) · `civiltekk-diagram-skill` (mermaid route).
 
 > Removed 2026-09: the §3 section-by-section writing guide (per-section prose templates), §4 multi-venue reference-style catalogs, §6 diagramming conventions detail, §7 formula/equation typography rules, §8 table formatting walkthroughs, §9 folder layout, §13 example invocation transcript, ASCII reference figure — venue-specific mechanics the model knows; the method, workflow, audit, and anti-patterns above are the durable contract.

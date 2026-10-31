@@ -40,7 +40,7 @@ INIT_MJS="installer/init.mjs"
 @test "init_mjs_help_has_npx_copy_paste_examples" {
   grep -qF 'npx github:darellchua2/civiltekk-opencode-claude-skills --list categories' "$INIT_MJS"
   grep -qF 'npx github:darellchua2/civiltekk-opencode-claude-skills add civiltekk-api-spec-skill' "$INIT_MJS"
-  grep -qF 'npx github:darellchua2/civiltekk-opencode-claude-skills add pdf-specialist-skill --dry-run' "$INIT_MJS"
+  grep -qF 'npx github:darellchua2/civiltekk-opencode-claude-skills add office-document-router-skill --dry-run' "$INIT_MJS"
   grep -qF 'npx github:darellchua2/civiltekk-opencode-claude-skills add code-review-subagent --project .' "$INIT_MJS"
   grep -qF 'npx github:darellchua2/civiltekk-opencode-claude-skills add gsap-core --target claude' "$INIT_MJS"
 }

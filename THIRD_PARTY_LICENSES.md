@@ -248,7 +248,7 @@ SOFTWARE.
 | `rapidocr` | Apache-2.0 | OCR engine |
 | `transformers` (huggingface) | Apache-2.0 | ML model loading |
 
-**Trust boundary:** unlike markitdown (zero phone-home, fully local), docling downloads ML models from `huggingface.co` on first use (~hundreds of MB, cached thereafter). See `docling-mcp-skill` trust-boundary section for details.
+**Trust boundary:** unlike markitdown (zero phone-home, fully local), docling downloads ML models from `huggingface.co` on first use (~hundreds of MB, cached thereafter). See the `docling` route's trust-boundary section in `office-document-router-skill` for details.
 
 ## License of this repository
 

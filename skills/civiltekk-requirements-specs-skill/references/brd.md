@@ -262,7 +262,7 @@ docs/brd/BRD-{ticket-key}.md
 
 ## Rendering (route `brd`)
 
-**Render dual outputs per `interactive-document-rendering-skill` (snapshot for BRD):**
+**Render dual outputs per the `rendering` route of `office-document-router-skill` (snapshot for BRD):**
 - **Interactive HTML** — rendered once at wrap (`docs/brd/{slug}/BRD-{slug}.interactive.html`), snapshot (not living)
 - **Word .docx** — formal deliverable for sponsor/stakeholder review & sign-off (`docs/brd/BRD-{slug}.docx`), auto-TOC + hyperlinked headers + section page-breaks
 

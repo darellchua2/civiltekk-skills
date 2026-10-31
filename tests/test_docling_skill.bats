@@ -1,12 +1,14 @@
 #!/usr/bin/env bats
 
-# Tests for docling-mcp-skill (PLAN-GIT-308).
+# Tests for the docling route of office-document-router-skill (PLAN-GIT-308; absorbed #680).
 # Verifies skill existence, frontmatter validity, required sections,
 # default-disabled MCP state, pack deep-merge correctness, AGENTS.md
 # routing rule, agent skill grants, and dependency-map.json edge.
 # Peer to tests/test_markitdown_skill.bats.
 
-SKILL_MD="skills/docling-mcp-skill/SKILL.md"
+# Route file since #680 (skill absorbed into office-document-router-skill)
+ROUTE_MD="skills/office-document-router-skill/references/routes/docling.md"
+SKILL_MD="$ROUTE_MD"
 AGENTS_DIR="agents"
 CONFIG="deploy/opencode.json"
 PACKS_DIR="deploy/packs"
@@ -21,7 +23,9 @@ MERGE_SCRIPT="deploy/merge-packs.mjs"
 }
 
 @test "docling_skill_frontmatter_parses" {
-  python3 -c "import yaml; d=open('$SKILL_MD').read(); fm=yaml.safe_load(d.split('---')[1]); assert fm['name']=='docling-mcp-skill'; assert fm['license']=='Apache-2.0'; assert fm['compatibility']=='opencode'; assert fm['category']=='Configuration'; assert 'metadata' in fm; assert fm['metadata']['pattern']=='cli-on-demand'"
+  # Route files carry a Load-when header instead of frontmatter (#680)
+  grep -qF '**Load when:**' "$SKILL_MD"
+  grep -qF '**Skip when:**' "$SKILL_MD"
 }
 
 @test "docling_skill_required_sections_present" {
@@ -34,8 +38,8 @@ MERGE_SCRIPT="deploy/merge-packs.mjs"
 }
 
 @test "docling_skill_references_agents_md_routing" {
-  # The skill must REFERENCE the AGENTS.md routing rule (single-source, no drift)
-  grep -q 'AGENTS.md' "$SKILL_MD"
+  # Since #680 the route references the ROUTER's extraction ladder (single-source)
+  grep -q "router's extraction ladder" "$SKILL_MD"
 }
 
 @test "docling_skill_has_docling_convert_command" {
@@ -108,7 +112,7 @@ assert len(rules)==1 and rules[0]['effect']=='allow', 'deny rule must flip in pl
 
 @test "agents_md_lists_four_tiers" {
   # All 4 tiers must be named in the routing section
-  for tier in "markitdown" "docling" "image-analyzer-subagent" "pdf-specialist-skill"; do
+  for tier in "markitdown" "docling" "image-analyzer-subagent" "pdf route"; do
     grep -q "$tier" AGENTS.md
   done
 }
@@ -125,14 +129,16 @@ assert len(rules)==1 and rules[0]['effect']=='allow', 'deny rule must flip in pl
 # =============================================================================
 
 @test "primary_has_docling_skill_allow" {
-  python3 -c "import json; d=json.load(open('${CONFIG}')); assert any(r['action']=='skill' and r.get('resource')=='docling-mcp-skill' and r['effect']=='allow' for r in d['permissions'])"
+  # #680 on-demand design: the shipped config allows the ROUTER; the docling
+  # MCP pack itself stays opt-in (--enable-pack docling, consent-gated).
+  python3 -c "import json; d=json.load(open('${CONFIG}')); assert any(r['action']=='skill' and r.get('resource')=='office-document-router-skill' and r['effect']=='allow' for r in d['permissions'])"
 }
 
 @test "office_document_primary_agent_has_docling_skill" {
   python3 -c "
 import yaml
 fm=yaml.safe_load(open('$AGENTS_DIR/office-document-router-subagent.md').read().split('---')[1])
-assert any(r['action']=='skill' and r['resource']=='docling-mcp-skill' and r['effect']=='allow' for r in fm['permissions']), 'docling skill rule missing'
+assert any(r['action']=='skill' and r['resource']=='office-document-router-skill' and r['effect']=='allow' for r in fm['permissions']), 'docling skill rule missing'
 "
 }
 
@@ -141,7 +147,9 @@ assert any(r['action']=='skill' and r['resource']=='docling-mcp-skill' and r['ef
 # =============================================================================
 
 @test "dependency_map_has_docling_edge" {
-  python3 -c "import json; d=json.load(open('installer/dependency-map.json')); assert 'docling-mcp-skill' in d['impliesMcp']; assert d['impliesMcp']['docling-mcp-skill'] == ['docling']"
+  # #680 on-demand design: the auto-enable impliesMcp edge is removed — the
+  # docling route carries the consent-gated enablement recipe instead.
+  python3 -c "import json; d=json.load(open('installer/dependency-map.json')); assert 'docling-mcp-skill' not in d['impliesMcp']; assert 'markitdown-mcp-skill' not in d['impliesMcp']"
 }
 
 # =============================================================================

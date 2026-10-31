@@ -99,7 +99,7 @@ Prompt-first, identical shape for both routes; only the part list differs
 
 ## Rendering
 
-Render dual outputs per `interactive-document-rendering-skill` —
+Render dual outputs per the `rendering` route of `office-document-router-skill` —
 **snapshot** for both routes: interactive HTML rendered once at wrap +
 Word .docx as the formal review/sign-off deliverable (exact paths in the
 route's values file).
@@ -125,7 +125,7 @@ delegate to `image-analyzer-subagent` (do not interpret inline).
 - Confirm before writing (§Discovery interview step 3); never emit a full
   draft unconfirmed; "skip" keeps the section heading.
 - Large tabular artifacts (RTM >15 rows, data dictionary, requirement
-  register) are `.xlsx` peer deliverables via `xlsx-specialist-skill` /
+  register) are `.xlsx` peer deliverables via the `xlsx` route of `office-document-router-skill` /
   `xlsx-specialist-subagent` — linked, never inlined (route `srs` only;
   see `references/srs.md`).
 - Headless/CI: no asks — read the route from the delegation prompt, use a
