@@ -65,7 +65,7 @@ No rewrite needed: bambu Failure Modes and gcode backend notes are already signa
 ### Vendor facts
 
 - `cadpy_metadata` package byte-identical ×3 (diff -rq clean) → single copy at `scripts/packages/cadpy_metadata`; scripts/urdf|srdf|sdf subdirs preserved as-is.
-- LICENSE: all 7 present merge-set LICENSE files identical house Apache-2.0 → one root LICENSE; civil3d/aps/open3d covered by repo license. `requirements.txt` ×3 all `--editable ./scripts/packages/cadpy_metadata` → single merged file.
+- LICENSE: all 7 present merge-set LICENSE files identical — **vendored MIT (Copyright earthtojake)** covering the text-to-cad payload → kept at skill root; civil3d/aps/open3d prose is house Apache-2.0 under the repo license. SKILL.md frontmatter Apache-2.0 applied to the prose only. `requirements.txt` ×3 all `--editable ./scripts/packages/cadpy_metadata` → single merged file.
 
 
 ## Dependency & Consumer Map
@@ -99,22 +99,26 @@ Phase ordering constraint: no deletion (4.1) before every consumer of the 10 IDs
 
 ### Phase 2: Build skills/cad-specialist-skill/
 
-- [ ] **2.1** Write `skills/cad-specialist-skill/SKILL.md` router: frontmatter (name `cad-specialist-skill`, description ≤50 words carrying the family trigger phrases — STEP, STL, DXF, URDF, SRDF, SDF, G-code, 3D printing, SendCutSend, Civil 3D, APS, Open3D, robot description, Gazebo —, license Apache-2.0, compatibility opencode, metadata, category CAD & Hardware Design), identity, decision tree (task type → route, lifted from `agents/cad-specialist-subagent.md` routing table), shared CAD spine (model-first → validate-before-export → units/tolerances → review), load table (Route | Read | When | Skip-when), 5 install-if-missing sibling rows, hard rules as one-liners, gates
+- [x] **2.1** Write `skills/cad-specialist-skill/SKILL.md` router: frontmatter (name `cad-specialist-skill`, description ≤50 words carrying the family trigger phrases — STEP, STL, DXF, URDF, SRDF, SDF, G-code, 3D printing, SendCutSend, Civil 3D, APS, Open3D, robot description, Gazebo —, license Apache-2.0, compatibility opencode, metadata, category CAD & Hardware Design), identity, decision tree (task type → route, lifted from `agents/cad-specialist-subagent.md` routing table), shared CAD spine (model-first → validate-before-export → units/tolerances → review), load table (Route | Read | When | Skip-when), 5 install-if-missing sibling rows, hard rules as one-liners, gates
     — **Why:** the router is the contract every consumer and route file hangs off; built first so later steps reference a real file
     — **Done when:** file exists; `wc -c` ≤ 10240; description ≤50 words; all 15 routes represented (10 internal rows + 5 sibling rows); no preload instructions
     — **Consumers affected:** cad-specialist-subagent (Phase 3), installer registry (4.2), end users
-- [ ] **2.2** Write `references/routes/<id>.md` for each of the 10 merged routes from the Phase 1 dispositions + each source SKILL.md's mechanics; absorb scripts/ trees under the route dirs; rewrite any intra-family path strings (e.g. `skills/cad-urdf-skill/scripts/x.py`) to own-dir relative paths so absorbed scripts actually execute
+    — **Done:** router written — 5022 bytes, description 47 words, 10 internal route rows + 5 sibling rows + viewer handoff, only "preload" hits are negation rules; files: skills/cad-specialist-skill/SKILL.md; fixes: none
+- [x] **2.2** Write `references/routes/<id>.md` for each of the 10 merged routes from the Phase 1 dispositions + each source SKILL.md's mechanics; absorb scripts/ trees under the route dirs; rewrite any intra-family path strings (e.g. `skills/cad-urdf-skill/scripts/x.py`) to own-dir relative paths so absorbed scripts actually execute
     — **Why:** route files carry the merged mechanics behind load rules; dead absolute paths would break at runtime and trip the isolation guard
     — **Done when:** 10 route files exist, each opening with a WHEN+WHAT load rule line; zero `skills/<removed-id>/` strings in any .py file or fenced block in the new skill dir
     — **Consumers affected:** router load table (2.1)
-- [ ] **2.3** Merge the per-skill `requirements.txt` files into one with a dependency-conflict audit (dedupe, resolve version conflicts, note unverifiable pins); carry a smallest-runnable self-check (assert-based) for any non-trivial absorbed script logic
+    — **Done:** 10 route files via git mv + transform (headers with Load when/Skip when/Route dir; viewer boilerplate collapsed to router rule in 7 files; interpreter note → spine pointer in 3; both Phase-1 rewords applied); 10 route detail dirs absorbed; 0 sibling path strings in .py; scripts history-preserving via git mv; files: references/routes/*, scripts/*; fixes: none
+- [x] **2.3** Merge the per-skill `requirements.txt` files into one with a dependency-conflict audit (dedupe, resolve version conflicts, note unverifiable pins); carry a smallest-runnable self-check (assert-based) for any non-trivial absorbed script logic
     — **Why:** one self-contained skill must not ship conflicting pins; ponytail check rule for non-trivial logic
     — **Done when:** single `requirements.txt` with no duplicate/conflicting pins (`pip install --dry-run -r` exits 0 or conflicts documented with resolution)
     — **Consumers affected:** route scripts runtime
-- [ ] **2.4** Preserve provenance: carry each merged skill's LICENSE into its route dir (combined NOTICES file when licenses are identical)
+    — **Done:** single requirements.txt (`--editable ./scripts/packages/cadpy_metadata`; gcode/bambu/step-parts scripts verified all-stdlib, zero third-party imports); closest-executable check: editable+dry-run conflict → 21 absorbed scripts AST-parse clean + package pyproject layout verified; no new logic written → no new test owed (moved proven code); files: requirements.txt; fixes: none
+- [x] **2.4** Preserve provenance: carry each merged skill's LICENSE into its route dir (combined NOTICES file when licenses are identical)
     — **Why:** Apache-2.0 house license and any vendored licenses must survive the merge unmodified
     — **Done when:** every license text present in the 10 old dirs is present verbatim in the new skill tree
     — **Consumers affected:** compliance readers
+    — **Done:** vendored MIT (earthtojake, byte-identical ×7) at skill root; audit note corrected (frontmatter Apache-2.0 = prose only; civil3d/aps/open3d under repo license); files: LICENSE, PLANS/PLAN-679.md; fixes: audit-note accuracy fix
 
 ### Phase 3: Rewire consumers (before any deletion)
 
@@ -198,4 +202,5 @@ Phase ordering constraint: no deletion (4.1) before every consumer of the 10 IDs
 
 LOG phase-1: docs-only phase (PLAN audit notes); no source files touched.
 GATE b58170f tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
+LOG phase-2 fix-on-fail: full gate red ×9 with ONE root cause — committed registry.json + README count literals still described the pre-merge roster, while the moves changed disk state (installer `add --all`/setup.sh deploy fail on first missing dir; #659 same-PR rule requires roster changes to carry counts). Fix pulled 4.2's regen + the 6 README count literals (122→113) into this phase commit; skill-profiles.json lean array verified untouched (68). Remaining 4.2/4.3 scope (final regen delta, category listing content, deploy-script help text) unchanged.
 

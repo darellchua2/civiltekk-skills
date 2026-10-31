@@ -1,13 +1,8 @@
----
-name: cad-step-parts-skill
-description: >-
-  Search, evaluate, and download purchasable parts from the step.parts catalog —
-  actuators, servos, motors, boards, connectors, fasteners — as canonical .step
-  files.
-license: Apache-2.0
-compatibility: opencode
-category: CAD & Hardware Design
----
+# Route: STEP-PARTS — step.parts catalog search & download
+
+**Load when:** the task searches, evaluates, or downloads purchasable parts (actuators, servos, fasteners) as STEP files before modeling placeholders.
+**Skip when:** the part is custom geometry (sibling `cad-generation-skill`).
+**Route dir:** `step-parts/` beside this file — read on demand.
 
 # CAD Parts
 
@@ -34,7 +29,9 @@ When a CAD assembly includes named off-the-shelf actuators, servos, motors, elec
 
 ## CAD Viewer Handoff
 
-After completing step.parts work that creates or updates a local `.step` or `.stp` file, you must ALWAYS hand the explicit file path to `the cad-viewer-skill (load via skill tool)` when that skill is installed. `the cad-viewer-skill (load via skill tool)` must start CAD Viewer if it is not already running and return link(s) to the relevant created or updated file(s); if `the cad-viewer-skill (load via skill tool)` is unavailable or startup fails, report that instead of silently omitting the handoff.
+Per the router viewer-handoff rule: hand the created/updated file path(s) to the
+`cad-viewer-skill` sibling (install-if-missing). Report when it is unavailable —
+never silently omit the handoff.
 
 ## Bundled Downloader
 
@@ -58,7 +55,7 @@ The script prints JSON to stdout. For searches, it prints matched records. For d
 
 ## API Reference
 
-Read `references/step-parts-api.md` when you need endpoint details, field meanings, or query semantics. Prefer:
+Read `step-parts/step-parts-api.md` when you need endpoint details, field meanings, or query semantics. Prefer:
 
 - `/v1/parts` for filtered search with absolute asset URLs.
 - `/v1/parts/{id}` for one enriched record.

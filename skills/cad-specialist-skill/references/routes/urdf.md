@@ -1,13 +1,8 @@
----
-name: cad-urdf-skill
-description: >-
-  Generate and validate .urdf robot descriptions — links, joints, limits,
-  inertials, geometry, frames — from gen_urdf() sources. MoveIt2 semantics:
-  cad-srdf-skill; rendering: cad-viewer-skill.
-license: Apache-2.0
-compatibility: opencode
-category: CAD & Hardware Design
----
+# Route: URDF — robot descriptions (.urdf)
+
+**Load when:** the task creates, edits, or validates URDF robot descriptions.
+**Skip when:** the task is MoveIt semantics (Route: SRDF), Gazebo worlds/simulator models (Route: SDF), or mechanical CAD (sibling `cad-generation-skill`).
+**Route dir:** `urdf/` beside this file carries this route's deep-dive files (listed in References) — read on demand.
 
 # URDF
 
@@ -22,15 +17,17 @@ Use this skill for URDF robot-description outputs. Treat URDF work as constraine
 1. Treat the Python source that defines `gen_urdf()` as the source of truth. Treat configured `.urdf` files as generated artifacts.
 2. Generate only explicit URDF targets. Do not regenerate unrelated CAD, mesh, render, SRDF, SDF, or simulator artifacts from this skill.
 3. The `scripts/urdf` generator validates generated URDFs by default. Do not use or document a separate `validate` command.
-4. Before writing or changing URDF XML, establish the robot's frame, joint, geometry, unit, and assumption ledger. See `references/design-ledger.md`.
-5. Use URDF frame semantics exactly. Joint origins, link frames, joint axes, and visual/collision/inertial origins use different reference frames. See `references/frame-semantics.md`.
+4. Before writing or changing URDF XML, establish the robot's frame, joint, geometry, unit, and assumption ledger. See `urdf/design-ledger.md`.
+5. Use URDF frame semantics exactly. Joint origins, link frames, joint axes, and visual/collision/inertial origins use different reference frames. See `urdf/frame-semantics.md`.
 6. Do not infer spatial transforms, mesh units, handedness, axes, or joint signs from vague prose. Use CAD transforms, dimensioned drawings, measured values, existing source data, or explicit documented assumptions.
 7. Prefer simple, auditable generator code over clever XML construction. Keep constants named by physical meaning, not by arbitrary numbers.
 8. For physical links, model `inertial`, `visual`, and `collision` separately when the target consumer needs them. Frame-only links may intentionally omit mass and geometry.
 
 ## CAD Viewer Handoff
 
-After completing URDF work that creates or modifies a `.urdf`, you must ALWAYS hand the explicit file path to `the cad-viewer-skill (load via skill tool)` when that skill is installed. `the cad-viewer-skill (load via skill tool)` must start CAD Viewer if it is not already running and return link(s) to the relevant created or updated file(s); if `the cad-viewer-skill (load via skill tool)` is unavailable or startup fails, report that instead of silently omitting the handoff.
+Per the router viewer-handoff rule: hand the created/updated file path(s) to the
+`cad-viewer-skill` sibling (install-if-missing). Report when it is unavailable —
+never silently omit the handoff.
 
 ## Workflow
 
@@ -46,7 +43,7 @@ After completing URDF work that creates or modifies a `.urdf`, you must ALWAYS h
 
 ## Commands
 
-Run with the Python environment for the project or workspace. Treat `python` in examples as an interpreter placeholder; if bare `python` is unavailable, substitute `python3`, a project virtualenv interpreter, or the configured interpreter path. The URDF generator and lightweight validator use only the Python standard library; downstream consumers such as RViz, Gazebo, or MoveIt may need their own runtime packages.
+Run with the project or workspace Python environment (interpreter placeholder rule: router shared spine). The URDF generator and lightweight validator use only the Python standard library; downstream consumers such as RViz, Gazebo, or MoveIt may need their own runtime packages.
 
 From this skill directory, the launcher shape is:
 
@@ -64,9 +61,9 @@ The launcher executes only `gen_urdf()` and validates the generated URDF output.
 
 ## References
 
-- Design ledger: `references/design-ledger.md`
-- Frame semantics: `references/frame-semantics.md`
-- URDF generator contract: `references/generator-contract.md`
-- URDF generation command: `references/gen-urdf.md`
-- URDF edit workflow: `references/urdf-workflow.md`
-- Generation-time validation expectations: `references/validation.md`
+- Design ledger: `urdf/design-ledger.md`
+- Frame semantics: `urdf/frame-semantics.md`
+- URDF generator contract: `urdf/generator-contract.md`
+- URDF generation command: `urdf/gen-urdf.md`
+- URDF edit workflow: `urdf/urdf-workflow.md`
+- Generation-time validation expectations: `urdf/validation.md`

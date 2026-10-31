@@ -1,13 +1,8 @@
----
-name: cad-sendcutsend-skill
-description: >-
-  Preflight DXF and STEP/STP uploads for SendCutSend.com orders —
-  material/SKU/service availability plus laser, CNC, bending, tapping,
-  countersinking, and finishing checks.
-license: Apache-2.0
-compatibility: opencode
-category: CAD & Hardware Design
----
+# Route: SENDCUTSEND — SendCutSend upload preflight
+
+**Load when:** the task preflights DXF/STEP/STP files for SendCutSend orders (material/SKU/service availability, laser/CNC/bend/tap checks).
+**Skip when:** the task is general geometry generation or DXF authoring (sibling `cad-generation-skill` / `cad-dxf-skill`).
+**Route dir:** `sendcutsend/` beside this file — read on demand.
 
 # SendCutSend
 
@@ -21,15 +16,17 @@ Treat SendCutSend's ordering guide, catalog JSON, and specs JSON as evidence fee
 
 ## Geometry Inspection
 
-Use the active project Python environment for local geometry inspection code. If the `the cad-generation-skill (load via skill tool)` skill is available, use it first for STEP/STP/DXF geometry inspection, measurement, and validation workflows, then add any SendCutSend-specific targeted measurements that are still missing. Use `build123d.import_step` for STEP/STP inspection and `build123d.ezdxf` for DXF inspection when geometry facts are required. Do not use raw text parsing or alternate geometry backends for geometry facts.
+Use the active project Python environment for local geometry inspection code. If the `cad-generation-skill` (install-if-missing sibling per router) skill is available, use it first for STEP/STP/DXF geometry inspection, measurement, and validation workflows, then add any SendCutSend-specific targeted measurements that are still missing. Use `build123d.import_step` for STEP/STP inspection and `build123d.ezdxf` for DXF inspection when geometry facts are required. Do not use raw text parsing or alternate geometry backends for geometry facts.
 
 ## CAD Viewer Handoff
 
-After completing SendCutSend work that creates or modifies a `.dxf`, `.step`, or `.stp` upload candidate, you must ALWAYS hand the explicit file path(s) to `the cad-viewer-skill (load via skill tool)` when that skill is installed. `the cad-viewer-skill (load via skill tool)` must start CAD Viewer if it is not already running and return link(s) to the relevant created or updated file(s); if `the cad-viewer-skill (load via skill tool)` is unavailable or startup fails, report that instead of silently omitting the handoff.
+Per the router viewer-handoff rule: hand the created/updated file path(s) to the
+`cad-viewer-skill` sibling (install-if-missing). Report when it is unavailable —
+never silently omit the handoff.
 
 ## Official Sources
 
-Before each review, fetch and inspect the current SendCutSend source documents directly from the official URLs listed in `references/official-sources.md`:
+Before each review, fetch and inspect the current SendCutSend source documents directly from the official URLs listed in `sendcutsend/official-sources.md`:
 
 Use the source URL, access date, and JSON `_meta` values in the source bibliography when helpful. If a source cannot be fetched, report that current SendCutSend sources were unavailable and avoid ready verdicts for dependent checks.
 
@@ -40,8 +37,8 @@ Use the source URL, access date, and JSON `_meta` values in the source bibliogra
    - Prefer STEP/STP for CNC routing and 3D model upload workflows.
    - Record file type, intended process, material/SKU, thickness, quantity, services, finish, and hardware.
    - If order context is missing or ambiguous, inspect enough source data to present concrete options, then ask the user to confirm before writing a readiness verdict. Include candidate SKUs/materials/thicknesses/services with relevant source links; include `photo_url` images and `learn_more_url` links from the specs JSON when available.
-2. Read `references/official-sources.md`, fetch the official sources directly, then inspect the returned documents. Normalize source facts defensively: parse numeric strings, size strings, `N/A`, missing fields, mixed types, and absent service arrays into explicit notes.
-3. Inspect the exact upload file with `the cad-generation-skill (load via skill tool)` when available and with targeted Python/`build123d` for any missing facts. Do not inspect only the source generator, CAD model, or generator console summary.
+2. Read `sendcutsend/official-sources.md`, fetch the official sources directly, then inspect the returned documents. Normalize source facts defensively: parse numeric strings, size strings, `N/A`, missing fields, mixed types, and absent service arrays into explicit notes.
+3. Inspect the exact upload file with `cad-generation-skill` (install-if-missing sibling per router) when available and with targeted Python/`build123d` for any missing facts. Do not inspect only the source generator, CAD model, or generator console summary.
    - DXF: measure units, bounds, layers, entity types, open/duplicate geometry, unsupported annotations, candidate holes/circles, linework stats, bend-line candidates, bend-to-cut distances, bend-adjacent cut geometry, local flange depths, and degenerate zero-area contours as needed for the selected service.
    - STEP/STP: measure parseability, units hints, solid/surface signals, bounding box, shell/body signals, validity, sheet thickness where available, cylindrical bend-face radii where bending is in scope, and limitations as needed for the selected service.
    - Keep each inspection helper fact-only. It may report measurements, parse errors, and limitations, but it must not emit pass/fail/readiness statuses.
@@ -65,7 +62,7 @@ Compare only trustworthy pairs of evidence.
 - For DXF units, inspect `$INSUNITS`, header extents, measured bounds, and order context together. If `$INSUNITS` is missing, unsupported, or not one of the SendCutSend guide's expected DXF unit codes (`1` inches or `4` mm), report a unit/scale error and recommend re-exporting or confirming units before applying size-, flange-, or material-specific comparisons. Do not silently rescale geometry or use an uncertain scale to issue material-specific pass/fail checks.
 - For 2D files with bend lines, check flange length locally along every bend line. Measure the nearest cut/free edge on both sides of each bend at each span or sample point, including notches, slots, gaps, split tabs, and cutouts that interrupt the bend span or create a local free edge. Compare the minimum local flange depth to the selected SKU's `bending_specs.min_flange_length_before_bend` and `bending_specs.min_flange_length_after_bend`. Do not apply flange-length limits to ordinary enclosed holes or interior cutouts unless a cited source gives a hole-to-bend or feature-to-bend rule for that service; report those separately with centerline-to-bend or edge-to-bend measurements as the cited rule requires. Do not treat nearby bend-adjacent cut geometry as only corner relief unless the remaining local flange still passes the flange-length minimum. If any local flange depth is below the SKU minimum, report `❌ fail`. Do not rely on aggregate source-level values when exported geometry has local cutouts, interrupted bends, split bend segments, reliefs, tabs, or unsupported regions.
 - Keep bend findings separate by physical cause. Do not collapse bend-adjacent geometry into a generic flange failure. Report distinct rows for minimum flange/contact length errors, bend line or die-area geometry crossings, insufficient bend contact/support from nearby free edges or cutouts, bend lines that do not span the bent region, split/common-axis bend segments, and cut geometry touching or crossing bend lines. If a SendCutSend source does not expose the exact die-area/contact threshold, cite the measured file fact as direct file inspection and mark the source-limited comparison explicitly.
-- For STEP/STP bent parts, inspect bend radii when the model contains sheet-metal bend geometry or the intended service includes bending. Extract cylindrical or toroidal bend faces and their radii with `the cad-generation-skill (load via skill tool)`/`build123d`/OCP where possible, group repeated bend radii, and compare them to the selected SKU's `bending_specs.effective_bend_radius` or `bending_specs.bend_radius`. If the selected material/SKU is unknown, report the measured bend-radius set and ask for material/thickness before readiness verdicts. If measured radii conflict with the selected SKU tooling radius, report a bend-radius mismatch error.
+- For STEP/STP bent parts, inspect bend radii when the model contains sheet-metal bend geometry or the intended service includes bending. Extract cylindrical or toroidal bend faces and their radii with `cad-generation-skill` (install-if-missing sibling per router)/`build123d`/OCP where possible, group repeated bend radii, and compare them to the selected SKU's `bending_specs.effective_bend_radius` or `bending_specs.bend_radius`. If the selected material/SKU is unknown, report the measured bend-radius set and ask for material/thickness before readiness verdicts. If measured radii conflict with the selected SKU tooling radius, report a bend-radius mismatch error.
 
 Report with restrained status labels:
 
@@ -120,9 +117,9 @@ Check for:
 
 Include the file path, assumed service, material/order context, source files checked with access date, inspected geometry facts, findings ordered by practical impact, and specific next edits. In the findings table, include a `Rule source` column with Markdown links to the source URL plus the specific JSON field path or guide section used for that row. If a row is based only on direct file inspection and has no external rule, say `Direct file inspection`; do not leave the source blank. Do not call a file "SendCutSend ready" unless every required cited check either passes or is explicitly outside the selected service.
 
-Use `references/report-template.md` when a structured report would help.
+Use `sendcutsend/report-template.md` when a structured report would help.
 
 ## References
 
-- Official source selection: `references/official-sources.md`
-- Report shape: `references/report-template.md`
+- Official source selection: `sendcutsend/official-sources.md`
+- Report shape: `sendcutsend/report-template.md`

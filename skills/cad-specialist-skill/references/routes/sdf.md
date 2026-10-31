@@ -1,13 +1,8 @@
----
-name: cad-sdf-skill
-description: >-
-  Generate and validate SDFormat .sdf models and worlds for Gazebo — links,
-  joints, poses, sensors, plugins, physics. Not for signed-distance-field
-  geometry.
-license: Apache-2.0
-compatibility: opencode
-category: CAD & Hardware Design
----
+# Route: SDF — SDFormat models & worlds (.sdf)
+
+**Load when:** the deliverable is an SDFormat document or `gen_sdf()` source (Gazebo/libsdformat). NOT for signed-distance-field geometry.
+**Skip when:** the task is URDF/SRDF robot description work (Routes: URDF, SRDF).
+**Route dir:** `sdf/` beside this file — read on demand.
 
 # SDF
 
@@ -26,7 +21,7 @@ This skill is for **SDFormat**, not signed-distance-field geometry.
 3. Decide document kind: model-level SDF, world-level SDF, or model-in-world. Prefer model-level SDF for reusable robot/object exports.
 4. Use SI units unless the target explicitly requires otherwise: meters, kilograms, seconds, radians.
 5. Prefer `version="1.12"` for new outputs unless the target consumer constrains the version.
-6. Establish the design ledger before writing poses, frames, joint axes, mesh scales, inertials, sensors, or plugins. Use `references/design-ledger.md` and `references/llm-guardrails.md`.
+6. Establish the design ledger before writing poses, frames, joint axes, mesh scales, inertials, sensors, or plugins. Use `sdf/design-ledger.md` and `sdf/llm-guardrails.md`.
 7. Do not infer spatial transforms from visual impression alone. Derive poses, axes, scale, mass, inertia, and frame names from upstream source data, drawings, simulator documentation, measured values, or explicit assumptions.
 8. Prefer helper functions and named constants over large XML string literals. Hidden numbers are a common SDF failure mode.
 9. Generate only explicit targets with `scripts/sdf` or the repository's existing SDF launcher. Do not run directory-wide generation.
@@ -40,13 +35,15 @@ Use this skill for SDFormat outputs and generators. Do not use it for signed-dis
 
 ## CAD Viewer Handoff
 
-After completing SDF work that creates or modifies a `.sdf`, you must ALWAYS hand the explicit file path to `the cad-viewer-skill (load via skill tool)` when that skill is installed. `the cad-viewer-skill (load via skill tool)` must start CAD Viewer if it is not already running and return link(s) to the relevant created or updated file(s); if `the cad-viewer-skill (load via skill tool)` is unavailable or startup fails, report that instead of silently omitting the handoff.
+Per the router viewer-handoff rule: hand the created/updated file path(s) to the
+`cad-viewer-skill` sibling (install-if-missing). Report when it is unavailable —
+never silently omit the handoff.
 
 ## Workflow
 
 1. Locate the `gen_sdf()` source and intended `.sdf` output.
 2. Read or create the design ledger.
-3. Read `references/frame-semantics.md` before editing any `<pose>`, `<frame>`, joint axis, `relative_to`, `expressed_in`, nested scope, sensor frame, or plugin frame.
+3. Read `sdf/frame-semantics.md` before editing any `<pose>`, `<frame>`, joint axis, `relative_to`, `expressed_in`, nested scope, sensor frame, or plugin frame.
 4. Edit the generator source, not generated XML.
 5. Use optional builder helpers when they make the generated structure clearer; raw ElementTree is still allowed.
 6. Regenerate the explicit target.
@@ -56,7 +53,7 @@ After completing SDF work that creates or modifies a `.sdf`, you must ALWAYS han
 
 ## Commands
 
-Run with the project or workspace Python environment. Treat `python` in examples as an interpreter placeholder; if bare `python` is unavailable, substitute `python3`, a project virtualenv interpreter, or the configured interpreter path.
+Run with the project or workspace Python environment (interpreter placeholder rule: router shared spine).
 
 ```bash
 python scripts/sdf path/to/source.py
@@ -86,7 +83,7 @@ Checks run:
 - bundled SDF validation: passed
 - gz sdf --check: skipped, gz not installed
 - simulator load: skipped, target simulator unavailable
-- viewer handoff: `the cad-viewer-skill (load via skill tool)` link returned
+- viewer handoff: `cad-viewer-skill` sibling (install-if-missing) link returned
 Assumptions:
 - Assumed mesh units are meters.
 - Assumed lidar frame is coincident with lidar_link.
@@ -96,15 +93,15 @@ Risks:
 
 ## References
 
-- Generation command: `references/gen-sdf.md`
-- Generator contract: `references/generator-contract.md`
-- SDF workflow: `references/sdf-workflow.md`
-- Builder helpers: `references/builder-helpers.md`
-- LLM guardrails: `references/llm-guardrails.md`
-- Design ledger: `references/design-ledger.md`
-- Frame semantics: `references/frame-semantics.md`
-- Validation scope: `references/validation.md`
-- Smoke tests: `references/smoke-tests.md`
-- Interoperability notes: `references/interoperability.md`
-- Examples: `references/examples.md`
-- Runtime notes and current limitations: `references/implementation-notes.md`
+- Generation command: `sdf/gen-sdf.md`
+- Generator contract: `sdf/generator-contract.md`
+- SDF workflow: `sdf/sdf-workflow.md`
+- Builder helpers: `sdf/builder-helpers.md`
+- LLM guardrails: `sdf/llm-guardrails.md`
+- Design ledger: `sdf/design-ledger.md`
+- Frame semantics: `sdf/frame-semantics.md`
+- Validation scope: `sdf/validation.md`
+- Smoke tests: `sdf/smoke-tests.md`
+- Interoperability notes: `sdf/interoperability.md`
+- Examples: `sdf/examples.md`
+- Runtime notes and current limitations: `sdf/implementation-notes.md`
