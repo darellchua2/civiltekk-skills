@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [15.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v14.0.0...v15.0.0) (2026-10-31)
+
+### ⚠ BREAKING CHANGES
+
+* consolidate 8 GSAP animation skills into gsap-skill router (#687) (#692)
+
+### Features
+
+* consolidate 8 GSAP animation skills into gsap-skill router ([#687](https://github.com/darellchua2/civiltekk-skills/issues/687)) ([#692](https://github.com/darellchua2/civiltekk-skills/issues/692)) ([899ec27](https://github.com/darellchua2/civiltekk-skills/commit/899ec270205785c7653b3d21a0f120b9d3a7660e))
+
 ## [14.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v13.0.0...v14.0.0) (2026-10-31)
 
 ### ⚠ BREAKING CHANGES
