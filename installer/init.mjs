@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// installer/init.mjs — opencode-init
+// installer/init.mjs — civiltekk-init (compat: opencode-init)
 //
 // Project-scoped selective installer. Copies a curated subset of this repo's
 // agents into a target project's .opencode/ and skills into the project's
@@ -9,21 +9,21 @@
 // dependencies.
 //
 // Read modes (pure, no writes):
-//   opencode-init --list agents [--category X]     # JSON of agents
-//   opencode-init --list skills [--category X]     # JSON of skills
-//   opencode-init --list categories                # unique categories + counts
-//   opencode-init --list mcps                      # MCP servers from opencode.json
-//   opencode-init --list presets                   # preset summaries
-//   opencode-init --describe <name>                # full agent/skill entry + deps
-//   opencode-init --expand <preset>                # full resolved install set
-//   opencode-init --help
+//   civiltekk-init --list agents [--category X]     # JSON of agents
+//   civiltekk-init --list skills [--category X]     # JSON of skills
+//   civiltekk-init --list categories                # unique categories + counts
+//   civiltekk-init --list mcps                      # MCP servers from opencode.json
+//   civiltekk-init --list presets                   # preset summaries
+//   civiltekk-init --describe <name>                # full agent/skill entry + deps
+//   civiltekk-init --expand <preset>                # full resolved install set
+//   civiltekk-init --help
 //
 // Install (writes <project>/.opencode/{agents,opencode.json} + <project>/.agents/skills/):
-//   opencode-init --project ./myapp --preset review --yes
-//   opencode-init --project . --agents code-review-subagent --mcps codegraph --yes
-//   opencode-init ... --dry-run        # print manifest, write nothing
-//   opencode-init ... --prune          # remove previously-installed entries not in the new set
-//   opencode-init prune [--dry-run]    # remove manifest-tracked entries whose names left the registry (#610)
+//   civiltekk-init --project ./myapp --preset review --yes
+//   civiltekk-init --project . --agents code-review-subagent --mcps codegraph --yes
+//   civiltekk-init ... --dry-run        # print manifest, write nothing
+//   civiltekk-init ... --prune          # remove previously-installed entries not in the new set
+//   civiltekk-init prune [--dry-run]    # remove manifest-tracked entries whose names left the registry (#610)
 //
 // Config merge semantics (verified, opencode 1.18.11): project .opencode/opencode.json
 // is read and has HIGHER precedence than <project>/opencode.json; it MERGES with the
@@ -555,7 +555,7 @@ export async function writeInstall(sel, opts, reg, depMap) {
   const ocFile = join(ocDir, "opencode.json"); // Phase 0.1: .opencode/opencode.json (highest precedence)
   const modelsFile = join(ocDir, "models.json");
   const agentsMd = join(project, "AGENTS.md");
-  const manifestFile = join(targetRoot, ".opencode-init.manifest.json");
+  const manifestFile = join(targetRoot, ".civiltekk-init.manifest.json");
   const dry = !!opts.dryRun;
   const force = !!opts.force;
 
@@ -615,7 +615,7 @@ export async function writeInstall(sel, opts, reg, depMap) {
   const ocConflict = ocProject && existsSync(ocFile) && !(prevManifest.configPath === ocFile);
   const manifest = {
     generatedAt: new Date().toISOString(),
-    tool: "opencode-init",
+    tool: "civiltekk-init",
     ...(ocProject ? { configPath: ocFile, modelsPath: modelsFile, agentsMd } : {}),
     agents: sel.agents,
     skills: sel.skills,
@@ -667,7 +667,7 @@ export async function writeInstall(sel, opts, reg, depMap) {
   if (ocProject) {
     // opencode.json
     if (ocConflict && !force) {
-      console.error(`conflict (skipped, use --force): existing ${relative(project, ocFile)} not written by opencode-init`);
+      console.error(`conflict (skipped, use --force): existing ${relative(project, ocFile)} not written by civiltekk-init`);
       manifest.configPath = prevManifest.configPath ?? null; // claim only what we wrote (#412)
     } else if (!existsSync(ocFile) || force || prevManifest.configPath === ocFile) {
       const oc = await generateOpenencodeJson(sel, project);
@@ -679,11 +679,11 @@ export async function writeInstall(sel, opts, reg, depMap) {
     // conflict-gated like opencode.json: never clobber a hand-authored file (#412)
     const modelsConflict = existsSync(modelsFile) && !(prevManifest.modelsPath === modelsFile);
     if (modelsConflict && !force) {
-      console.error(`conflict (skipped, use --force): existing ${relative(project, modelsFile)} not written by opencode-init`);
+      console.error(`conflict (skipped, use --force): existing ${relative(project, modelsFile)} not written by civiltekk-init`);
       manifest.modelsPath = prevManifest.modelsPath ?? null; // claim only what we wrote (#412)
     } else if (!existsSync(modelsFile) || force || prevManifest.modelsPath === modelsFile) {
       const usedTiers = [...new Set(sel.agents.map((stem) => reg.agents.find((x) => x.stem === stem)?.tier).filter(Boolean))];
-      const modelsMap = { "$comment": "Generated by opencode-init. Tier->model map for the agents installed in this project.", tiers: {} };
+      const modelsMap = { "$comment": "Generated by civiltekk-init. Tier->model map for the agents installed in this project.", tiers: {} };
       for (const t of usedTiers) modelsMap.tiers[t] = tierModels[t] || null;
       await writeFile(modelsFile, JSON.stringify(modelsMap, null, 2) + "\n", "utf8");
     }
@@ -799,7 +799,7 @@ export function injectModelLine(content, modelValue) {
 function generateAgentsMd(sel, reg) {
   const agentByName = new Map(reg.agents.map((a) => [a.stem, a]));
   const lines = ["# Project OpenCode Instructions", ""];
-  lines.push("> Generated by `opencode-init`. Trimmed to the installed agent/skill subset.");
+  lines.push("> Generated by `civiltekk-init`. Trimmed to the installed agent/skill subset.");
   lines.push("");
   lines.push("## Installed agents");
   for (const stem of sel.agents) {
@@ -855,9 +855,9 @@ export async function doPrune(sel, opts) {
     console.error(`note: --target ${opts.target} has no project destination; --prune uses opencode target.`);
   const agentsDir = join(project, pCfg.projectAgentsDir);
   const skillsDir = join(project, pCfg.projectSkillsDir);
-  const manifestFile = join(dirname(agentsDir), ".opencode-init.manifest.json");
+  const manifestFile = join(dirname(agentsDir), ".civiltekk-init.manifest.json");
   const prev = await readJsonMaybe(manifestFile);
-  if (!prev) die("no manifest found — nothing to prune (opencode-init has not installed here).");
+  if (!prev) die("no manifest found — nothing to prune (civiltekk-init has not installed here).");
   const keep = { agents: new Set(sel.agents), skills: new Set(sel.skills) };
   const removed = [];
   for (const stem of (prev.agents || [])) {
@@ -1901,7 +1901,7 @@ async function main() {  const opts = parseArgs(process.argv.slice(2));
 
   // prune-only mode
   if (opts.prune && !opts.preset && !opts.agents && !opts.skills) {
-    // prune against an empty selection = remove everything opencode-init installed
+    // prune against an empty selection = remove everything civiltekk-init installed
     const sel = resolveSelection({}, reg, depMap);
     await doPrune(sel, opts);
     return;
@@ -2086,8 +2086,8 @@ FLAGS
   --category <name>    filter for --list
   --yes                non-interactive (required for install without a TTY)
   --dry-run            preview the install manifest, write nothing
-  --force              overwrite conflicting files opencode-init didn't write
-  --prune              remove opencode-init-owned entries absent from the new set
+  --force              overwrite conflicting files civiltekk-init didn't write
+  --prune              remove civiltekk-init-owned entries absent from the new set
   --permit             (user scope) backup opencode.json + merge permissions-array rules (skill allows + build's subagent rules)
   --no-deps            (add) skip transitive dependency resolution
   --target <t>         (add) install target: opencode (default), auto (detect installed harnesses), claude, agents (shared ~/.agents/), kimi, kilo, zcode, copilot, or both (--format is a deprecated alias)

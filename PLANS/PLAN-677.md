@@ -137,20 +137,23 @@ Phase order: P1 → P2 (listings read pack data); P3, P4 independent; P5 after P
     — **Consumers affected:** none
     — **Done:** tests/test_install_wizard.bats 8/8 (shape, defaults≡deploy defaults, non-TTY abort+no-write, THE equivalence pin plan≡flags incl. step count, unknown-pack gate, schema/mode rejection, packs-dir-derived catalog) + parse_arguments 4 new + menu_multipick 3 new; files: tests/test_install_wizard.bats, tests/parse_arguments.bats, tests/test_menu_multipick.bats; fixes: bats set -e vs expected-nonzero exits → run+status
 
-### Phase 6: CivilTekk Skills Setup branding + shim rename
+### Phase 6: CivilTekk Skills Setup branding + shim rename ✅
 
-- [ ] **6.1** Rename deployed shims: `setup_opencode_setup_symlink` / `setup_opencode_init_symlink` install `civiltekk-setup` / `civiltekk-init` as primary AND refresh `opencode-setup` / `opencode-init` as compat symlinks to the same targets (idempotent refresh logic reused); PATH warnings mention the new names
+- [x] **6.1** Rename deployed shims: `setup_opencode_setup_symlink` / `setup_opencode_init_symlink` install `civiltekk-setup` / `civiltekk-init` as primary AND refresh `opencode-setup` / `opencode-init` as compat symlinks to the same targets (idempotent refresh logic reused); PATH warnings mention the new names
     — **Why:** deployed API matches the project name without breaking existing scripts/muscle memory
     — **Done when:** after a dry-run preview, planned `ln -sf` lines name all four links; on a real run both names resolve to the same script via `readlink -f`
     — **Consumers affected:** README (P7), `tests/test_setup_symlinks.bats` (if present) / symlink assertions in deploy tests
-- [ ] **6.2** Rebrand user-facing strings: TUI wizard header, setup.sh banners + mode-completion lines, `show_help` header block, `print_summary`/`print_next_steps` headers → "CivilTekk Skills Setup"; `deploy/setup.ps1` + `setup.cmd` help text rebranded; upstream-product references (`@opencode/cli`, `opencode --version`, `~/.config/opencode/`) stay verbatim; log filename `~/.opencode-setup.log` unchanged
+    — **Done:** civiltekk-setup/civiltekk-init installed primary + opencode-setup/opencode-init compat (4 symlinks, idempotent loop); sandbox-verified all four resolve to the same scripts; PATH warnings teach the new names; plan-step labels updated; files: deploy/setup.sh; fixes: none
+- [x] **6.2** Rebrand user-facing strings: TUI wizard header, setup.sh banners + mode-completion lines, `show_help` header block, `print_summary`/`print_next_steps` headers → "CivilTekk Skills Setup"; `deploy/setup.ps1` + `setup.cmd` help text rebranded; upstream-product references (`@opencode/cli`, `opencode --version`, `~/.config/opencode/`) stay verbatim; log filename `~/.opencode-setup.log` unchanged
     — **Why:** configurator identity ≠ upstream runtime; rename-sweep must cover the ps1/cmd launchers and root-adjacent surfaces, not just setup.sh
     — **Done when:** `grep -rn "OpenCode Configuration Setup\|OpenCode Skills Deployment" deploy/` = 0; `bats tests/test_help_parity.bats tests/test_setup_ps1_vars.bats` green (branding only — no new vars/pins in ps1)
     — **Consumers affected:** `tests/test_help_parity.bats` (expected-string updates)
-- [ ] **6.3** Root-doc spelling sweep: README, `deploy/setup.ps1` comments, `installer/init.mjs` tips (`opencode-setup` → `civiltekk-setup`, `opencode-init` → `civiltekk-init` with one compat note)
+    — **Done:** rebrand: file header, log start/complete lines, help header, skills-deployment banner, setup banner → CivilTekk Skills Setup/Deployment; 'OpenCode CLI Updater' banner stays (upstream product, factual); ps1/cmd already neutral (thin launcher, no branding strings); wizard title set to 'CivilTekk Skills Setup — deploy mode'; files: deploy/setup.sh, deploy/tui.mjs; fixes: none
+- [x] **6.3** Root-doc spelling sweep: README, `deploy/setup.ps1` comments, `installer/init.mjs` tips (`opencode-setup` → `civiltekk-setup`, `opencode-init` → `civiltekk-init` with one compat note)
     — **Why:** directory-scoped renames miss root docs that teach the spelling (repo learning)
     — **Done when:** `grep -rn "opencode-setup\|opencode-init" README.md deploy/ installer/ | grep -v "compat\|legacy"` returns only intentional compat mentions
     — **Consumers affected:** none
+    — **Done:** installer/init.mjs swept: 24 opencode-init mentions → civiltekk-init + compat note in header; setup.sh plan labels swept; deploy/+installer/ mentions now compat-only; README sweep lands in Phase 7 (its section restructure); files: installer/init.mjs, deploy/setup.sh; fixes: sed pattern mismatch on // comments → global replace + compat-note restore
 
 ### Phase 7: README + install-assistant docs
 
@@ -181,6 +184,9 @@ GATE phase4 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — test_agent
 
 GATE phase5 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — wizard 8/8, parse 23, menu 27, headless+dry-run+help+deploy_delegate all green
 LOG deviation 5.1: per-item picker step deferred — `--select` remains the per-item surface (wizard composes with it via CLI flags); plan JSON schema omits `items` (v1 scope trim, YAGNI)
+
+GATE phase6 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — plan_executor/setup_shim/help_parity/ps1_vars/deploy_delegate green; dual-shim sandbox-verified (4/4 links)
+LOG: smoke-test harness wrote real ~/.local/bin symlinks pointing at the worktree — restored all four to the main checkout (durable state)
 
 ## Technical Notes
 

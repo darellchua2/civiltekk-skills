@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# OpenCode Configuration Setup Script
+# CivilTekk Skills Setup — OpenCode/claude-skills configurator deploy
 #
 # Copyright 2026 CivilTekk OpenCode & Claude Skills Contributors
 #
@@ -393,7 +393,7 @@ init_logging() {
         touch "$LOG_FILE" 2>/dev/null || true
     fi
 
-    log "INFO" "=== OpenCode Setup Started at $(date) ==="
+    log "INFO" "=== CivilTekk Skills Setup Started at $(date) ==="
     log "INFO" "Script version: ${SCRIPT_VERSION}"
     log "INFO" "User: ${USER:-${LOGNAME:-unknown}}"
     log "INFO" "Working directory: ${PWD}"
@@ -586,7 +586,7 @@ trap 'echo ""; log_warn "Setup interrupted by user"; exit 130' INT
 show_help() {
     cat << EOF
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    OpenCode Configuration Setup v${SCRIPT_VERSION}
+                    CivilTekk Skills Setup v${SCRIPT_VERSION}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 USAGE:
@@ -3902,8 +3902,8 @@ build_plan() {
             PLAN_STEPS+=("true|agents|Deploy agents|deploy_agents")
             PLAN_STEPS+=("true|plugins|Deploy plugins|deploy_plugins")
         fi
-        PLAN_STEPS+=("false|init-symlink|Install opencode-init shim|setup_opencode_init_symlink")
-        PLAN_STEPS+=("false|setup-symlink|Install opencode-setup shim|setup_opencode_setup_symlink")
+        PLAN_STEPS+=("false|init-symlink|Install civiltekk-init shim (+opencode-init compat)|setup_opencode_init_symlink")
+        PLAN_STEPS+=("false|setup-symlink|Install civiltekk-setup shim (+opencode-setup compat)|setup_opencode_setup_symlink")
         PLAN_STEPS+=("false|learnings|Set up learnings directory|setup_learnings_dir")
     else
         PLAN_MODE="full"
@@ -3932,8 +3932,8 @@ build_plan() {
             PLAN_STEPS+=("true|agents|Deploy agents|deploy_agents")
             PLAN_STEPS+=("true|plugins|Deploy plugins|deploy_plugins")
         fi
-        PLAN_STEPS+=("false|init-symlink|Install opencode-init shim|setup_opencode_init_symlink")
-        PLAN_STEPS+=("false|setup-symlink|Install opencode-setup shim|setup_opencode_setup_symlink")
+        PLAN_STEPS+=("false|init-symlink|Install civiltekk-init shim (+opencode-init compat)|setup_opencode_init_symlink")
+        PLAN_STEPS+=("false|setup-symlink|Install civiltekk-setup shim (+opencode-setup compat)|setup_opencode_setup_symlink")
         PLAN_STEPS+=("false|learnings|Set up learnings directory|setup_learnings_dir")
         PLAN_STEPS+=("false|shell-vars|Set up shell variables|setup_shell_vars")
     fi
@@ -5003,68 +5003,78 @@ print_next_steps() {
 # MAIN EXECUTION
 ################################################################################
 
-# Setup the opencode-init symlink (project-scoped selective installer CLI).
-# Symlinks <repo>/installer/init.mjs -> ~/.local/bin/opencode-init so the CLI is on
-# PATH and invocable from any project (the LLM uses it via the routing rule in
-# AGENTS.md). Idempotent: refreshes a stale link, skips a correct one. Additive —
-# does not touch any other setup.sh behavior.
+# Setup the civiltekk-init symlink (project-scoped selective installer CLI).
+# Symlinks <repo>/installer/init.mjs -> ~/.local/bin/civiltekk-init so the CLI
+# is on PATH and invocable from any project (the LLM uses it via the routing
+# rule in AGENTS.md); opencode-init stays as a compat shim (#677). Idempotent:
+# refreshes stale links, skips correct ones. Additive — does not touch any
+# other setup.sh behavior.
 setup_opencode_init_symlink() {
     local init_src="${REPO_DIR}/installer/init.mjs"
     if [ ! -f "$init_src" ]; then
-        log_warn "opencode-init source not found at ${init_src}; skipping symlink"
+        log_warn "civiltekk-init source not found at ${init_src}; skipping symlink"
         return 0
     fi
     local user_bin="${HOME}/.local/bin"
     # Dry-run safe (#469, same class as #467): bare mkdir/ln here would really
     # create the PATH shim during a preview.
     run_cmd mkdir -p "$user_bin"
-    local link="${user_bin}/opencode-init"
-    # Refresh if missing or pointing elsewhere; leave alone if already correct.
-    if [ -L "$link" ] && [ "$(readlink -f "$link" 2>/dev/null)" = "$(readlink -f "$init_src" 2>/dev/null)" ]; then
-        log_info "opencode-init symlink already correct at ${link}"
-    else
-        run_cmd ln -sf "$init_src" "$link"
-        log_success "opencode-init installed to ${link}"
-    fi
+    # Primary name + compat shim (#677): both resolve to the same script so
+    # existing scripts and docs referencing opencode-init keep working.
+    local link compat
+    link="${user_bin}/civiltekk-init"
+    compat="${user_bin}/opencode-init"
+    for target in "$link" "$compat"; do
+        if [ -L "$target" ] && [ "$(readlink -f "$target" 2>/dev/null)" = "$(readlink -f "$init_src" 2>/dev/null)" ]; then
+            log_info "$(basename "$target") symlink already correct at ${target}"
+        else
+            run_cmd ln -sf "$init_src" "$target"
+            log_success "$(basename "$target") installed to ${target}"
+        fi
+    done
     # PATH check (mirrors the markitdown pattern ~line 2587)
     case ":${PATH}:" in
         *":${user_bin}:"*) ;;
-        *) log_warn "${user_bin} is not on your PATH. Add it to your shell rc to use opencode-init:" \
+        *) log_warn "${user_bin} is not on your PATH. Add it to your shell rc to use civiltekk-init:" \
            && echo "    export PATH=\"${user_bin}:\$PATH\"" >&2 ;;
     esac
     log_info "Tip: individual skills/agents can also be installed via: npx github:darellchua2/civiltekk-opencode-claude-skills add <name>"
 }
 
-# Setup the opencode-setup symlink (full-deploy entrypoint shim).
-# Symlinks <repo>/deploy/setup.sh -> ~/.local/bin/opencode-setup so the full
+# Setup the civiltekk-setup symlink (full-deploy entrypoint shim).
+# Symlinks <repo>/deploy/setup.sh -> ~/.local/bin/civiltekk-setup so the full
 # configurator deploy is on PATH and runnable from any directory (safe only
-# because the SCRIPT_DIR resolution above follows symlinks). Idempotent:
-# refreshes a stale link, skips a correct one. Additive — does not touch any
-# other setup.sh behavior.
+# because the SCRIPT_DIR resolution above follows symlinks); opencode-setup
+# stays as a compat shim (#677). Idempotent: refreshes stale links, skips
+# correct ones. Additive — does not touch any other setup.sh behavior.
 setup_opencode_setup_symlink() {
     local setup_src="${REPO_DIR}/deploy/setup.sh"
     if [ ! -f "$setup_src" ]; then
-        log_warn "setup.sh source not found at ${setup_src}; skipping symlink"
+        log_warn "civiltekk-setup source not found at ${setup_src}; skipping symlink"
         return 0
     fi
     local user_bin="${HOME}/.local/bin"
     # Dry-run safe (#469, same class as #467): run_cmd only logs in preview.
     run_cmd mkdir -p "$user_bin"
-    local link="${user_bin}/opencode-setup"
-    # Refresh if missing or pointing elsewhere; leave alone if already correct.
-    if [ -L "$link" ] && [ "$(readlink -f "$link" 2>/dev/null)" = "$(readlink -f "$setup_src" 2>/dev/null)" ]; then
-        log_info "opencode-setup symlink already correct at ${link}"
-    else
-        run_cmd ln -sf "$setup_src" "$link"
-        log_success "opencode-setup installed to ${link}"
-    fi
-    # PATH check (mirrors the opencode-init pattern ~line 4788)
+    # Primary name + compat shim (#677).
+    local link compat
+    link="${user_bin}/civiltekk-setup"
+    compat="${user_bin}/opencode-setup"
+    for target in "$link" "$compat"; do
+        if [ -L "$target" ] && [ "$(readlink -f "$target" 2>/dev/null)" = "$(readlink -f "$setup_src" 2>/dev/null)" ]; then
+            log_info "$(basename "$target") symlink already correct at ${target}"
+        else
+            run_cmd ln -sf "$setup_src" "$target"
+            log_success "$(basename "$target") installed to ${target}"
+        fi
+    done
+    # PATH check (mirrors the civiltekk-init pattern)
     case ":${PATH}:" in
         *":${user_bin}:"*) ;;
-        *) log_warn "${user_bin} is not on your PATH. Add it to your shell rc to use opencode-setup:" \
+        *) log_warn "${user_bin} is not on your PATH. Add it to your shell rc to use civiltekk-setup:" \
            && echo "    export PATH=\"${user_bin}:\$PATH\"" >&2 ;;
     esac
-    log_info "Tip: full redeploys from any directory: opencode-setup"
+    log_info "Tip: full redeploys from any directory: civiltekk-setup (compat: opencode-setup)"
 }
 
 main() {
@@ -5081,7 +5091,7 @@ main() {
     # own banners inside their steps).
     case "$PLAN_MODE" in
         skills-only)
-            echo "=== OpenCode Skills Deployment v${SCRIPT_VERSION} ==="
+            echo "=== CivilTekk Skills Deployment v${SCRIPT_VERSION} ==="
             echo ""
             ;;
         update)
@@ -5089,7 +5099,7 @@ main() {
             echo ""
             ;;
         full)
-            echo "=== OpenCode Configuration Setup v${SCRIPT_VERSION} ==="
+            echo "=== CivilTekk Skills Setup v${SCRIPT_VERSION} ==="
             echo ""
             ;;
     esac
@@ -5233,7 +5243,7 @@ main() {
             ;;
     esac
 
-    log "INFO" "=== OpenCode Setup Completed at $(date) ==="
+    log "INFO" "=== CivilTekk Skills Setup Completed at $(date) ==="
 
     # Truthful exit (#470): non-zero iff a critical step failed.
     if [ -n "$PLAN_FAILED_CRITICAL" ]; then

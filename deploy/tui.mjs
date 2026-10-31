@@ -111,7 +111,7 @@ export async function flowInstallWizard(_parsed) {
   }
 
   // Step: deploy mode
-  const mode = await singleSelect("Deploy mode", [
+  const mode = await singleSelect("CivilTekk Skills Setup — deploy mode", [
     { label: "Skills-only (recommended) — skills + agents, no dependency checks", value: "skills-only" },
     { label: "Quick — config + skills only", value: "quick" },
     { label: "Full — API keys, Node.js, OpenCode, the works", value: "full" },
