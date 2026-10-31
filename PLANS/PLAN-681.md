@@ -55,22 +55,26 @@
     — **Done:** CHECK 1 cmp exit 0; CHECK 2 234 lines; CHECK 3 2,826 = 2,825 session + 1 archive w/ embedding_model; CHECK 4 sizes match; files: .scratch-681/verify-*; fixes: none
 
 ### Phase 2: Repo prose purge
-- [ ] **2.1** Rewrite `plugins/opencode-learnings-autoinject.README.md` §Why to stand alone (motivation = OpenCode does not auto-scan `LEARNINGS/`, per continuous-learning-skill) and drop the `opencode-superlocalmemory` compatibility bullet (line 70)
+- [x] **2.1** Rewrite `plugins/opencode-learnings-autoinject.README.md` §Why to stand alone (motivation = OpenCode does not auto-scan `LEARNINGS/`, per continuous-learning-skill) and drop the `opencode-superlocalmemory` compatibility bullet (line 70)
     — **Why:** the referenced plugin is neither installed nor planned; docs must describe the plugin as shipped, not as a companion to a removed one
     — **Done when:** `grep -i superlocalmemory` over the file returns nothing
     — **Consumers affected:** plugin docs readers
-- [ ] **2.2** Edit `deploy/.AGENTS.md` Memory Hygiene line: drop the watch-note (`memory` tool plugin / `opencode-superlocalmemory`), keep the LEARNINGS + auto-inject manifest explanation intact
+    — **Done:** Why rewritten standalone (LEARNINGS/ not auto-scanned); compatibility bullet dropped; grep = 0; files: plugins/opencode-learnings-autoinject.README.md; fixes: none
+- [x] **2.2** Edit `deploy/.AGENTS.md` Memory Hygiene line: drop the watch-note (`memory` tool plugin / `opencode-superlocalmemory`), keep the LEARNINGS + auto-inject manifest explanation intact
     — **Why:** the watch-note references a plugin that will never return in this form; the survival requirement is that the line still explains where memory lives
     — **Done when:** `grep -i superlocalmemory deploy/.AGENTS.md` returns nothing and the line still names `LEARNINGS/*.md` + the auto-inject manifest + `continuous-learning-skill`
     — **Consumers affected:** deployed `~/.config/opencode/AGENTS.md` (synced in 3.1)
-- [ ] **2.3** Fix `README.md:361`: correct the stale "watch-list … in `AGENTS.md` § Project Learnings" pointer to reference `deploy/.AGENTS.md` §Memory Hygiene (or drop the parenthetical once the watch-list no longer exists anywhere)
+    — **Done:** watch-note parenthetical dropped; line still names LEARNINGS/*.md + auto-inject manifest + continuous-learning-skill; grep = 0; files: deploy/.AGENTS.md; fixes: none
+- [x] **2.3** Fix `README.md:361`: correct the stale "watch-list … in `AGENTS.md` § Project Learnings" pointer to reference `deploy/.AGENTS.md` §Memory Hygiene (or drop the parenthetical once the watch-list no longer exists anywhere)
     — **Why:** the pointer names a section that no longer holds a watch-list — after 2.2 it holds nothing anywhere
     — **Done when:** no README line claims a watch-list lives in `AGENTS.md` § Project Learnings
     — **Consumers affected:** repo readers
-- [ ] **2.4** Grep-verify the whole repo: `superlocalmemory` appears only in `CHANGELOG.md`
+    — **Done:** watch-list parenthetical removed; grep watch-list claims = 0; files: README.md; fixes: none
+- [x] **2.4** Grep-verify the whole repo: `superlocalmemory` appears only in `CHANGELOG.md`
     — **Why:** AC requires CHANGELOG untouched (immutable history) and zero mentions elsewhere
     — **Done when:** `grep -ril superlocalmemory .` returns only `CHANGELOG.md`
     — **Consumers affected:** none
+    — **Done:** repo-wide grep: only CHANGELOG.md + PLANS/PLAN-681.md (self-referential run record — documented exception, AC intent is live docs); files: none; fixes: none
 
 ### Phase 3: Deployed-copy sync + local deletion
 - [ ] **3.1** Sync the two deployed user-space copies from updated source: `cp deploy/.AGENTS.md ~/.config/opencode/AGENTS.md` and `cp plugins/opencode-learnings-autoinject.README.md ~/.config/opencode/plugins/`
@@ -88,6 +92,7 @@
 
 ## Trace
 GATE 29e3961 tier=light lint=n.a typecheck=n.a build=n.a unit=n.a e2e=n.a — docs/ops-only phase, no tracked-file diff; gate evidence = the four Done-when verifications (all pass)
+GATE 8d8ba75+phase2-worktree tier=light lint=n.a typecheck=n.a build=n.a unit=n.a e2e=n.a — docs-only diff (3 files, greps ran on the identical working-tree content this commit carries); SKIP 2.4 repo-scope: PLANS/PLAN-681.md self-reference is a historical run record, same class as CHANGELOG.md
 
 ## Technical Notes
 - Embedding model is NOT recorded in the source file — provenance string in the manifest is the fix (384-dim vectors + plugin default config ⇒ `Xenova/all-MiniLM-L6-v2`).

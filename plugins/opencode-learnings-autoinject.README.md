@@ -9,11 +9,10 @@ summary. The model `read()`s specific files on demand.
 
 ## Why
 
-`opencode-superlocalmemory` already auto-injects its **vector store** on the
-first message, but the git-committed `LEARNINGS/*.md` markdown files are never
-surfaced automatically. `continuous-learning-skill` documents the gap:
-*"OpenCode does NOT auto-scan LEARNINGS/ directories."* This plugin automates
-the discovery step.
+OpenCode does not auto-scan `LEARNINGS/` directories — the git-committed
+markdown files are never surfaced automatically. `continuous-learning-skill`
+documents the gap: *"OpenCode does NOT auto-scan LEARNINGS/ directories."*
+This plugin automates the discovery step.
 
 ## Toggle (enabled by default)
 
@@ -67,7 +66,6 @@ Source: LEARNINGS/ (2 project). Refresh: /learnings-refresh
 ## Compatibility
 
 - No `opencode.json` change — local plugins are glob-discovered.
-- No conflict with `opencode-superlocalmemory` (different store: markdown vs vectors; v2 hook: `session.hook("context")` vs the memory plugin's own injection).
 - Requires `LEARNINGS/` to exist in the project root; absent → skips silently.
 
 It is `.ts` (not `.mjs`) because OpenCode's local-plugin discovery glob matches only `*.{ts,js}` — an `.mjs` plugin file is silently never loaded (verified at v1.18.11; all five shipped v2 plugins are `.ts` and demonstrably load — diagnostic history: `git log --all --oneline -- research`).
