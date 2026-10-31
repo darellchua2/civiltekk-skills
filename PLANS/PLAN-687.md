@@ -26,6 +26,7 @@
 | `deploy/skill-profiles.json` lean array | router named | README primary-visible literal; skill_profiles tests | med |
 | `README.md` (category row + 6 count literals) | final roster | count-drift tests | low |
 | `AGENTS.md` isolation-contract prose (`gsap-*` naming example) | final roster | docs readers | low |
+| `THIRD_PARTY_LICENSES.md` §5 (vendored paths + 8 IDs + MIT text) | final roster | license compliance readers | low |
 | 8 old dirs (delete) | ALL consumer rewires landed (Phase 3) | registry build, counts, README | high |
 | `installer/registry.json` | all frontmatter final; producer `installer/build-registry.mjs` per roster-affecting commit (not hand-edited) | installer/init.mjs, npx installer | med |
 
@@ -65,10 +66,11 @@ Phase ordering constraint: no deletion (4.1) before every consumer is rewired (P
     — **Why:** installer surfaces must match the post-merge installable set or help parity and lean-⊆-allows tests fail
     — **Done when:** zero gsap-* IDs in the three files; JSON parses; parity test passes
     — **Consumers affected:** installer users, CI
-- [ ] **3.2** Docs + counts in one commit: README Frontend Animation row (8→1 with capability text + vendored attribution), count literals 103→96 and primary-visible 66→59, AGENTS.md naming-convention prose (`gsap-*` example → suffix-or-not wording); regenerate registry if not already current
+- [ ] **3.2** Docs + counts + attribution in one commit: README Frontend Animation row (8→1 with capability text + vendored attribution), count literals 103→96 and primary-visible 66→59, AGENTS.md naming-convention prose (`gsap-*` example → suffix-or-not wording), `THIRD_PARTY_LICENSES.md` §5 "What we vendor" repointed at the router's route files (arch-review finding); regenerate registry if not already current
     — **Why:** count drift across README/registry is the documented failure mode; AGENTS.md prose would reference vanished dirs
-    — **Done when:** count literals equal disk; no old IDs in README/AGENTS.md
-    — **Consumers affected:** docs readers, count-drift tests
+    — **Done when:** count literals equal disk; no old IDs in README/AGENTS.md/THIRD_PARTY_LICENSES.md
+    — **Consumers affected:** docs readers, count-drift tests, license compliance
+    — **Review fix:** THIRD_PARTY_LICENSES §5 added to map + this step
 
 ### Phase 4: Delete, final regen, recount
 
