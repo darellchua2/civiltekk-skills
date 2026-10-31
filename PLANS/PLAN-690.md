@@ -6,11 +6,11 @@
 
 ## Acceptance Criteria
 
-- [ ] Router ships: ≤10240 bytes, ≤50-word description, triggers preserved (clean code, code smells, refactoring, SOLID, design patterns, object design, complexity, clean architecture), decision tree, load table (7 routes), gates, zero-preload
-- [ ] 7 route files with headers; the 3 retrofitted routes (clean-code, code-smells, solid-principles) keep their `## Iteration Protocol (opt-in)` sections + protocol citations verbatim; router frontmatter carries `metadata.protocol: autoresearch-opt-in`; no old-ID path strings in fences
-- [ ] Consumers rewired: 4 subagents (allows 14→4), init.mjs:917 die() example, presets ×4 (backend/business/inline-workers/review), shipped config 7→1, lean 7→1 (59→53), README (row + counts 91→85 + history clause), 6 sibling-skill citation sites, init.bats fixture (3+ installs), test_autoresearch_protocol tier3 retarget, test_default_behavior retarget, test_installer_versions + test_help_parity verified; registry regenerated
-- [ ] 7 old dirs hard-removed; orphan-reference grep clean (PLANS/CHANGELOG excepted)
-- [ ] Full bats green; generalizer output contract (weight line, change list, residual list) in trace
+- [x] Router ships: ≤10240 bytes, ≤50-word description, triggers preserved (clean code, code smells, refactoring, SOLID, design patterns, object design, complexity, clean architecture), decision tree, load table (7 routes), gates, zero-preload
+- [x] 7 route files with headers; the 3 retrofitted routes (clean-code, code-smells, solid-principles) keep their `## Iteration Protocol (opt-in)` sections + protocol citations verbatim; router frontmatter carries `metadata.protocol: autoresearch-opt-in`; no old-ID path strings in fences
+- [x] Consumers rewired: 4 subagents (allows 14→4), init.mjs:917 die() example, presets ×4 (backend/business/inline-workers/review), shipped config 7→1, lean 7→1 (59→53), README (row + counts 91→85 + history clause), 6 sibling-skill citation sites, init.bats fixture (3+ installs), test_autoresearch_protocol tier3 retarget, test_default_behavior retarget, test_installer_versions + test_help_parity verified; registry regenerated
+- [x] 7 old dirs hard-removed; orphan-reference grep clean (PLANS/CHANGELOG excepted)
+- [x] Full bats green; generalizer output contract (weight line, change list, residual list) in trace
 
 ## Audit Baseline (measured at plan time)
 
@@ -125,22 +125,26 @@
 
 ### Phase 5: Verify + deliverables (ticket exit gate — full)
 
-- [ ] **5.1** Full bats green on the final tree
+- [x] **5.1** Full bats green on the final tree
     — **Why:** governance
     — **Done when:** exit 0, zero `not ok`
     — **Consumers affected:** repo governance, CI
-- [ ] **5.2** Generalizer verification: ≤10240 bytes, ≤50 words, rows resolve, retrofit sections intact, no old-ID strings
+    — **Done:** full bats green on 132cd1a6 (0 not-ok; TS 0); files: tests/; fixes: tier3 names + count pins + ref fixture (see LOG)
+- [x] **5.2** Generalizer verification: ≤10240 bytes, ≤50 words, rows resolve, retrofit sections intact, no old-ID strings
     — **Why:** router-pattern correctness
     — **Done when:** checks pass with measurements
     — **Consumers affected:** skill consumers
-- [ ] **5.3** Deliverables in trace: weight line, change list, residual list
+    — **Done:** router 1,861 bytes ≤10240; description 44 words ≤50; 7 rows resolve; retrofit sections intact ×3; zero old-ID strings; files: skills/code-principles-skill/; fixes: none
+- [x] **5.3** Deliverables in trace: weight line, change list, residual list
     — **Why:** ticket AC
     — **Done when:** three blocks present
     — **Consumers affected:** reviewers, ticket close
-- [ ] **5.4** Full exit gate + `tier=full` memo for the final implementation SHA
+    — **Done:** deliverables above; files: PLANS/PLAN-690.md; fixes: none
+- [x] **5.4** Full exit gate + `tier=full` memo for the final implementation SHA
     — **Why:** PR citation
     — **Done when:** memo matches final pushed SHA
     — **Consumers affected:** PR creation (Step 10a)
+    — **Done:** exit gate full on 132cd1a6, memo above; files: none; fixes: none
 
 ## Technical Notes
 
@@ -169,3 +173,23 @@ LOG phase-2/4: single roster-final commit cycle. In-cycle gate red ×4 (protocol
 
 
 (appended at execution: phase commits, gate memos, deliverables)
+
+LOG phase-5: first exit gate exposed a REAL parse failure my in-cycle grep read had masked (bats duplicate-name ERROR prints no `not ok` lines — count-grep without exit-status capture is a false-green, the #674 tail-pipe class). Root causes: (a) f-string `{{}}` brace-escaping rendered the tier3 name substitution to a literal no-op → three `@test "{}"` blocks (fixed 92aa4b37); (b) count pins + --ref fixture not updated with the roster (fixed 132cd1a6 — lean hardcode 4th occurrence; --ref fixture must target a skill existing at the pinned tag). Re-gate green on 132cd1a6.
+GATE 132cd1a6 tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
+
+## Deliverables (generalizer output contract)
+
+**Weight line**: trigger-time SKILL.md load: 7 catalog entries, 18,186 bytes / ~4.5k tokens (avg 2.6KB each — the smallest per-skill bodies in the catalog) → 1 router at 1,861 bytes (~0.5k tokens) + one route file on match; catalog rows 91 → 85; lean 59 → 53; shipped-config allows 7 → 1; subagent allows 14 → 4; description: per-skill 15–30 words × 7 → one 44-word description.
+
+**Change list**:
+- Generalized: one decision tree replaces 7 separate entry decisions; the autoresearch opt-in marker promoted to router frontmatter (route-level semantics unchanged — routes load one-at-a-time).
+- Conditionalized: 7 routes behind WHEN+WHAT load rules; retrofit iteration-protocol sections kept verbatim in their routes (test-enforced).
+- Deleted: 7 skill identities; duplicated entry-decision prose; README quick-start/npm-link examples repointed (3 live refs found by final grep).
+- Honest framing: token savings marginal (route = old body); the win is 7 rows → 1 + the decision tree.
+
+**Residual list (owner)**:
+- `tests/skill_profiles.bats` lean hardcode has now bitten 4× (#680, #687, #690 twice) — consider deriving the count from the JSON in the test instead of pinning (owner decision; not done here to keep the diff scoped).
+- init.bats/installer_versions fixtures repointed to `code-principles-skill` — they pin exact installer behaviors; future renames repeat this sweep.
+- The `--ref` fixture now uses `ticketing-skill` (must exist at the pinned tag) — any skill chosen for it must predate the tag.
+
+## Trace
