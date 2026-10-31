@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [13.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.24.0...v13.0.0) (2026-10-31)
+
+### ⚠ BREAKING CHANGES
+
+* consolidate 15 CAD skills into cad-specialist-skill router (#679) (#683)
+
+### Features
+
+* consolidate 15 CAD skills into cad-specialist-skill router ([#679](https://github.com/darellchua2/civiltekk-skills/issues/679)) ([#683](https://github.com/darellchua2/civiltekk-skills/issues/683)) ([eb55a60](https://github.com/darellchua2/civiltekk-skills/commit/eb55a60357e792ca4d0850889033017c98921443)), closes [#659](https://github.com/darellchua2/civiltekk-skills/issues/659)
+
+### Documentation
+
+* **memory:** archive superlocalmemory data to S3 and purge references ([#682](https://github.com/darellchua2/civiltekk-skills/issues/682)) ([844ba61](https://github.com/darellchua2/civiltekk-skills/commit/844ba612dd8b12f4daaf402ba2bd71a3b3504c0f)), closes [#681](https://github.com/darellchua2/civiltekk-skills/issues/681)
+
 ## [12.24.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.23.0...v12.24.0) (2026-10-31)
 
 ### Features
