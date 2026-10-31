@@ -241,3 +241,5 @@ LOG phase-5 fix: phase-3's registry regen had been reverted by a gate-time `git 
 GATE 3651923 tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
 LOG phase-5 deviation: the review-fix commit fe95801 swept the staged LEARNINGS bodies/_index/.gitignore negations + PLAN deliverables (intended for a separate end-of-ticket chore(learnings) commit); contents identical, single-commit rule bent — noted per the inline reviewer discipline.
 GATE fe95801 tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
+LOG phase-5 resume: PR #683 went mergeable_state=dirty — main advanced (#678 setup.sh decoupling/civiltekk-init rename, #682 memory purge) while the watcher waited; zero CI checks configured on the head (0 check runs, 0 workflow runs attempted in the full 30-min window). Rebased feat/679 onto origin/main (union merges: README count+rename hunk, LEARNINGS index entries, .gitignore negations), full gate re-run green on the rebased tree; watcher restarting on the new head.
+GATE 59540b8f tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
