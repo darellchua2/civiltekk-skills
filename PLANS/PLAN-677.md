@@ -195,6 +195,15 @@ GATE exit tier=full lint=- typecheck=- build=- unit=t(727/727) e2e=n.a — full 
 LOG fix1: rename sweep over-reached into init.mjs manifest FILENAME (deployed-artifact contract) — reverted, compat-first
 LOG fix2: setup_provider_credentials resolve call missed --provider pass-through — explicit providers (anthropic oauth hint, openrouter env seed) resolved the wrong preset; test_provider_credentials caught it
 
+GATE 190a849 tier=full lint=- typecheck=- build=- unit=t(727/727) e2e=n.a — re-gate on the review-fix tree (green, final pushed SHA)
+
+## Step 9 — Code Review (inline, diff origin/main...feat/677, 20 files +1508/−451)
+
+**Status:** success — direct-caller coverage complete (install_pack_runtime×2 call sites, mcp helpers×4 surfaces, apply_install_plan×1, shim functions via PLAN_STEPS, register_provider_auth/seed_codex_provider×1 each, merge-packs CLI+run_pack_merger, seed mjs×3 subcommand callers, wizard×2 entry points — all grep-verified green).
+**Findings:** 1 Major (legacy-uninstall loop ran before resolve_python — $PYTHON_BIN empty, uninstall silently no-op'd; FIXED 190a849, trace-verified expanded command), 3 Minor/NOTE (mcp_pack_names suffix-strip relies on append order — works; pack-csv split loop duplicated at 2 sites — extract helper at third use; wizard temp plan file not cleaned after apply — no secrets, /tmp residue).
+**LEARNINGS candidates:** 4 written (2 anti-patterns: rewire-must-carry-forward-all-inputs, rename-sweep-must-skip-deployed-artifact-names; 1 pattern: tui-emits-plan-single-executor-consumes; 1 solution: shell-key-value-parser-gotchas).
+**Requirements Gaps:** [] · **Patterns applied:** ponytail deletion bias (deleted 2 dead functions rather than stubbing), single-executor (TUI-only-decides).
+
 ## Technical Notes
 
 - Test runner: `bats` (repo standard). `tests/deploy_delegate.bats` pins first-occurrence line order of delegate functions in setup.sh — all four deleted functions (`install_markitdown_mcp`, `install_docling`, `provision_laya_guard`, python heredoc) sit below/after pinned regions; verify per phase, never reorder pinned functions.

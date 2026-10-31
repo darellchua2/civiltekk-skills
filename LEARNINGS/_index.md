@@ -667,6 +667,42 @@
 - **Date**: 2026-09-20
 - **Summary**: Frontmatter-vocabulary sweeps scoped to code dirs skip README/opencode_app teaching sites, and literal `action: task` greps pass vacuously over `action:"task"` — sweep repo-root *.md + opencode_app/ with form-insensitive patterns and named exclusions (#482).
 
+### Rewiring N snippets into one helper call must carry forward every input
+
+- **Category**: anti-pattern
+- **File**: `LEARNINGS/anti-patterns/rewire-must-carry-forward-all-inputs.md`
+- **Confidence**: 0.9
+- **Scope**: project
+- **Date**: 2026-10-31
+- **Summary**: An extract-to-helper rewire dropped `--provider "$PROVIDER"` from the replaced `node -e` snippets — explicit providers silently resolved the derived default; enumerate each removed snippet's inputs verbatim before deleting (#677).
+
+### Rename sweeps must skip deployed-artifact filenames
+
+- **Category**: anti-pattern
+- **File**: `LEARNINGS/anti-patterns/rename-sweep-must-skip-deployed-artifact-names.md`
+- **Confidence**: 0.9
+- **Scope**: project
+- **Date**: 2026-10-31
+- **Summary**: The opencode-init→civiltekk-init sweep renamed the manifest FILENAME init.mjs writes — a persisted contract existing installs and five tests pin; branding sweeps cover identifiers/prose, never data filenames or on-disk paths (#677).
+
+### TUI-only-decides: plan-emitting UI, single executor
+
+- **Category**: pattern
+- **File**: `LEARNINGS/patterns/tui-emits-plan-single-executor-consumes.md`
+- **Confidence**: 0.9
+- **Scope**: project
+- **Date**: 2026-10-31
+- **Summary**: The install wizard only emits `civiltekk-install-plan/1` JSON; `--from-plan` maps it onto CLI flags inside build_plan where the existing gates run — one execution owner makes TUI/CLI drift impossible and test-pinnable via plan≡flags equivalence (#677).
+
+### Shell KEY<value> parsers: quote `<` in case patterns, strip both wrapper ends
+
+- **Category**: solution
+- **File**: `LEARNINGS/solutions/shell-key-value-parser-gotchas.md`
+- **Confidence**: 0.9
+- **Scope**: project
+- **Date**: 2026-10-31
+- **Summary**: `<` is a metachar in case patterns (quote the literal), `${line#KEY<}` leaves the closing `>` on the value, and multi-line string literals break line-based extraction splices — re-add trailing newlines before appending braces (#677).
+
 ### Dry-run preview logs must not interpolate secret values
 
 - **Category**: anti-pattern
