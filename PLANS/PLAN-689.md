@@ -16,6 +16,28 @@
 
 3 skills, ~27KB SKILL.md: civiltekk-requirements-specs-skill (7.6KB, already internally routed — brd/srs routes + `references/{brd,srs}.md` values files), technical-design-creation-skill (12.4KB, 7-part TDD template), vision-creation-skill (7.0KB, Vision template + docs/vision/ convention). The ladder (Vision→BRD→SRS→TDD) is described in all 3. Rendering/image-routing/return-contract/harness-binding blocks are near-verbatim ×3. In lean (specs only). dependency-map: requirements-inline → {grilling, specs} = guard HANDOFF4 (target rename, no renumber).
 
+## Audit Notes (Phase 1 — detector pass, 2026-10-31)
+
+### Boundary + layout (steps 1.1–1.2)
+
+**All 3 merge.** Router: **`solution-docs-skill`**. The specs skill is already a router (brd/srs + values files) — its METHOD (route detection, discovery interview, confirm-before-write, draft naming + PLAN linkage, rendering, return contract, harness binding) becomes the router spine; its two values files become route files verbatim+header. TDD and vision SKILL.mds become route detail files. Ladder = router identity: Vision (customer-facing) → BRD (sponsor) → SRS (internal) → TDD (engineering) → implementation.
+
+### Shared blocks (near-verbatim ×3 → spine, stated once)
+
+Rendering (dual-output; snapshot for brd/srs/tdd vs LIVING for vision — the vision exception stays in its route) · image routing → `image-analyzer-subagent` · Return Contract shape · harness binding (OpenCode/Claude/other ask rules) · ladder position paragraphs.
+
+### Named-entity dispositions
+
+- **Keep (protocol):** BABOK/IIBA + IEEE 830 templates, 7-part TDD structure, ADR format/numbering, IIBA Vision structure, docs/{vision,brd,srs,technical-design}/ conventions, TDD-vs-TDD name-collision note (load-bearing, stays in technical-design route), Vision no-ticket-linkage rule (stays in vision route; spine scopes PLAN-linkage to brd/srs/technical-design).
+- **Keep (attribution):** specs' #604 consolidation lineage → router provenance line.
+- **Reword (cross-family refs):** specs spine "Customer-facing vision → `vision-creation-skill`; technical design → `technical-design-creation-skill`" → route names; TDD "use `civiltekk-requirements-specs-skill`, routes srs/brd" / "use `vision-creation-skill`" → route names; vision "`civiltekk-requirements-specs-skill` (route `srs`)" → "Route: SRS"; specs ladder line names vision skill → "Route: VISION".
+- **Keep (external siblings):** `civiltekk-api-spec-skill`, `domain-modeling-skill`, `design-patterns-skill`, `search-first-skill`, `clean-architecture-skill`, `logging-observability-skill`, `security-audit-skill`, `authentication-authorization-skill`, `wireframer-skill`, `pptx-specialist-subagent`, `image-analyzer-subagent`, office-document-router routes — all survive, name-referenced.
+- **Consumer note:** office-router `rendering.md` names vision+specs as its consumers → route names; `requirements-inline-skill` "templates stay in the specs skill" → router; worktree-pipeline §6b mechanics cite docs/ paths (unchanged).
+
+### Constants audit
+
+All keep: template part structures, ADR-NNN numbering, RTM >15 rows xlsx threshold, naming patterns. No case-local numbers.
+
 ## Dependency & Consumer Map
 
 | Node (file/module) | Depends on (must precede) | Consumers (who depends on this) | Change risk |
@@ -32,14 +54,16 @@
 
 ### Phase 1: Generalizer audit (detector pass)
 
-- [ ] **1.1** Run detectors over the 3 SKILL.mds + 2 values files; inventory all cross-family references, the near-verbatim shared blocks (rendering/image-routing/return-contract/harness), and the ladder descriptions ×3
+- [x] **1.1** Run detectors over the 3 SKILL.mds + 2 values files; inventory all cross-family references, the near-verbatim shared blocks (rendering/image-routing/return-contract/harness), and the ladder descriptions ×3
     — **Why:** drives the spine/route split and the transform
     — **Done when:** dispositions + shared-block inventory recorded
     — **Consumers affected:** Phase 2
-- [ ] **1.2** Confirm boundary (all 3 merge; specs method → spine; values files → routes) and router name `solution-docs-skill`; record the ladder as the router identity
+    — **Done:** all 3 + 2 values files read in full; shared-block inventory (rendering/image-routing/return-contract/harness ×3); 5 disposition classes; consumer note for rendering.md + requirements-inline prose; files: PLANS/PLAN-689.md; fixes: none
+- [x] **1.2** Confirm boundary (all 3 merge; specs method → spine; values files → routes) and router name `solution-docs-skill`; record the ladder as the router identity
     — **Why:** name + layout are permanent
     — **Done when:** recorded in Audit Notes
     — **Consumers affected:** Phases 2–4
+    — **Done:** all-3-merge; specs-method-as-spine + values-as-routes layout; router name `solution-docs-skill`; vision no-linkage scoping recorded; files: PLANS/PLAN-689.md; fixes: none
 
 ### Phase 2: Build skills/solution-docs-skill/
 
@@ -125,5 +149,9 @@
 | Count drift | roster-change rule; count-drift tests |
 
 ## Trace
+
+LOG phase-1: docs-only; baseline captured concurrently (background).
+GATE (phase-1 tree) tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
+
 
 (appended at execution: phase commits, gate memos, deliverables)
