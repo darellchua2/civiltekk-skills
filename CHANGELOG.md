@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [19.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v18.0.0...v19.0.0) (2026-10-31)
+
+### ⚠ BREAKING CHANGES
+
+* consolidate 2 install-assistant skills into install-assistant-skill router (#691) (#696)
+
+### Features
+
+* consolidate 2 install-assistant skills into install-assistant-skill router ([#691](https://github.com/darellchua2/civiltekk-skills/issues/691)) ([#696](https://github.com/darellchua2/civiltekk-skills/issues/696)) ([72a6cbe](https://github.com/darellchua2/civiltekk-skills/commit/72a6cbe4c2c4b0b441a3005da72722ceb0d3272a))
+
 ## [18.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v17.0.0...v18.0.0) (2026-10-31)
 
 ### ⚠ BREAKING CHANGES
