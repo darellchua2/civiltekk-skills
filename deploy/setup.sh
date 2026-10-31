@@ -4111,6 +4111,7 @@ setup_provider_credentials() {
     local resolved
     resolved="$(node "$SEED_AUTH_SCRIPT" resolve \
         --presets "$PROVIDER_PRESETS" \
+        ${PROVIDER:+--provider "$PROVIDER"} \
         ${USER_MODELS_MAP:+--models-map "$USER_MODELS_MAP"} \
         --default-map "$MODELS_DEFAULT_MAP" 2>/dev/null || true)"
     if [ -z "$chosen" ]; then

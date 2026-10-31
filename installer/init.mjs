@@ -555,7 +555,7 @@ export async function writeInstall(sel, opts, reg, depMap) {
   const ocFile = join(ocDir, "opencode.json"); // Phase 0.1: .opencode/opencode.json (highest precedence)
   const modelsFile = join(ocDir, "models.json");
   const agentsMd = join(project, "AGENTS.md");
-  const manifestFile = join(targetRoot, ".civiltekk-init.manifest.json");
+  const manifestFile = join(targetRoot, ".opencode-init.manifest.json");
   const dry = !!opts.dryRun;
   const force = !!opts.force;
 
@@ -855,7 +855,7 @@ export async function doPrune(sel, opts) {
     console.error(`note: --target ${opts.target} has no project destination; --prune uses opencode target.`);
   const agentsDir = join(project, pCfg.projectAgentsDir);
   const skillsDir = join(project, pCfg.projectSkillsDir);
-  const manifestFile = join(dirname(agentsDir), ".civiltekk-init.manifest.json");
+  const manifestFile = join(dirname(agentsDir), ".opencode-init.manifest.json");
   const prev = await readJsonMaybe(manifestFile);
   if (!prev) die("no manifest found — nothing to prune (civiltekk-init has not installed here).");
   const keep = { agents: new Set(sel.agents), skills: new Set(sel.skills) };

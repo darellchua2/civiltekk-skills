@@ -6,15 +6,15 @@
 
 ## Acceptance Criteria
 
-- [ ] Adding a new MCP pack = one `pack-<name>.json` file; zero setup.sh edits (`install` block drives config merge + runtime install)
-- [ ] `install_markitdown_mcp` / `install_docling` replaced by generic `install_pack_runtime`; dry-run contract preserved (no pip/npm under `--dry-run`)
-- [ ] All 4 MCP prose surfaces derive from `deploy/opencode.json` + packs dir; `test_mcp_count_consistency.bats` passes without hand counts
-- [ ] `provision_laya_guard` lives in `plugins/laya-guard/provision.sh`; `deploy_plugins` invokes provision hooks generically; `LAYA_GUARD_SKIP`/`LAYA_GUARD_WARM`/dry-run semantics preserved
-- [ ] `deploy/seed-provider-auth.mjs` owns auth.json/pi/codex seeding; merge-never-clobber + corrupt-file parking + `0600` perms preserved
-- [ ] `tui.mjs install-wizard` emits `install-plan.json`; `--from-plan` ≡ equivalent CLI flags (identical `build_plan`); non-TTY aborts; cancel writes nothing
-- [ ] `civiltekk-setup` / `civiltekk-init` deployed primary; `opencode-setup` / `opencode-init` kept as compat symlinks; no log-path break
-- [ ] README Installation section = 5-entry-point table; derived-count greps (`ships N MCP server entries`) still pass
-- [ ] Full `bats tests/` suite green; `test_laya_guard.bats`, `test_markitdown_skill.bats`, `test_docling_skill.bats`, `test_pack_permissions.bats`, `test_help_parity.bats`, `test_dry_run_leaks.bats` updated for new locations
+- [x] Adding a new MCP pack = one `pack-<name>.json` file; zero setup.sh edits (`install` block drives config merge + runtime install)
+- [x] `install_markitdown_mcp` / `install_docling` replaced by generic `install_pack_runtime`; dry-run contract preserved (no pip/npm under `--dry-run`)
+- [x] All 4 MCP prose surfaces derive from `deploy/opencode.json` + packs dir; `test_mcp_count_consistency.bats` passes without hand counts
+- [x] `provision_laya_guard` lives in `plugins/laya-guard/provision.sh`; `deploy_plugins` invokes provision hooks generically; `LAYA_GUARD_SKIP`/`LAYA_GUARD_WARM`/dry-run semantics preserved
+- [x] `deploy/seed-provider-auth.mjs` owns auth.json/pi/codex seeding; merge-never-clobber + corrupt-file parking + `0600` perms preserved
+- [x] `tui.mjs install-wizard` emits `install-plan.json`; `--from-plan` ≡ equivalent CLI flags (identical `build_plan`); non-TTY aborts; cancel writes nothing
+- [x] `civiltekk-setup` / `civiltekk-init` deployed primary; `opencode-setup` / `opencode-init` kept as compat symlinks; no log-path break
+- [x] README Installation section = 5-entry-point table; derived-count greps (`ships N MCP server entries`) still pass
+- [x] Full `bats tests/` suite green; `test_laya_guard.bats`, `test_markitdown_skill.bats`, `test_docling_skill.bats`, `test_pack_permissions.bats`, `test_help_parity.bats`, `test_dry_run_leaks.bats` updated for new locations
 
 ## Dependency & Consumer Map
 
@@ -155,20 +155,23 @@ Phase order: P1 → P2 (listings read pack data); P3, P4 independent; P5 after P
     — **Consumers affected:** none
     — **Done:** installer/init.mjs swept: 24 opencode-init mentions → civiltekk-init + compat note in header; setup.sh plan labels swept; deploy/+installer/ mentions now compat-only; README sweep lands in Phase 7 (its section restructure); files: installer/init.mjs, deploy/setup.sh; fixes: sed pattern mismatch on // comments → global replace + compat-note restore
 
-### Phase 7: README + install-assistant docs
+### Phase 7: README + install-assistant docs ✅
 
-- [ ] **7.1** Restructure README Installation: "pick your entry point" table — npx single skill, TUI wizard (`civiltekk-setup`), scripted full deploy, per-project presets (`civiltekk-init`), in-session assistants (`civiltekk-install-assistant`, `mcp-install-assistant-skill`, `opencode-repo-setup-skill` promoted from deep reference); compat-shim note for old names
+- [x] **7.1** Restructure README Installation: "pick your entry point" table — npx single skill, TUI wizard (`civiltekk-setup`), scripted full deploy, per-project presets (`civiltekk-init`), in-session assistants (`civiltekk-install-assistant`, `mcp-install-assistant-skill`, `opencode-repo-setup-skill` promoted from deep reference); compat-shim note for old names
     — **Why:** five real entry points exist after P5; the README is the front door and must not bury two of them
     — **Done when:** README renders the 5-row table; derived-count phrasing `ships N MCP server entries` preserved verbatim for `test_mcp_count_consistency.bats`
     — **Consumers affected:** `tests/test_mcp_count_consistency.bats`, `tests/test_count_drift.bats`
-- [ ] **7.2** Add full-stack routing row to `skills/civiltekk-install-assistant/SKILL.md` route table ("set up the whole stack" → `civiltekk-setup` wizard/flags) and a deploy-time-pack pointer in `skills/mcp-install-assistant-skill/SKILL.md` (→ `--enable-pack` / wizard packs step); keep both skills self-contained (#437 — no new cross-skill references beyond the routing line)
+    — **Done:** README Installation restructured to a 5-entry-point table (npx single skill, civiltekk-setup TUI wizard, scripted deploy, civiltekk-init presets, in-session assistants promoted from deep reference); wizard + --from-plan + --no-tui documented; compat note for old shim names; directory-structure + full-setup-reference rows updated; `ships 11 MCP server entries` phrasing preserved (count-grep verified); files: README.md; fixes: none
+- [x] **7.2** Add full-stack routing row to `skills/civiltekk-install-assistant/SKILL.md` route table ("set up the whole stack" → `civiltekk-setup` wizard/flags) and a deploy-time-pack pointer in `skills/mcp-install-assistant-skill/SKILL.md` (→ `--enable-pack` / wizard packs step); keep both skills self-contained (#437 — no new cross-skill references beyond the routing line)
     — **Why:** in-session assistants route full-stack asks instead of reimplementing them
     — **Done when:** route table shows the new row; `bats tests/test_skill_isolation.bats` green unchanged
     — **Consumers affected:** none
-- [ ] **7.3** Full verification: `bats tests/` entire suite green; AC checklist re-ticked in PLAN + ticket
+    — **Done:** civiltekk-install-assistant route table gains the full-stack row (routes to civiltekk-setup, installs nothing itself); mcp-install-assistant global-enable step notes the #677 install-block mechanics + wizard alternative; both stay self-contained (#437 — routing lines only); files: skills/civiltekk-install-assistant/SKILL.md, skills/mcp-install-assistant-skill/SKILL.md; fixes: none
+- [x] **7.3** Full verification: `bats tests/` entire suite green; AC checklist re-ticked in PLAN + ticket
     — **Why:** the exit gate is full-tier by contract; suite-wide green is the merge precondition
     — **Done when:** full `bats tests/` exit 0; gate memo `tier=full` recorded
     — **Consumers affected:** PR (Step 10 citation)
+    — **Done:** full bats suite 727/727 exit 0 (ticket exit gate, full tier); 7 first-run failures fixed: manifest filename contract restored (.opencode-init.manifest.json — deployed-artifact compat, my #677 rename sweep had over-reached into init.mjs data) + missing --provider pass-through in the resolve call (explicit providers resolved the derived default instead); files: installer/init.mjs, deploy/setup.sh; fixes: manifest name revert, PROVIDER pass-through
 
 ## Trace
 
@@ -187,6 +190,10 @@ LOG deviation 5.1: per-item picker step deferred — `--select` remains the per-
 
 GATE phase6 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — plan_executor/setup_shim/help_parity/ps1_vars/deploy_delegate green; dual-shim sandbox-verified (4/4 links)
 LOG: smoke-test harness wrote real ~/.local/bin symlinks pointing at the worktree — restored all four to the main checkout (durable state)
+
+GATE exit tier=full lint=- typecheck=- build=- unit=t(727/727) e2e=n.a — full bats suite green
+LOG fix1: rename sweep over-reached into init.mjs manifest FILENAME (deployed-artifact contract) — reverted, compat-first
+LOG fix2: setup_provider_credentials resolve call missed --provider pass-through — explicit providers (anthropic oauth hint, openrouter env seed) resolved the wrong preset; test_provider_credentials caught it
 
 ## Technical Notes
 

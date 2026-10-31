@@ -62,7 +62,10 @@ reason NOT to enable, and offer to proceed anyway only if the user insists.
 - **Global** (only when cwd is the configurator repo
   `civiltekk-opencode-claude-skills`): run
   `./deploy/setup.sh --enable-pack <pack>` — the deploy script owns the global
-  config; never hand-edit `~/.config/opencode/opencode.json`.
+  config; never hand-edit `~/.config/opencode/opencode.json`. (#677: each
+  pack's JSON `install` block drives the runtime install too — new packs are
+  data-only. Interactive alternative: the `civiltekk-setup` TUI wizard's packs
+  step shows each pack's install command before anything runs.)
 - **Per-project** (any project): write a **full v2 entry** into the project's
   `opencode.json` — v2 replaces `mcp.servers.<name>` atomically, so a bare
   `{"disabled": false}` stub is inert. Copy the full entry from the deployed
