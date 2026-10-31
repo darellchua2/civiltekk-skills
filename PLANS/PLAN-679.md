@@ -27,7 +27,8 @@
 | `skills/cad-specialist-skill/` (new) | Phase 1 audit findings | cad-specialist-subagent, installer registry, npx add consumers | med |
 | `agents/cad-specialist-subagent.md` | router skill exists (its allow rules reference it) | OpenCode runtime, installer frontmatter dependency edges, registry build | med |
 | `installer/presets/pack-cad.json` | final skill roster (Phase 3) | `installer/init.mjs --preset cad` | low |
-| `installer/registry.json` | all skill/agent frontmatter final (generated) | installer/init.mjs, npx installer | med |
+| `installer/registry.json` | all skill/agent frontmatter final; producer `installer/build-registry.mjs` run in 4.2 (not edited) | installer/init.mjs, npx installer | med |
+| 5 persisting sibling SKILL.mds (generation, dxf, implicit, redraw, viewer) | router exists (references repoint at it) | users loading those skills; Phase 4 deletion must not orphan their references | med |
 | 10 old skill dirs (delete) | ALL consumer rewires landed (Phase 3) | registry build, setup counts, README tables | high |
 | `README.md`, `deploy/setup.sh`, `deploy/setup.ps1` | final roster post-deletion | deploy users, docs readers | low |
 
@@ -76,6 +77,11 @@ Phase ordering constraint: no deletion (4.1) before every consumer of the 10 IDs
     — **Done when:** preset lists exactly 6 skills + the subagent; JSON parses (`node -e` or jq)
     — **Consumers affected:** installer `--preset cad` users
 
+- [ ] **3.3** Rewrite absorbed-capability references in the persisting sibling SKILL.mds: `skills/cad-generation-skill/SKILL.md:72` (references `cad-step-parts-skill`) and `skills/cad-dxf-skill/SKILL.md:30` (references `cad-sendcutsend-skill`) repoint at `cad-specialist-skill` and its matching route
+    — **Why:** both referenced skills are deleted in 4.1; unrewired references dangle at first use (arch-review finding)
+    — **Done when:** grep of the 5 persisting sibling SKILL.mds finds zero references to any of the 10 removed IDs
+    — **Consumers affected:** users loading cad-generation-skill / cad-dxf-skill; 5.2 orphan grep
+
 ### Phase 4: Delete, regenerate, recount
 
 - [ ] **4.1** `git rm -r` the 10 merged skill dirs
@@ -101,7 +107,7 @@ Phase ordering constraint: no deletion (4.1) before every consumer of the 10 IDs
     — **Why:** a missed consumer reference breaks at first use, not at review
     — **Done when:** remaining hits are only historical PLAN docs or are justified line-by-line in the run report
     — **Consumers affected:** none (verification)
-- [ ] **5.3** Generalizer verification pass on the new skill: router ≤10240 bytes, description ≤50 words with triggers intact, every load-table row points at an existing file, no load rule says "read all references", no sibling path strings in fenced blocks
+- [ ] **5.3** Generalizer verification pass on the new skill: router ≤10240 bytes, description ≤50 words with triggers intact, every load-table row points at an existing file, route-file cross-references resolve within the skill, no load rule says "read all references", no sibling path strings in fenced blocks
     — **Why:** load-weight and load-rule integrity are the router pattern's correctness conditions
     — **Done when:** all checks pass with recorded measurements (bytes, word count, row→file map)
     — **Consumers affected:** skill consumers
