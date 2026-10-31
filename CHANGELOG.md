@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v13.0.0...v14.0.0) (2026-10-31)
+
+### ⚠ BREAKING CHANGES
+
+* consolidate 11 office-document skills into office-document-router-skill (#680) (#685)
+
+### Features
+
+* consolidate 11 office-document skills into office-document-router-skill ([#680](https://github.com/darellchua2/civiltekk-skills/issues/680)) ([#685](https://github.com/darellchua2/civiltekk-skills/issues/685)) ([586e626](https://github.com/darellchua2/civiltekk-skills/commit/586e6261703ef8d02dbca15e2ea6f534f0a37798))
+
+### Documentation
+
+* **learnings:** untrack _index.md — local derived cache, never committed ([#686](https://github.com/darellchua2/civiltekk-skills/issues/686)) ([e62582e](https://github.com/darellchua2/civiltekk-skills/commit/e62582e7aa7fe01c3c40085c80e58bd92d5f9818)), closes [#684](https://github.com/darellchua2/civiltekk-skills/issues/684)
+
 ## [13.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v12.24.0...v13.0.0) (2026-10-31)
 
 ### ⚠ BREAKING CHANGES
