@@ -122,19 +122,22 @@ Phase ordering constraint: no deletion (4.1) before every consumer of the 10 IDs
 
 ### Phase 3: Rewire consumers (before any deletion)
 
-- [ ] **3.1** Rewrite `agents/cad-specialist-subagent.md`: permissions `action:"skill"` allowlist 15→1 (`cad-specialist-skill`); routing table rows point at internal routes; workflow examples updated; the 5 sibling IDs appear only in install-if-missing context
+- [x] **3.1** Rewrite `agents/cad-specialist-subagent.md`: permissions `action:"skill"` allowlist 15→1 (`cad-specialist-skill`); routing table rows point at internal routes; workflow examples updated; the 5 sibling IDs appear only in install-if-missing context
     — **Why:** the agent must not allow or reference skills that Phase 4 removes; its frontmatter allow rules are the installer's primary dependency source
     — **Done when:** grep of the agent file finds zero references to the 10 removed IDs outside install-if-missing sibling mentions of the 5
     — **Consumers affected:** OpenCode runtime, registry build (4.2)
-- [ ] **3.2** Update `installer/presets/pack-cad.json`: skills list → `cad-specialist-skill` + the 5 siblings; description updated; `$comment` hand-edit note kept accurate
+    — **Done:** permissions 15→1 (siblings deliberately NOT allowed in frontmatter — installer would derive them as requiresSkills and force-install the 18MB viewer, defeating the hybrid); routing table → router routes; pipelines → router flows; point refs → routes; zero removed-ID refs; files: agents/cad-specialist-subagent.md; fixes: none
+- [x] **3.2** Update `installer/presets/pack-cad.json`: skills list → `cad-specialist-skill` + the 5 siblings; description updated; `$comment` hand-edit note kept accurate
     — **Why:** the preset must match the post-merge installable set or `--preset cad` breaks
     — **Done when:** preset lists exactly 6 skills + the subagent; JSON parses (`node -e` or jq)
     — **Consumers affected:** installer `--preset cad` users
+    — **Done:** preset = router + 5 siblings (6 skills) + subagent; JSON parses; $comment + description updated; files: installer/presets/pack-cad.json; fixes: none
 
-- [ ] **3.3** Rewrite absorbed-capability references in the persisting sibling SKILL.mds: `skills/cad-generation-skill/SKILL.md:72` (references `cad-step-parts-skill`) and `skills/cad-dxf-skill/SKILL.md:30` (references `cad-sendcutsend-skill`) repoint at `cad-specialist-skill` and its matching route
+- [x] **3.3** Rewrite absorbed-capability references in the persisting sibling SKILL.mds: `skills/cad-generation-skill/SKILL.md:72` (references `cad-step-parts-skill`) and `skills/cad-dxf-skill/SKILL.md:30` (references `cad-sendcutsend-skill`) repoint at `cad-specialist-skill` and its matching route
     — **Why:** both referenced skills are deleted in 4.1; unrewired references dangle at first use (arch-review finding)
     — **Done when:** grep of the 5 persisting sibling SKILL.mds finds zero references to any of the 10 removed IDs
     — **Consumers affected:** users loading cad-generation-skill / cad-dxf-skill; 5.2 orphan grep
+    — **Done:** both anchors rewritten (generation → step-parts route; dxf → sendcutsend route); grep of 5 siblings clean; files: skills/cad-generation-skill/SKILL.md, skills/cad-dxf-skill/SKILL.md; fixes: none
 
 ### Phase 4: Delete, regenerate, recount
 
@@ -204,3 +207,5 @@ LOG phase-1: docs-only phase (PLAN audit notes); no source files touched.
 GATE b58170f tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
 LOG phase-2 fix-on-fail: full gate red ×9 with ONE root cause — committed registry.json + README count literals still described the pre-merge roster, while the moves changed disk state (installer `add --all`/setup.sh deploy fail on first missing dir; #659 same-PR rule requires roster changes to carry counts). Fix pulled 4.2's regen + the 6 README count literals (122→113) into this phase commit; skill-profiles.json lean array verified untouched (68). Remaining 4.2/4.3 scope (final regen delta, category listing content, deploy-script help text) unchanged.
 
+GATE 9f0f1a8 tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
+GATE (phase-3 tree) tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
