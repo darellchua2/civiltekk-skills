@@ -11,16 +11,14 @@
 #   4. (retired #680 — the pptx vendored trees merged into one
 #      office-document-router-skill/scripts/_common; nothing left to compare)
 
-# Declared cross-skill dependencies. #437: the modifier extends templates,
-# the slide engine fills. #597: the inline plan executor routes its delegate
-# matrix to the four inline worker skills.# cite the core protocol host's references at runtime (multi-owner pair —
-# every owner in HANDOFF2_OWNERS maps to every target in HANDOFF2_TARGETS).
-# #635: the inline code-review wrapper loads the reviewer baseline + language
-# checklists at runtime (declared closure, HANDOFF4).
+# Declared cross-skill dependencies (uniform owner->targets guard pairs).
+# #597: the inline plan executor routes its delegate matrix to the four
+# inline worker skills (HANDOFF1). #635: the inline code-review wrapper
+# loads the reviewer baseline + language checklists at runtime (HANDOFF2).
 # #650: the architecture-review-skill decision-tree reviewer loads the
-# reviewer baseline at runtime (declared closure, HANDOFF3).
-# #641: the inline requirements wrapper loads grilling + the specs skill at
-# runtime (declared closure, HANDOFF4).
+# reviewer baseline (HANDOFF3). #641: the inline requirements wrapper loads
+# grilling + the specs skill (HANDOFF4). (The #437 pptx and #602 autoresearch
+# pairs retired by consolidation — #680 and #688.)
 # Any other edge must be declared the same way or duplicated.
 HANDOFF1_OWNER="plan-execution-inline-skill"
 HANDOFF1_TARGETS="testing-inline-skill linting-inline-skill civiltekk-documentation-inline-skill responsive-audit-inline-skill"
