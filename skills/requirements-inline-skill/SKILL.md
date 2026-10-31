@@ -4,7 +4,7 @@ description: >-
   In-session requirements delegate — runs the AC-quality detection gate,
   grills reviewer-emitted Requirements Gaps inline (Mode R, agent file as
   checklist), and drafts BRD/SRS in-session with native questioning (Mode
-  A). Thin wrapper: templates stay in the specs skill; never spawns a
+  A). Thin wrapper: templates stay in `solution-docs-skill`; never spawns a
   subagent. Triggers: requirements detection gate, grill requirements gaps,
   inline requirements.
 license: Apache-2.0
@@ -24,7 +24,7 @@ delegate the work.
 
 **You are a wrapper, not a copy.** Mode conduct lives in the deployed
 `agents/requirements-specialist-subagent.md` (loaded as checklist); BRD/SRS
-templates live in `civiltekk-requirements-specs-skill`; interrogation
+templates live in `solution-docs-skill`; interrogation
 methodology lives in `grilling-skill`. This file owns the detection decision
 tree and the invocation loop only.
 
@@ -73,7 +73,7 @@ gap. Max 2 relay rounds per review (caller-enforced; state the round number).
 Resolve the checklist, then per its workflow (Steps 0–5) with the interactive
 caveat inverted: you HAVE the question channel — use it instead of relay
 rounds. Doc-type routing tree, templates, and file conventions come from
-`civiltekk-requirements-specs-skill` (matching `brd`/`srs` route). Drafts
+`solution-docs-skill` (matching `brd`/`srs` route). Drafts
 land at `docs/{brd|srs}/{BRD|SRS}-draft-{slug}.md` in the caller's working
 tree.
 

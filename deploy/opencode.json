@@ -122,17 +122,7 @@
     },
     {
       "action": "skill",
-      "resource": "vision-creation-skill",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "civiltekk-requirements-specs-skill",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "technical-design-creation-skill",
+      "resource": "solution-docs-skill",
       "effect": "allow"
     },
     {

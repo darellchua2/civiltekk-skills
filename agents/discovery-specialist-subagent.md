@@ -49,7 +49,7 @@ permissions:
     resource: pptx-specialist-subagent
     effect: allow
   - action: skill
-    resource: vision-creation-skill
+    resource: solution-docs-skill
     effect: allow
   - action: skill
     resource: office-document-router-skill
@@ -167,7 +167,7 @@ Repeat until the client's direction is clear:
 7. Confirm the captured feedback before the next iteration
 
 ### Step 3: Synthesize the Vision Document
-1. Gather remaining sections per `vision-creation-skill` (Target Outcomes, Success Measures, Assumptions/Constraints, Scope Boundaries, Open Questions)
+1. Gather remaining sections per the `vision` route of `solution-docs-skill` (Target Outcomes, Success Measures, Assumptions/Constraints, Scope Boundaries, Open Questions)
 2. Present a full summary and confirm before writing
 
 ### Step 4: Write & Render

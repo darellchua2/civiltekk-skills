@@ -47,7 +47,7 @@ permissions:
     resource: explore
     effect: allow
   - action: skill
-    resource: civiltekk-requirements-specs-skill
+    resource: solution-docs-skill
     effect: allow
   - action: skill
     resource: office-document-router-skill
@@ -107,7 +107,7 @@ This subagent authors **two document types**: BRD drafts (`docs/brd/BRD-draft-{s
 2. **Explicit SRS signals** → produce an **SRS**: "functional spec", "software requirements", "srs", "create srs", "specification", detailed functional requirements, acceptance criteria, NFRs, traceability matrix. Back-compat: "create prd" / "product requirement" / "product doc" → **SRS**.
 3. **Ambiguous / unsure** → **ASK before proceeding**: "Are you looking for a business-level **BRD** (sponsor/stakeholder scope: business problem, objectives, stakeholder needs, transition) or a detailed **SRS** (internal functional/technical scope: functional requirements, acceptance criteria, NFRs)?" Present the recommendation based on the phrasing, but let the user confirm.
 
-> If the user wants BOTH (BRD then SRS), produce the BRD first; the BRD's Solution Requirements Summary (§3) becomes the input to the SRS. Use the matching route of `civiltekk-requirements-specs-skill` (`brd` or `srs`) for the template.
+> If the user wants BOTH (BRD then SRS), produce the BRD first; the BRD's Solution Requirements Summary (§3) becomes the input to the SRS. Use the matching route of the `brd or srs` route of `solution-docs-skill` (`brd` or `srs`) for the template.
 
 ## Audience
 
@@ -171,14 +171,14 @@ When delegating to this subagent, provide:
 - **Target directory**: Defaults to `docs/srs/` (override if needed)
 - **Technical notes**: Any implementation constraints to capture
 
-**Extract-then-delegate pattern**: The primary agent loads `civiltekk-requirements-specs-skill` (resolved route `srs` or `brd`) first, extracts the route's template structure and naming convention, then delegates to this subagent with those parameters.
+**Extract-then-delegate pattern**: The primary agent loads the `brd or srs` route of `solution-docs-skill` (resolved route `srs` or `brd`) first, extracts the route's template structure and naming convention, then delegates to this subagent with those parameters.
 
 ## Workflow
 
 ### Step 0: Resolve Document Type (BRD vs SRS)
 1. Walk the **Doc-Type Routing Decision Tree** (above) on the user's request
 2. If the signals are ambiguous, **ask** which document they want (BRD vs SRS) before gathering content
-3. Set `DOC_TYPE`: `brd` or `srs`; select the matching route of `civiltekk-requirements-specs-skill` (`brd` / `srs`) for the template
+3. Set `DOC_TYPE`: `brd` or `srs`; select the matching route of the `brd or srs` route of `solution-docs-skill` (`brd` / `srs`) for the template
 
 ### Step 1: Gather Title & Overview
 1. Prompt the user for the title and brief overview (or read the upstream Vision if provided)
@@ -207,7 +207,7 @@ For SRS, after Part 3/4, ask: "Will the Requirements Traceability Matrix / data 
    - BRD: `docs/brd/BRD-draft-{slug}.md`
    - SRS: `docs/srs/SRS-draft-{slug}.md`
    (create the directory if it doesn't exist)
-2. Use the template from the resolved route of `civiltekk-requirements-specs-skill` (`brd` / `srs`)
+2. Use the template from the resolved route of the `brd or srs` route of `solution-docs-skill` (`brd` / `srs`)
 3. Include the header with `**PLAN**: PLANS/PLAN-{key}.md _(filled when ticket is created)_`
 4. Render the **snapshot** interactive HTML + .docx per `office-document-router-skill route `rendering``
 5. Return the file path

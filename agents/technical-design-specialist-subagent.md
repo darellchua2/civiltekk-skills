@@ -46,7 +46,7 @@ permissions:
     resource: architecture-review-subagent
     effect: allow
   - action: skill
-    resource: technical-design-creation-skill
+    resource: solution-docs-skill
     effect: allow
   - action: skill
     resource: office-document-router-skill
@@ -151,7 +151,7 @@ When delegating to this subagent, provide:
 - **Constraints**: technology stack, performance targets, integration requirements
 - **Target directory**: Defaults to `docs/technical-design/`
 
-**Extract-then-delegate pattern**: The primary agent loads `technical-design-creation-skill` first, extracts the template structure and naming convention, then delegates to this subagent with those parameters.
+**Extract-then-delegate pattern**: The primary agent loads the `technical-design` route of `solution-docs-skill` first, extracts the template structure and naming convention, then delegates to this subagent with those parameters.
 
 ## Workflow
 
