@@ -333,9 +333,9 @@ EOC
   run $INIT add tdd-workflow-skill -g --yes
   [ "$status" -eq 0 ]
   [ -d "${HOME}/.config/opencode/skills/tdd-workflow-skill" ]
-  run $INIT add solid-principles-skill --global --yes
+  run $INIT add code-principles-skill --global --yes
   [ "$status" -eq 0 ]
-  [ -d "${HOME}/.config/opencode/skills/solid-principles-skill" ]
+  [ -d "${HOME}/.config/opencode/skills/code-principles-skill" ]
 }
 
 @test "add -g --project conflicts and exits non-zero (#563)" {
@@ -384,9 +384,9 @@ EOC
   cd "$TMP_PROJ"
   export HOME="$TMP_PROJ/home2"
   mkdir -p "$HOME"
-  run $INIT add solid-principles-skill -p -y
+  run $INIT add code-principles-skill -p -y
   [ "$status" -eq 0 ]
-  [ -d "$TMP_PROJ/.agents/skills/solid-principles-skill" ]
+  [ -d "$TMP_PROJ/.agents/skills/code-principles-skill" ]
   [ ! -e "$TMP_PROJ/-y" ]
 }
 
@@ -422,11 +422,11 @@ EOC
   run $INIT add tdd-workflow-skill --target claude --yes
   [ "$status" -eq 0 ]
   [ -d "${HOME}/.config/opencode" ]
-  run $INIT add solid-principles-skill --target auto --yes
+  run $INIT add code-principles-skill --target auto --yes
   [ "$status" -eq 0 ]
   echo "$output" | grep -q "detected claude"
-  [ ! -e "${HOME}/.config/opencode/skills/solid-principles-skill" ]
-  [ -d "${HOME}/.claude/skills/solid-principles-skill" ]
+  [ ! -e "${HOME}/.config/opencode/skills/code-principles-skill" ]
+  [ -d "${HOME}/.claude/skills/code-principles-skill" ]
 }
 
 @test "add --prune is rejected explicitly on all add paths (#567)" {

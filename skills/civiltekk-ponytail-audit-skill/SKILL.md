@@ -74,7 +74,7 @@ is the on-demand reviewer/auditor.
 - Scope: over-engineering and complexity only. Correctness bugs, security
   holes, and performance are explicitly out of scope — route them to a
   normal review pass. Smell cataloging and KISS tradeoffs belong to
-  `code-smells-skill` / `complexity-management-skill`; this skill cuts,
+  the `code-smells` route of `code-principles-skill` / the `complexity-management` route of `code-principles-skill`; this skill cuts,
   those classify.
 - All routes list findings and apply nothing; `debt-ledger` writes a file
   only on explicit ask. One-shot each.

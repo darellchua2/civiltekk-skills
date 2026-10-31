@@ -1,12 +1,7 @@
----
-name: code-smells-skill
-description: Detect and fix code smells including long methods, large classes, feature envy, primitive obsession, and more with refactoring guidance - language-agnostic
-license: Apache-2.0
-compatibility: opencode
-metadata:
-  protocol: autoresearch-opt-in
-category: Code Quality
----
+# Route: CODE-SMELLS
+
+**Load when:** detecting and fixing code smells — long methods, large classes, feature envy, primitive obsession, and the refactoring guidance per smell. **Skip when:** general readability (Route: `clean-code`) or architecture-level layering (Route: `clean-architecture`).
+
 
 ## What I do
 

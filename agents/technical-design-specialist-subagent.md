@@ -52,10 +52,7 @@ permissions:
     resource: office-document-router-skill
     effect: allow
   - action: skill
-    resource: clean-architecture-skill
-    effect: allow
-  - action: skill
-    resource: design-patterns-skill
+    resource: code-principles-skill
     effect: allow
   - action: skill
     resource: domain-modeling-skill

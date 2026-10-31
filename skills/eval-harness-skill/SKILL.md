@@ -44,7 +44,7 @@ Criteria starters: code quality — naming per language convention, function ≤
 - `verification-loop-skill` — canonical gate contract; eval supplies scoring rubrics, not gate execution
 - `continuous-learning-skill` — learn which patterns score well
 - `civiltekk-context-optimization-skill` — compact preserves eval results
-- `linting-workflow-skill` / `code-smells-skill` / `solid-principles-skill` — signals feeding the quality criterion
+- `linting-workflow-skill` / the `code-smells` route of `code-principles-skill` / the `solid-principles` route of `code-principles-skill` — signals feeding the quality criterion
 
 ## References
 

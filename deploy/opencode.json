@@ -222,37 +222,7 @@
     },
     {
       "action": "skill",
-      "resource": "clean-code-skill",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "clean-architecture-skill",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "solid-principles-skill",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "design-patterns-skill",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "code-smells-skill",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "complexity-management-skill",
-      "effect": "allow"
-    },
-    {
-      "action": "skill",
-      "resource": "object-design-skill",
+      "resource": "code-principles-skill",
       "effect": "allow"
     },
     {

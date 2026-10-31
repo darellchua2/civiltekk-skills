@@ -1,14 +1,7 @@
----
-name: solid-principles-skill
-description: >-
-  Enforce SOLID principles with language-agnostic examples and detection
-  strategies.
-license: Apache-2.0
-compatibility: opencode
-metadata:
-  protocol: autoresearch-opt-in
-category: Code Quality
----
+# Route: SOLID-PRINCIPLES
+
+**Load when:** applying or reviewing Single Responsibility, Open/Closed, Liskov, Interface Segregation, Dependency Inversion — with detection strategies per principle. **Skip when:** concrete smell fixes (Route: `code-smells`).
+
 
 ## What I do
 

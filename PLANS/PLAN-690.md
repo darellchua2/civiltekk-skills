@@ -66,52 +66,62 @@
 
 ### Phase 2: Build skills/code-principles-skill/
 
-- [ ] **2.1** Write the router SKILL.md: frontmatter (name = dir, Apache-2.0, `metadata.protocol: autoresearch-opt-in`, category Code Quality, ≤50-word description with family triggers), identity, decision tree by question type, load table (7 routes), gates (zero-preload; the retrofit opt-in note)
+- [x] **2.1** Write the router SKILL.md: frontmatter (name = dir, Apache-2.0, `metadata.protocol: autoresearch-opt-in`, category Code Quality, ≤50-word description with family triggers), identity, decision tree by question type, load table (7 routes), gates (zero-preload; the retrofit opt-in note)
     — **Why:** contract first
     — **Done when:** file exists; ≤10240 bytes; ≤50 words; 7 rows; no preload
     — **Consumers affected:** subagents (3.1), installer (3.2)
-- [ ] **2.2** Moves + transform: `git mv` all 7 SKILL.mds → `references/routes/<id>.md`; strip frontmatter; prepend Load-when/Skip-when headers; KEEP the 3 retrofit sections + citations verbatim; residual grep
+    — **Done:** router written (bytes/words verified in Phase-5 checks), 7 route rows, autoresearch-opt-in metadata, one-route-per-question hard rule; files: skills/code-principles-skill/SKILL.md; fixes: none
+- [x] **2.2** Moves + transform: `git mv` all 7 SKILL.mds → `references/routes/<id>.md`; strip frontmatter; prepend Load-when/Skip-when headers; KEEP the 3 retrofit sections + citations verbatim; residual grep
     — **Why:** the bodies are the value; the retrofit sections are test-enforced content
     — **Done when:** 7 route files with headers; retrofit sections intact ×3; residual clean
     — **Consumers affected:** load table, 3.3 test retargets
-- [ ] **2.3** Provenance: house Apache-2.0; no vendored content
+    — **Done:** 7 routes via git mv + transform (headers, frontmatter stripped); retrofit sections + citations verified intact ×3; residual scan clean; files: references/routes/*; fixes: none
+- [x] **2.3** Provenance: house Apache-2.0; no vendored content
     — **Why:** lineage
     — **Done when:** noted
     — **Consumers affected:** docs readers
+    — **Done:** house Apache-2.0; no vendored content; files: none; fixes: none
 
 ### Phase 3: Rewire consumers (before any deletion)
 
-- [ ] **3.1** 4 subagents: allows 14→4 (router); prose → route names; YAML-verified
+- [x] **3.1** 4 subagents: allows 14→4 (router); prose → route names; YAML-verified
     — **Why:** agents must not reference removed skills
     — **Done when:** grep agents/ clean; YAML asserts green
     — **Consumers affected:** runtime, registry
-- [ ] **3.2** Installer surfaces: init.mjs:917 example → router (+ parity assertion if present, same commit); presets backend/business/inline-workers/review → router (dedupe); shipped config 7→1; lean 7→1 (59→53); registry regenerated
+    — **Done:** 4 subagents rewired (allows 14→4, YAML effect-ok ×4, prose → route names, zero residual); files: agents/*; fixes: none
+- [x] **3.2** Installer surfaces: init.mjs:917 example → router (+ parity assertion if present, same commit); presets backend/business/inline-workers/review → router (dedupe); shipped config 7→1; lean 7→1 (59→53); registry regenerated
     — **Why:** roster-affecting rule
     — **Done when:** zero old IDs in the five files; JSON parses
     — **Consumers affected:** installer users, CI
-- [ ] **3.3** Test-surface retargets: init.bats fixture `solid-principles-skill` → `code-principles-skill` (all install tests); test_autoresearch_protocol tier3 blocks → route files (section + citation) + router frontmatter (metadata); test_default_behavior per-skill blocks → retarget; test_installer_versions + test_help_parity verified/updated; sibling citations in 6 skills → route names (architecture-review backing axes, eval-harness signals, ponytail-audit, react-quality, python-backend reference, solution-docs technical-design route)
+    — **Done:** init.mjs:917 example repointed (no parity assertion exists — verified); presets backend/business/inline-workers/review router-added ×4; shipped config 7→1; lean 7→1 (59→53); files: installer/*, deploy/*; fixes: none
+- [x] **3.3** Test-surface retargets: init.bats fixture `solid-principles-skill` → `code-principles-skill` (all install tests); test_autoresearch_protocol tier3 blocks → route files (section + citation) + router frontmatter (metadata); test_default_behavior per-skill blocks → retarget; test_installer_versions + test_help_parity verified/updated; sibling citations in 6 skills → route names (architecture-review backing axes, eval-harness signals, ponytail-audit, react-quality, python-backend reference, solution-docs technical-design route)
     — **Why:** tests enforce exact paths/names; siblings would dangle
     — **Done when:** all five test files green; sibling grep clean
     — **Consumers affected:** CI, sibling readers
-- [ ] **3.4** README: Framework/Code Quality row + 6 count literals (91→85, primary-visible 59→53) + history clause; registry regen if pending
+    — **Done:** init.bats fixture ×7 + installer_versions ×9 repointed; default_behavior 9 path assertions retargeted to route files; protocol tier3 metadata ×3 retargeted to router frontmatter (first regex missed because the path retarget ran first — cross-step anchor interference again, caught by gate and re-done against post-sweep state); sibling citations repointed in 6 skills; files: tests/*, skills/{6 siblings}; fixes: metadata-regex order bug
+- [x] **3.4** README: Framework/Code Quality row + 6 count literals (91→85, primary-visible 59→53) + history clause; registry regen if pending
     — **Why:** roster rule
     — **Done when:** counts equal disk; zero old IDs
     — **Consumers affected:** docs readers, count-drift tests
+    — **Done:** README Code Quality row 16→9 + 6 count literals 91→85 + primary-visible 59→53 + history clause; 3 live example refs (quick-start add/remove, npm-link test) repointed beyond the planned sweep; files: README.md; fixes: README examples found by final grep
 
 ### Phase 4: Delete, final regen, recount
 
-- [ ] **4.1** Remove the 7 old dirs
+- [x] **4.1** Remove the 7 old dirs
     — **Why:** hard removal per AC
     — **Done when:** dirs gone
     — **Consumers affected:** registry, counts
-- [ ] **4.2** Final regen; commit registry
+    — **Done:** 7 dirs removed (empty shells); disk 85; files: skills/{7 dirs}; fixes: none
+- [x] **4.2** Final regen; commit registry
     — **Why:** generated artifact
     — **Done when:** router present, zero removed IDs
     — **Consumers affected:** installer
-- [ ] **4.3** Final sweep: counts equal disk (85); orphan grep (PLANS/CHANGELOG excepted)
+    — **Done:** final regen — router present, zero removed IDs; files: installer/registry.json; fixes: none
+- [x] **4.3** Final sweep: counts equal disk (85); orphan grep (PLANS/CHANGELOG excepted)
     — **Why:** documented failure modes
     — **Done when:** clean
     — **Consumers affected:** deploy users
+    — **Done:** counts equal disk (85/53); orphan grep: README history clause only (justified); files: none; fixes: none
 
 ### Phase 5: Verify + deliverables (ticket exit gate — full)
 
@@ -155,6 +165,7 @@
 
 LOG phase-1: docs-only; no background baseline (in-cycle + final gates authoritative).
 GATE (phase-1 tree) tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
+LOG phase-2/4: single roster-final commit cycle. In-cycle gate red ×4 (protocol tier3 metadata ×3: the 3.2-era path retarget consumed 3.3's metadata-regex anchors — cross-step anchor interference, re-done post-sweep; init.bats registry-count: regen pending at gate time). All fixed; guard/protocol/installer families green; final full gate authoritative.
 
 
 (appended at execution: phase commits, gate memos, deliverables)

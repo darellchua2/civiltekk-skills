@@ -914,7 +914,7 @@ async function cmdAdd(args, opts, reg, depMap) {
   }
 
   const name = args[0];
-  if (!name) die("add: specify a skill or agent name (e.g. 'solid-principles-skill'). Use --list agents|skills to browse.", 2);
+  if (!name) die("add: specify a skill or agent name (e.g. 'code-principles-skill'). Use --list agents|skills to browse.", 2);
 
   const isAgent = reg.agents.some((a) => a.stem === name);
   const isSkill = reg.skills.some((s) => s.name === name);

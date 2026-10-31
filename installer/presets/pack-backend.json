@@ -9,17 +9,14 @@
     "authentication-authorization-skill",
     "civiltekk-api-spec-skill",
     "civiltekk-python-backend-skill",
-    "clean-code-skill",
-    "code-smells-skill",
+    "code-principles-skill",
     "continuous-learning-skill",
     "database-migration-skill",
-    "design-patterns-skill",
     "docker-containerization-skill",
     "logging-observability-skill",
     "performance-optimization-skill",
     "search-first-skill",
-    "security-audit-skill",
-    "solid-principles-skill"
+    "security-audit-skill"
   ],
   "mcps": [
     "codegraph"

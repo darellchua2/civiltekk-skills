@@ -514,18 +514,18 @@ extract_section_range() {
 
 # --- code-smells ---
 @test "default_behavior_code-smells_has_imperative_gating_preamble" {
-  skill_md="$SKILLS_DIR/code-smells-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/code-smells.md"
   [ -f "$skill_md" ]
   grep -q 'DO NOT execute any of the following unless' "$skill_md"
 }
 @test "default_behavior_code-smells_preamble_appears_exactly_once" {
-  skill_md="$SKILLS_DIR/code-smells-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/code-smells.md"
   [ -f "$skill_md" ]
   count=$(grep -c 'DO NOT execute any of the following unless' "$skill_md")
   [ "$count" -eq 1 ]
 }
 @test "default_behavior_code-smells_evaluator_token_in_section_only" {
-  skill_md="$SKILLS_DIR/code-smells-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/code-smells.md"
   [ -f "$skill_md" ]
   range=$(extract_section_range "$skill_md")
   start=$(echo "$range" | awk '{print $1}')
@@ -601,18 +601,18 @@ extract_section_range() {
 
 # --- solid-principles ---
 @test "default_behavior_solid-principles_has_imperative_gating_preamble" {
-  skill_md="$SKILLS_DIR/solid-principles-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/solid-principles.md"
   [ -f "$skill_md" ]
   grep -q 'DO NOT execute any of the following unless' "$skill_md"
 }
 @test "default_behavior_solid-principles_preamble_appears_exactly_once" {
-  skill_md="$SKILLS_DIR/solid-principles-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/solid-principles.md"
   [ -f "$skill_md" ]
   count=$(grep -c 'DO NOT execute any of the following unless' "$skill_md")
   [ "$count" -eq 1 ]
 }
 @test "default_behavior_solid-principles_evaluator_token_in_section_only" {
-  skill_md="$SKILLS_DIR/solid-principles-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/solid-principles.md"
   [ -f "$skill_md" ]
   range=$(extract_section_range "$skill_md")
   start=$(echo "$range" | awk '{print $1}')
@@ -630,18 +630,18 @@ extract_section_range() {
 
 # --- clean-code ---
 @test "default_behavior_clean-code_has_imperative_gating_preamble" {
-  skill_md="$SKILLS_DIR/clean-code-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/clean-code.md"
   [ -f "$skill_md" ]
   grep -q 'DO NOT execute any of the following unless' "$skill_md"
 }
 @test "default_behavior_clean-code_preamble_appears_exactly_once" {
-  skill_md="$SKILLS_DIR/clean-code-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/clean-code.md"
   [ -f "$skill_md" ]
   count=$(grep -c 'DO NOT execute any of the following unless' "$skill_md")
   [ "$count" -eq 1 ]
 }
 @test "default_behavior_clean-code_evaluator_token_in_section_only" {
-  skill_md="$SKILLS_DIR/clean-code-skill/SKILL.md"
+  skill_md="$SKILLS_DIR/code-principles-skill/references/routes/clean-code.md"
   [ -f "$skill_md" ]
   range=$(extract_section_range "$skill_md")
   start=$(echo "$range" | awk '{print $1}')
