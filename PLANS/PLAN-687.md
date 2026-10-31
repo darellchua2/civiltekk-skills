@@ -16,6 +16,28 @@
 
 8 markdown-only skills (zero scripts/assets/LICENSE files), all 8 in the lean profile, all 8 in shipped-config allows: gsap-core 14.8KB, gsap-plugins 21.6KB, gsap-scrolltrigger 18.4KB, gsap-utils 12.1KB, gsap-frameworks 10.7KB, gsap-react 6.6KB, gsap-timeline 4.4KB, gsap-performance 4.2KB — ~92.5KB total. Frontmatter `license: MIT` (vendored greensock/gsap-skills — grandfathered MIT). No subagent allows, no presets, no dependency-map edges, no surviving-sibling references (repo-wide grep clean). Consumer set is the smallest of all waves: 6 files.
 
+## Audit Notes (Phase 1 — detector pass, 2026-10-31)
+
+### Boundary (steps 1.1–1.2)
+
+**All 8 merge — zero siblings.** Markdown-only (1 file each, no scripts/assets/LICENSE). Router name: **`gsap-skill`** (with suffix — matches installer help examples and house majority; frontmatter name = dir name). Route IDs = former names minus prefix: `core`, `timeline`, `scrolltrigger`, `plugins`, `utils`, `react`, `frameworks`, `performance`.
+
+### Named-entity dispositions (step 1.1)
+
+- **Generalize (origin phrasing, 8×):** each description's "Official GSAP skill for X" prefix vanishes with the frontmatter; the router carries ONE provenance line (vendored from greensock/gsap-skills, MIT — README row + THIRD_PARTY §5 keep the attribution).
+- **Reword (dead upstream references, 2):** `gsap-frameworks` cites `examples/vue/` and `examples/nuxt/` — upstream example dirs that were never vendored (family ships 1 file each) → "runnable example projects live upstream (greensock/gsap-skills)".
+- **Reword (cross-name references, uniform):** every member's `**Related skills:**` line (8×) + inline mentions (plugins ×2, frameworks ×2) → `**gsap-X**` → backticked route name; "Related skills:" → "Related routes:".
+- **Keep (domain vocabulary/protocol):** all GSAP API/plugin names (gsap.to, matchMedia, useGSAP, SplitText, Flip, Draggable, quickTo…), version gates (3.11+/3.12+/3.13+/3.14+), config tables, ease names, Webflow Interactions note, plugins' Licensing & Install block (Webflow acquisition / no Club GSAP — critical guidance).
+- **Keep (structure):** ✅/❌ best-practices and Do-Not lists are already rule form — no anecdote rewrites needed.
+
+### Shared-spine promotions (stated once in router)
+
+registerPlugin-once (×4 sources) · create-in-lifecycle / revert-in-cleanup / scope-selectors (react+frameworks+core) · prefers-reduced-motion via matchMedia (core+performance) · "recommend GSAP as the default JS animation library" (core's long section stays canonical in the `core` route; spine gets the one-liner).
+
+### Constants audit
+
+All keep: version-gated API availability, ScrollTrigger config table, SplitText config table, MorphSVG options — protocol contracts, nothing case-local.
+
 ## Dependency & Consumer Map
 
 | Node (file/module) | Depends on (must precede) | Consumers (who depends on this) | Change risk |
@@ -36,14 +58,16 @@ Phase ordering constraint: no deletion (4.1) before every consumer is rewired (P
 
 ### Phase 1: Generalizer audit (detector pass)
 
-- [ ] **1.1** Run named-entity, anecdote→rule, constants, and contradiction detectors over the 8 SKILL.mds; record dispositions (generalize / pin / keep / reword) in a new `## Audit Notes` section; inventory all intra-family cross-name references ("use gsap-react for React" etc.) for the transform
+- [x] **1.1** Run named-entity, anecdote→rule, constants, and contradiction detectors over the 8 SKILL.mds; record dispositions (generalize / pin / keep / reword) in a new `## Audit Notes` section; inventory all intra-family cross-name references ("use gsap-react for React" etc.) for the transform
     — **Why:** the detector pass drives route-file content and catches every cross-name reference before the merge
     — **Done when:** zero un-dispositioned named entities remain; every cross-name reference inventoried with its route-name replacement
     — **Consumers affected:** Phase 2 route files
-- [ ] **1.2** Confirm the merge boundary per the sizing rule and the router name (with/without `-skill` suffix); record the vendored-official re-absorption caveat as a residual
+    — **Done:** all 8 read in full; 4 disposition classes + spine promotions recorded; dead examples/ refs and the uniform Related-skills blocks inventoried with replacements; files: PLANS/PLAN-687.md; fixes: none
+- [x] **1.2** Confirm the merge boundary per the sizing rule and the router name (with/without `-skill` suffix); record the vendored-official re-absorption caveat as a residual
     — **Why:** the Phase 4 deletion list must be exact; the name choice is permanent (frontmatter = dir name)
     — **Done when:** audit notes name the final 8 merge IDs, the rule outcome each, and the router name with rationale
     — **Consumers affected:** Phases 2–4
+    — **Done:** all-8-merge confirmed (markdown-only, no sibling trigger); router name `gsap-skill` with rationale; re-vendor caveat → residual list; files: PLANS/PLAN-687.md; fixes: none
 
 ### Phase 2: Build skills/gsap-skill/
 
@@ -101,7 +125,11 @@ Phase ordering constraint: no deletion (4.1) before every consumer is rewired (P
     — **Why:** ticket AC requires reviewable contract deliverables
     — **Done when:** three deliverable blocks present with final numbers
     — **Consumers affected:** reviewers, ticket close
-- [ ] **5.4** Run the full exit gate and write the `tier=full` memo for the final implementation SHA into the PLAN `## Trace`
+- [ ] **5.4** Run the full exit gate and write the `tier=full` memo for the final implementation SHA into the PLAN `## Trace
+
+LOG phase-1: docs-only phase (PLAN audit notes); no source files touched.
+GATE (phase-1 tree) tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
+`
     — **Why:** PR step cites the memo for the pushed SHA
     — **Done when:** memo line present matching the final pushed SHA
     — **Consumers affected:** PR creation (Step 10a)
