@@ -17,6 +17,28 @@
 
 4 skills, 21,829 bytes of SKILL.md + 15,132 bytes core `references/*.md` (5 files) + 15,230 bytes core scripts (3) + per-loop `templates/` dirs. Not in lean, not in shipped-config allows. HANDOFF2 = the multi-owner pair (3 owners → core). The core skill is the #602 **shared protocol host**: 24 surviving skills + 5 templates/scripts cite `autoresearch-core-skill/references/*.md` by path (prose citations, NOT installer edges), mechanically enforced by `tests/test_autoresearch_protocol.bats` (`tier1_*_cites_all_5_references` greps the exact prefix per retrofitted skill).
 
+## Audit Notes (Phase 1 — detector pass, 2026-10-31)
+
+### Boundary + layout (steps 1.1–1.2)
+
+**All 4 merge — core becomes the router spine, not a route.** Router: `autoresearch-skill`. Layout: core `references/*.md` (5 protocol deep-dives) → router root `references/`; core `scripts/*` (3) → `scripts/`; loop SKILL.mds → `references/routes/{code,ml,research}.md`; loop `templates/*` → `templates/<loop>/`. **Citation format: skill-root-relative** — route files cite `references/X.md`, `scripts/tool`, `templates/<loop>/file`; the router states the convention once.
+
+### Citation-network inventory (step 1.1 — the dominant surface)
+
+Uniform string `autoresearch-core-skill/references/` appears in **24 surviving skills** (verification-loop ×5, tdd-workflow ×6, eval-harness ×5, linting-workflow ×5, continuous-learning ×6, coverage-readme ×6, deprecated-code-cleanup ×6, opencode-skills-maintainer ×5, plan-execution ×3, civiltekk-pr-workflow ×3, playwright-responsive-audit ×3, civiltekk-documentation-sync ×3, clean-code ×2, + 12 singles) — mechanically enforced by `test_autoresearch_protocol.bats` `tier1_*_cites_all_5_references` (exact-prefix grep ×6 skills × 5 refs). Also citing: 3 loop subagents, 5 templates, 2 core scripts, AGENTS.md, dependency-map, pack-research, README, THIRD_PARTY §1. Rename: `autoresearch-core-skill/references/` → `autoresearch-skill/references/` everywhere + test expected prefix (one commit, 3.2).
+
+### Named-entity dispositions
+
+- **Keep (protocol contracts):** the `{"pass":bool,"score":N}` shape, 5-stage order, 3-strike/5-strike thresholds, 25-iteration default, TSV 8-column spec, val_bpb metric, TIME_BUDGET=5min, Tier 1/2 taxonomy, NEVER STOP/NEVER ASK directives.
+- **Keep (attribution):** uditgoenka/karpathy/wjgoarxiv MIT notices — per-route blocks stay (they differ per route).
+- **Fold into spine:** core's 5-stage loop, evaluator contract summary, stuck detection, injection boundary, autonomy directive, crash recovery (full detail stays in `references/*.md`, absorbed unchanged).
+- **Drop:** core's "When to use me" section (obsolete — the router IS the methodology host now); "Domain skills cite my references by path" self-description → router convention line.
+- **Reword (cross-refs):** loop triggers "→ `autoresearch-ml-skill`" → "→ the `ml` route"; loop citations `autoresearch-core-skill/references/X.md` → `references/X.md`; loop templates `autoresearch-<loop>-skill/templates/` → `templates/<loop>/`; core References/Scripts tables → skill-root-relative.
+
+### Constants audit
+
+All keep: thresholds and defaults are the protocol itself. No case-local numbers.
+
 ## Dependency & Consumer Map
 
 | Node (file/module) | Depends on (must precede) | Consumers (who depends on this) | Change risk |
@@ -37,14 +59,16 @@ Phase ordering: no deletion (4.1) before every consumer is rewired (Phase 3); re
 
 ### Phase 1: Generalizer audit (detector pass)
 
-- [ ] **1.1** Run named-entity, anecdote→rule, constants, and contradiction detectors over the 4 SKILL.mds; inventory ALL path citations (`autoresearch-core-skill/references|scripts|templates`) across the 4 members + the 24-skill retrofit network + templates + scripts, with their post-merge forms
+- [x] **1.1** Run named-entity, anecdote→rule, constants, and contradiction detectors over the 4 SKILL.mds; inventory ALL path citations (`autoresearch-core-skill/references|scripts|templates`) across the 4 members + the 24-skill retrofit network + templates + scripts, with their post-merge forms
     — **Why:** the citation network is this ticket's dominant consumer surface; every path form must be inventoried before the transform
     — **Done when:** zero un-dispositioned entities; citation inventory complete with counts per file
     — **Consumers affected:** Phase 2 transform, Phase 3 rewire
-- [ ] **1.2** Confirm boundary (all 4 merge; core becomes spine + shared references) and router layout (references at root, scripts at root, templates per-loop subdir); record the citation-format decision (skill-root-relative) in the layout
+    — **Done:** all 4 read in full; citation inventory complete (24 skills + templates/scripts/tests with counts, uniform string verified); 5 disposition classes recorded; files: PLANS/PLAN-688.md; fixes: none
+- [x] **1.2** Confirm boundary (all 4 merge; core becomes spine + shared references) and router layout (references at root, scripts at root, templates per-loop subdir); record the citation-format decision (skill-root-relative) in the layout
     — **Why:** the citation format must be decided once — 24 files depend on it
     — **Done when:** layout + citation format recorded in Audit Notes
     — **Consumers affected:** Phases 2–3
+    — **Done:** all-4-merge confirmed; core-as-spine + layout + skill-root-relative citation format recorded; files: PLANS/PLAN-688.md; fixes: none
 
 ### Phase 2: Build skills/autoresearch-skill/
 
@@ -135,5 +159,9 @@ Phase ordering: no deletion (4.1) before every consumer is rewired (Phase 3); re
 | Registry/count drift | roster-change rule; count-drift tests |
 
 ## Trace
+
+LOG phase-1: docs-only; clean baseline captured pre-edit (bats 0, ts 0).
+GATE (phase-1 tree) tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
+
 
 (appended at execution: phase commits, gate memos, deliverables)
