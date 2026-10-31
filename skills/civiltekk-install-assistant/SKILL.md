@@ -29,6 +29,7 @@ skills/subagents what `mcp-install-assistant-skill` is to MCP servers.
 | "is there a skill for X", "find a skill", "what skills exist", "recommend" | `find` — load `references/find.md` |
 | "install skill X", "add subagent Y to this project", "use the installer" | `install` — load `references/install.md` |
 | "what's installed", "update my skills", "remove skill X" | `maintain` — load `references/maintain.md` |
+| "set up the whole stack", "full install", "guided setup" | **Full-stack route (#677)** — do NOT install anything: point at the deploy surface — `civiltekk-setup` (interactive TUI wizard via menu option 0, or flags like `--quick --yes --enable-pack <packs>`); only skills/subagents stay this skill's job |
 | Invoked by handle (`@civiltekk-install-assistant` / `/civiltekk-install-assistant`) | fast path — run the tree immediately; classify by content; bare ask defaults to `find` |
 | Ambiguous ("set me up with X") | ask once, then route — one ask per run |
 

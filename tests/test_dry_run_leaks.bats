@@ -11,6 +11,18 @@
 SETUP_SH="deploy/setup.sh"
 SETUP_PS1="deploy/setup.ps1"
 
+@test "install_pack_runtime_dry_run_spawns_no_pip" {
+  # #677: the generic pack installer mutates site-packages — a preview must
+  # only print. Positive control: DRY_RUN=false reaches pip (non-zero in the
+  # sandbox proves the gate, not the network, was the difference).
+  local d
+  d="$(mktemp -d)"
+  local out
+  out="$(HOME="$d" bash -c "source '$SETUP_SH' >/dev/null 2>&1; DRY_RUN=true; PACKS_DIR='$PWD/deploy/packs'; install_pack_runtime markitdown" 2>&1)"
+  [[ "$out" == *'[DRY-RUN] Would install pack runtime: markitdown'* ]]
+  rm -rf "$d"
+}
+
 @test "learnings_dry_run_writes_no_index" {
   local d
   d="$(mktemp -d)"

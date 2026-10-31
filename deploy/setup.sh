@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# OpenCode Configuration Setup Script
+# CivilTekk Skills Setup — OpenCode/claude-skills configurator deploy
 #
 # Copyright 2026 CivilTekk OpenCode & Claude Skills Contributors
 #
@@ -350,6 +350,8 @@ LIST_ITEMS=false            # --list-items (registry catalog dump)
 SAVE_PRESET_NAME=""         # --save-preset <name>
 LOAD_PRESET_NAME=""         # --preset <name>
 KEEP_BACKUPS=5
+FROM_PLAN=""               # --from-plan <file> (install-plan.json from the TUI wizard, #677)
+NO_TUI=false               # --no-tui (hide the guided-setup wizard option in the classic menu)
 
 # Rollback mode (set by --rollback)
 ROLLBACK_MODE=false
@@ -362,14 +364,14 @@ MODELS_ONLY=false        # --models-only (provider + resolve only)
 FORCE_RESOLVE=false      # --force (ignore preserve-edits)
 MIGRATE_ONLY=false       # --migrate (migration + resolve only)
 MIX_MODE=false           # --mix (per-category provider/model editor)
-ENABLE_PACK=""           # --enable-pack <csv> (provider packs: markitdown,nextjs,docling,chrome-devtools,playwright,alpha-vantage,nanobanana)
+ENABLE_PACK=""           # --enable-pack <csv> (provider packs — the vocabulary is deploy/packs/pack-*.json)
 SKILL_PROFILE="lean"     # --skill-profile lean|full (default lean: primary-visible skills per deploy/skill-profiles.json; full = the shipped opencode.json skill set)
+SEED_AUTH_SCRIPT="${DEPLOY_DIR}/seed-provider-auth.mjs"  # credential seeding CLI (#677)
 
 # API Keys (initialize to empty to avoid unbound variable errors)
 # Capture from environment if they exist
 GITHUB_PAT=""
 ZAI_API_KEY="${ZAI_API_KEY:-}"
-
 
 # Colors for output
 readonly RED='\033[0;31m'
@@ -391,7 +393,7 @@ init_logging() {
         touch "$LOG_FILE" 2>/dev/null || true
     fi
 
-    log "INFO" "=== OpenCode Setup Started at $(date) ==="
+    log "INFO" "=== CivilTekk Skills Setup Started at $(date) ==="
     log "INFO" "Script version: ${SCRIPT_VERSION}"
     log "INFO" "User: ${USER:-${LOGNAME:-unknown}}"
     log "INFO" "Working directory: ${PWD}"
@@ -448,6 +450,79 @@ print_skill_categories() {
         | sed -E 's/^[[:space:]]*category:[[:space:]]*//' \
         | sort | uniq -c | sort -rn \
         | while read -r n c; do [ -n "$c" ] && echo "    - ${c} (${n})"; done
+}
+
+# Derive MCP state from data (#677): the deployed config's mcp.servers block
+# + the packs dir are the single source. The four prose surfaces (help,
+# config echo, summary, next-steps) render this output — hand-maintained
+# server lists were the drift class this replaces (PLAN-GIT-262/GIT-336/GIT-364).
+# Falls back to the shipped source config when nothing is deployed yet.
+# Prints one KEY: value line per state:
+#   AUTO-START: <csv, servers with disabled:false>
+#   PACKED:    <csv, servers covered by a pack partial's mcp.servers keys>
+#   OPTIN:     <csv, remaining disabled servers (per-project opt-in)>
+#   COUNT:     <total server entries>
+mcp_state_listing() {
+    local config_src="$CONFIG_FILE"
+    [ -f "$config_src" ] || config_src="$SOURCE_CONFIG"
+    node -e '
+        const fs = require("fs");
+        const read = (f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return null; } };
+        const config = read(process.argv[1]) || {};
+        const servers = (config.mcp && config.mcp.servers) || {};
+        const autostart = [], names = Object.keys(servers);
+        for (const name of names) {
+            if (servers[name] && servers[name].disabled === false) autostart.push(name);
+        }
+        const packed = [];
+        try {
+            for (const f of fs.readdirSync(process.argv[2])) {
+                if (!/^pack-.+\.json$/.test(f)) continue;
+                const pack = read(process.argv[2] + "/" + f);
+                if (pack && pack.mcp && pack.mcp.servers) packed.push(...Object.keys(pack.mcp.servers));
+            }
+        } catch {}
+        const optin = names.filter((n) => !autostart.includes(n) && !packed.includes(n));
+        console.log("AUTO-START: " + autostart.join(", "));
+        console.log("PACKED: " + packed.join(", "));
+        console.log("OPTIN: " + optin.join(", "));
+        console.log("COUNT: " + names.length);
+    ' "$config_src" "$PACKS_DIR" 2>/dev/null
+}
+
+# Render mcp_state_listing as the three prose lines the surfaces share.
+# Prefix-free (callers indent); csv counts derived, never hand-written.
+mcp_state_lines() {
+    local listing auto packed optin
+    listing="$(mcp_state_listing)"
+    auto="$(sed -n 's/^AUTO-START: //p' <<< "$listing")"
+    packed="$(sed -n 's/^PACKED: //p' <<< "$listing")"
+    optin="$(sed -n 's/^OPTIN: //p' <<< "$listing")"
+    local n_auto n_packed n_optin
+    n_auto="$(awk -F', ' 'NF {print NF}' <<< "$auto")"; n_auto="${n_auto:-0}"
+    n_packed="$(awk -F', ' 'NF {print NF}' <<< "$packed")"; n_packed="${n_packed:-0}"
+    n_optin="$(awk -F', ' 'NF {print NF}' <<< "$optin")"; n_optin="${n_optin:-0}"
+    echo "Auto-start (${n_auto}): ${auto:-none}"
+    echo "Opt-in via provider packs (${n_packed}) — ./setup.sh --enable-pack <name>: ${packed:-none}"
+    echo "Opt-in per-project (${n_optin}) — .opencode/opencode.json: ${optin:-none}"
+}
+
+# Total configured MCP server entries (derived — the count-literal ban in
+# test_mcp_count_consistency.bats applies to prose surfaces, never here).
+mcp_state_count() {
+    sed -n 's/^COUNT: //p' <<< "$(mcp_state_listing)"
+}
+
+# Pack names (the --enable-pack vocabulary) derived from the packs dir —
+# mirrors validate_enable_pack's enumeration without duplicating it.
+mcp_pack_names() {
+    local f out=""
+    for f in "$PACKS_DIR"/pack-*.json; do
+        [ -f "$f" ] || continue
+        out="${out}${f##*/pack-}"
+        out="${out%.json}|"
+    done
+    echo "${out%|}"
 }
 
 ################################################################################
@@ -511,7 +586,7 @@ trap 'echo ""; log_warn "Setup interrupted by user"; exit 130' INT
 show_help() {
     cat << EOF
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    OpenCode Configuration Setup v${SCRIPT_VERSION}
+                    CivilTekk Skills Setup v${SCRIPT_VERSION}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 USAGE:
@@ -616,7 +691,7 @@ USAGE:
                           and appends v2 permissions-array allow rules for the
                           named packs. Available
                           packs: markitdown, nextjs, docling, chrome-devtools, playwright, alpha-vantage, nanobanana
-                          (comma-separated, e.g. --enable-pack markitdown,docling).
+                          (comma-separated pack names, e.g. two packs — see the derived list under MCP SERVERS).
                           No-op if omitted; default state of every pack is OFF.
 
   SKILL PROFILE (deploy-time primary visibility):
@@ -625,7 +700,6 @@ USAGE:
                            lean-profile skill set + "*": "deny" (subagents
                            unaffected — they self-scope via frontmatter allows);
                            full deploys the shipped allowlist verbatim.
-
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                             EXAMPLES
@@ -642,7 +716,7 @@ USAGE:
 
   Provider packs (deploy-time MCP toggle):
     ./setup.sh --enable-pack markitdown           # Enable the markitdown MCP server
-    ./setup.sh --enable-pack markitdown,docling   # Enable multiple packs
+    ./setup.sh --enable-pack <pack-names>   # Enable packs (see MCP SERVERS for the derived list)
     ./setup.sh --quick --enable-pack markitdown   # Combine with other modes
 
   Model resolution + skill profile:
@@ -734,22 +808,9 @@ USAGE:
            opencode --agent explore "find all API routes"
 
   MCP SERVERS:
-    Auto-start (enabled by default):
-      codegraph           Pre-indexed code knowledge graph (100% local)
-      zai-web-reader      Web page content extraction (remote, needs ZAI_API_KEY)
-      zai-web-search      Web search with cited results (remote, needs ZAI_API_KEY)
-
-    Available but disabled (opt-in — enable per-project via
-    opencode.json or opencode-repo-setup-skill):
-      atlassian           JIRA and Confluence integration (first use opens browser OAuth)
-      next-devtools      Next.js DevTools integration
-      markitdown         Document-to-Markdown (upstream markitdown-mcp, stdio, plugins off)
-      docling            Layout-aware document extraction (heavy ~3-4 GB)
-      chrome-devtools    Live Chrome automation: perf traces, network/console, Lighthouse, heap snapshots
-                          (privacy-hardened: telemetry + CrUX OFF; throwaway profile; enable via --enable-pack chrome-devtools)
-      playwright         Logged-in web automation via accessibility snapshots (Microsoft, Apache-2.0)
-      alpha-vantage      Market/macro/commodities data with cited figures (remote; needs ALPHA_VANTAGE_API_KEY)
-      nanobanana         Google Nano Banana image generation: 4K, multi-reference editing (needs GEMINI_API_KEY)
+$(mcp_state_lines | sed 's/^/    /')
+    Enable a group: ./setup.sh --enable-pack <$(mcp_pack_names)>
+    (listing derived from the deployed opencode.json + deploy/packs — never hand-maintained)
 
     SKILLS ($(count_skills "${REPO_DIR}/skills")):
 
@@ -904,6 +965,18 @@ parse_arguments() {
                 ZIP_BACKUP=false
                 shift
                 ;;
+            --from-plan)
+                if [ $# -lt 2 ] || [ -z "$2" ]; then
+                    log_error "--from-plan requires a plan file (install-plan.json from the TUI wizard)"
+                    exit 1
+                fi
+                FROM_PLAN="$2"
+                shift 2
+                ;;
+            --no-tui)
+                NO_TUI=true
+                shift
+                ;;
             --provider)
                 if [ -n "$2" ]; then
                     PROVIDER="$2"
@@ -933,7 +1006,7 @@ parse_arguments() {
                 # Accept any value including "" (empty = no-op, handled by
                 # merge-packs.mjs). Only error if no following token at all.
                 if [ $# -lt 2 ]; then
-                    log_error "--enable-pack requires an argument (csv: markitdown,nextjs,docling,chrome-devtools,playwright,alpha-vantage,nanobanana)"
+                    log_error "--enable-pack requires an argument (csv: $(mcp_pack_names | tr '|' ','))"
                     exit 1
                 fi
                 ENABLE_PACK="$2"
@@ -1021,6 +1094,13 @@ parse_menu_selection() {
     # "2,6", "2 6", and "2, 6" all word-split into menu digits.
     for token in ${pick//,/ }; do
         case "$token" in
+            0)
+                if [ -n "$MENU_BASE" ]; then
+                    log_error "Menu pick '$pick': more than one base (${MENU_BASE}, ${token}). Pick one base (0-4) plus add-ons (5, 6)."
+                    return 1
+                fi
+                MENU_BASE="0"
+                ;;
             1|2|3)
                 if [ -n "$MENU_BASE" ]; then
                     log_error "Menu pick '$pick': more than one base (${MENU_BASE}, ${token}). Pick one base (1-3) plus add-ons (5, 6)."
@@ -1038,7 +1118,7 @@ parse_menu_selection() {
             5) MENU_ADDON_PEONPING=true ;;
             6) MENU_ADDON_SELECT=true ;;
             *)
-                log_error "Menu pick '$pick': unknown option '${token}'. Bases: 1 quick, 2 skills-only, 3 full, 4 update. Add-ons: 5 peonping, 6 select-items."
+                log_error "Menu pick '$pick': unknown option '${token}'. Bases: 0 guided (TUI), 1 quick, 2 skills-only, 3 full, 4 update. Add-ons: 5 peonping, 6 select-items."
                 return 1
                 ;;
         esac
@@ -1059,6 +1139,53 @@ append_select_plan_steps() {
     PLAN_STEPS+=("true|deploy-selected-agents|Deploy selected agents|deploy_selected_agents")
     PLAN_STEPS+=("true|prune-registry-removed|Prune registry-removed entries|deploy_selected_prune")
     PLAN_STEPS+=("false|apply-selected-extras|Apply selected packs|apply_selected_packs_extras")
+}
+
+# Apply a wizard-emitted install plan (#677) to the mode flags. The TUI only
+# collects decisions — this is the ONLY place plan fields touch flags, and it
+# runs before validate_enable_pack/build_plan so downstream gating (unknown
+# packs, mode conflicts) applies unchanged. One owner for the mapping = the
+# wizard and the CLI cannot drift (test_install_wizard pins the equivalence).
+apply_install_plan() {
+    local plan_file="$FROM_PLAN"
+    if [ ! -f "$plan_file" ]; then
+        log_error "--from-plan: plan file not found: ${plan_file}"
+        exit 1
+    fi
+    local out
+    out="$(node -e '
+        const p = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+        if (p.schema !== "civiltekk-install-plan/1") { console.error("bad schema: " + p.schema); process.exit(1); }
+        const modes = ["skills-only", "quick", "full", "update"];
+        if (!modes.includes(p.mode)) { console.error("bad mode: " + p.mode); process.exit(1); }
+        if (p.skillProfile && !["lean", "full"].includes(p.skillProfile)) { console.error("bad skillProfile: " + p.skillProfile); process.exit(1); }
+        if (p.packs !== undefined && !Array.isArray(p.packs)) { console.error("bad packs: not an array"); process.exit(1); }
+        console.log("MODE=" + p.mode);
+        console.log("PROVIDER=" + (p.provider || ""));
+        console.log("PACKS=" + (p.packs || []).join(","));
+        console.log("PROFILE=" + (p.skillProfile || "lean"));
+    ' "$plan_file")" || { log_error "--from-plan: unreadable or invalid plan: ${plan_file}"; exit 1; }
+
+    local line plan_mode="" plan_packs="" plan_profile="" plan_provider=""
+    while IFS= read -r line; do
+        case "$line" in
+            MODE=*)     plan_mode="${line#MODE=}" ;;
+            PROVIDER=*) plan_provider="${line#PROVIDER=}" ;;
+            PACKS=*)    plan_packs="${line#PACKS=}" ;;
+            PROFILE=*)  plan_profile="${line#PROFILE=}" ;;
+        esac
+    done <<< "$out"
+
+    case "$plan_mode" in
+        skills-only) SKILLS_ONLY=true ;;
+        quick)       QUICK_SETUP=true ;;
+        update)      UPDATE_ONLY=true ;;
+        full)        : ;; # the plain-full base — no flag
+    esac
+    [ -n "$plan_provider" ] && PROVIDER="$plan_provider"
+    [ -n "$plan_packs" ] && ENABLE_PACK="$plan_packs"
+    [ -n "$plan_profile" ] && SKILL_PROFILE="$plan_profile"
+    log_info "Install plan applied from ${plan_file} (mode: ${plan_mode}, provider: ${plan_provider:-default}, packs: ${plan_packs:-none}, profile: ${plan_profile})"
 }
 
 # Mode exclusivity (#466): the early-exit modes are mutually exclusive, and
@@ -1096,6 +1223,12 @@ validate_mode_conflicts() {
     [ "$PEONPING_ONLY" = true ] && modes+=("--peonping")
     [ "$LIST_ITEMS" = true ] && modes+=("--list-items")
     [ -n "$SAVE_PRESET_NAME" ] && modes+=("--save-preset")
+    # FROM_PLAN (#677) is a flag SOURCE, not a mode — it must not combine with
+    # an explicit mode flag (ambiguous which wins).
+    if [ -n "$FROM_PLAN" ] && [ "${#modes[@]}" -gt 0 ]; then
+        log_error "--from-plan combines with no explicit mode flag (the plan sets the mode): ${modes[*]:-}. Drop the mode flag or the plan."
+        exit 1
+    fi
     # SELECT_ITEMS is whitelisted (#673) and never enters the exclusivity
     # count; it is validated against the surviving modes below instead.
     local count=0 m
@@ -2797,20 +2930,19 @@ setup_config() {
             # jsonc-only machine): restore the one-live-config end state.
             park_jsonc_sibling
 
-            # Install the upstream markitdown MCP server (#487: markitdown-mcp from PyPI)
-            # only when the pack is requested — the server ships disabled:true, and
-            # markitdown[all] is a large install, so never on a plain deploy.
-            # Best-effort — non-fatal on offline/pip-missing.
-            if echo "$ENABLE_PACK" | grep -qw "markitdown"; then
-                install_markitdown_mcp
+            # Install runtimes for requested packs (#677): each pack's install
+            # block (deploy/packs/pack-<name>.json) declares its own runtime —
+            # config-only packs no-op inside install_pack_runtime. Best-effort —
+            # non-fatal on offline/pip-missing.
+            if [ -n "$ENABLE_PACK" ]; then
+                local _pack _pack_list
+                IFS=',' read -ra _pack_list <<< "$ENABLE_PACK" || true
+                for _pack in "${_pack_list[@]:-}"; do
+                    _pack=$(echo "$_pack" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                    [ -z "$_pack" ] && continue
+                    install_pack_runtime "$_pack"
+                done
             fi
-
-            # Install docling-mcp if --enable-pack docling was requested (PLAN-GIT-308).
-            # Heavy (~3-4 GB) — only runs when explicitly opted in.
-            install_docling
-
-            # Provision the laya-guard sidecar (#671); model pre-pull is opt-in (prompt at deploy time, or LAYA_GUARD_WARM=1).
-            provision_laya_guard
 
             # Deploy vibeguard secret-masking config (PLAN-GIT-315).
             local vg_src="${REPO_DIR}/plugins/vibeguard.config.json"
@@ -2831,10 +2963,8 @@ setup_config() {
         echo "    - ... and $(($(count_agents "${REPO_DIR}/agents") - 6)) more agents"
             echo ""
              echo "✓ Configured MCP servers:"
-             echo "    Auto-start: codegraph, web-reader, web-search"
-              echo "    Opt-in per-project (.opencode/opencode.json): atlassian"
-              echo "    Available but disabled (opt-in): next-devtools, markitdown, docling, chrome-devtools, playwright, alpha-vantage, nanobanana"
-              echo "    Enable a group with: ./setup.sh --enable-pack <markitdown|nextjs|docling|chrome-devtools|playwright|alpha-vantage|nanobanana>"
+            mcp_state_lines | sed 's/^/    /'
+              echo "    Enable a group with: ./setup.sh --enable-pack <$(mcp_pack_names)>"
             echo ""
         else
             log_error "opencode.json source not found: ${SOURCE_CONFIG}"
@@ -2940,222 +3070,154 @@ detect_runtime_context() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MARKITDOWN MCP INSTALL (#487 — upstream markitdown-mcp from PyPI)
+# PACK RUNTIME INSTALLS (#677 — data-driven, per deploy/packs/pack-<name>.json)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Install the official markitdown-mcp MCP server (microsoft/markitdown) from
-# PyPI onto the user's PATH so OpenCode can spawn it via the `command` field in
-# opencode.json. Replaces the former in-repo vendored launcher
-# (markitdown-local-mcp) — #487. Uses pip (already a soft dep via
-# codegraph/python tooling).
-#
-# Why the exact pin: upstream publishes only alpha releases (0.0.1a1–0.0.1a7);
-# plain `pip install markitdown-mcp` fails ("no matching distribution") because
-# pip skips pre-releases. An exact pre-release pin installs without --pre and
-# keeps pre-release candidates out of transitive resolution. Bump ritual:
-# the pin lives in deploy/setup.sh only (deploy/setup.ps1 is a thin launcher
-# since #474 and carries no pin; tests/test_setup_ps1_vars.bats enforces its
-# absence there).
-#
-# Why the mcp[cli] co-install: docling-mcp>=3.0 requires mcp[cli]>=2.0,<3.0 and
-# upstream markitdown-mcp requires mcp>=2.1.1,<3.0.0 — installing both specs in
-# one resolve keeps the shared MCP SDK at 2.x for both servers (the retired
-# vendored pin mcp<2.0 was mutually exclusive with docling and broke both).
-#
-# Why --user: avoids polluting system site-packages; console-script lands in
-# ~/.local/bin (Linux/macOS). Python 3.12+ auto-adds ~/.local/bin to PATH on
-# most distros.
-install_markitdown_mcp() {
-    echo ""
-
-    # Dry-run contract (#467): the pip uninstall/install below mutate the
-    # user's site-packages — never during a preview.
-    if [ "$DRY_RUN" = true ]; then
-        echo "[DRY-RUN] Would ensure markitdown-mcp==0.0.1a7 (pip --user)"
+# Generic pack-runtime installer: reads the pack JSON's `install` block and
+# dispatches on `runtime`. All per-pack knowledge (pins, packages, idempotency
+# probes, legacy uninstalls) lives in the pack file — this function is
+# pack-agnostic, so adding a pack with a runtime never edits setup.sh.
+#   runtime "pip"  — pip --user install with PEP 668 --break-system-packages
+#                    fallback (#487/#673 semantics preserved verbatim)
+#   runtime "npm"  — reserved (no pack ships it yet); plain global install
+#   absent/none    — config-only pack, nothing to install
+# Dry-run contract (#467): installs mutate site-packages — preview only prints.
+install_pack_runtime() {
+    local pack_name="$1"
+    local pack_file="${PACKS_DIR}/pack-${pack_name}.json"
+    if [ ! -f "$pack_file" ]; then
+        log_warn "install_pack_runtime: pack spec not found: ${pack_file}"
         return 0
     fi
 
-    log_info "Installing markitdown-mcp (upstream, PyPI)..."
+    if [ "$DRY_RUN" = true ]; then
+        echo "[DRY-RUN] Would install pack runtime: ${pack_name} (per its install block)"
+        return 0
+    fi
 
-    # Working-python gate (#673): functional probe replaces the old
-    # command_exists python3 + pip probes that silently skipped on
-    # Windows Store-stub installs.
+    # One node read prints KEY<value> lines — package specs carry commas and
+    # brackets (mcp[cli]>=2.1.1,<3.0.0), so never comma-split in bash.
+    local spec
+    spec="$(node -e '
+        const fs = require("fs");
+        let pack;
+        try { pack = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); }
+        catch { process.exit(1); }
+        const inst = pack.install;
+        if (!inst || !inst.runtime || inst.runtime === "none") { console.log("RUNTIME<none>"); process.exit(0); }
+        console.log("RUNTIME<" + inst.runtime + ">");
+        for (const p of inst.uninstall || []) console.log("UNINSTALL<" + p + ">");
+        for (const p of inst.packages || []) console.log("PKG<" + p + ">");
+        const id = inst.idempotent || {};
+        if (id.pipShow) console.log("IDEMP_SHOW<" + id.pipShow + ">");
+        if (id.version) console.log("IDEMP_VERSION<" + id.version + ">");
+        if (id["import"]) console.log("IDEMP_IMPORT<" + id["import"] + ">");
+    ' "$pack_file" 2>/dev/null)"
+    if [ -z "$spec" ]; then
+        log_warn "install_pack_runtime: could not parse ${pack_file} — skipping runtime install"
+        return 0
+    fi
+
+    local line runtime="" show="" ver="" imp=""
+    local pkgs=() unis=()
+    while IFS= read -r line; do
+        case "$line" in
+            'RUNTIME<'*)     runtime="${line#RUNTIME<}";  runtime="${runtime%>}" ;;
+            'UNINSTALL<'*)   line="${line#UNINSTALL<}";   unis+=("${line%>}") ;;
+            'PKG<'*)         line="${line#PKG<}";         pkgs+=("${line%>}") ;;
+            'IDEMP_SHOW<'*)  show="${line#IDEMP_SHOW<}";  show="${show%>}" ;;
+            'IDEMP_VERSION<'*) ver="${line#IDEMP_VERSION<}"; ver="${ver%>}" ;;
+            'IDEMP_IMPORT<'*)  imp="${line#IDEMP_IMPORT<}";  imp="${imp%>}" ;;
+        esac
+    done <<< "$spec"
+
+    if [ "$runtime" = "none" ]; then
+        log_debug "pack ${pack_name} is config-only (no install block) — nothing to install"
+        return 0
+    fi
+
+    if [ "$runtime" != "pip" ] && [ "$runtime" != "npm" ]; then
+        log_warn "install_pack_runtime: unknown runtime '${runtime}' in ${pack_file} (supported: pip|npm) — skipping"
+        return 0
+    fi
+
+    if [ "$runtime" = "npm" ]; then
+        if ! command_exists npm; then
+            log_warn "npm not found — skipping ${pack_name} runtime install"
+            return 0
+        fi
+        log_info "npm install -g ${pkgs[*]}"
+        if npm install -g "${pkgs[@]}" >/dev/null 2>&1; then
+            log_success "pack runtime installed: ${pack_name}"
+        else
+            log_warn "npm install failed for ${pack_name} (offline?) — the pack is opt-in, OpenCode works without it"
+        fi
+        return 0
+    fi
+
+    # pip path — working-python gate (#673): functional probe, per-OS hint.
     if ! resolve_python; then
         return 0
     fi
-
-    # Migrate old installs: the retired vendored launcher must not linger on
-    # PATH beside the new entry point (best-effort — absent is fine). PEP 668
-    # blocks plain uninstalls on externally-managed systems — retry once with
-    # --break-system-packages (mirrors the install path below).
-    $PYTHON_BIN -m pip uninstall -y markitdown-local-mcp >/dev/null 2>&1 \
-        || $PYTHON_BIN -m pip uninstall -y --break-system-packages markitdown-local-mcp >/dev/null 2>&1 \
-        || true
-
-    # Idempotency: skip the network round-trip when the PINNED version is
-    # already installed AND importable. Version-aware on purpose: a plain
-    # `pip show` + import probe passes for ANY installed version, so pin
-    # bumps would never reach machines with a working older alpha. `pip
-    # show` alone hides broken installs (e.g. the mcp SDK dependency
-    # missing), which surfaces later as "MCP error -32000: Connection
-    # closed" when the server crashes on import.
-    if $PYTHON_BIN -m pip show markitdown-mcp 2>/dev/null | grep -qF "Version: 0.0.1a7" \
-        && $PYTHON_BIN -c "from markitdown_mcp.__main__ import main" >/dev/null 2>&1; then
-        log_success "markitdown-mcp 0.0.1a7 already installed — skipping pip install"
+    if [ "${#pkgs[@]}" -eq 0 ]; then
+        log_warn "install_pack_runtime: pip runtime with no packages in ${pack_file} — skipping"
         return 0
+    fi
+
+    # Legacy uninstall migration (pack-declared, best-effort — absent is
+    # fine). Runs AFTER resolve_python: PYTHON_BIN must be live here or the
+    # uninstall silently no-ops (code-review Major, #677). PEP 668 blocks
+    # plain uninstalls on externally-managed systems — retry once with
+    # --break-system-packages (mirrors the install path below).
+    local legacy
+    for legacy in "${unis[@]:-}"; do
+        [ -z "$legacy" ] && continue
+        $PYTHON_BIN -m pip uninstall -y "$legacy" >/dev/null 2>&1 \
+            || $PYTHON_BIN -m pip uninstall -y --break-system-packages "$legacy" >/dev/null 2>&1 \
+            || true
+    done
+
+    # Idempotency: skip the network round-trip when the declared version (or
+    # any version, when the pack declares none) is already installed AND the
+    # import probe (when declared) passes. `pip show` alone hides broken
+    # installs, which surface later as "MCP error -32000: Connection closed".
+    if [ -n "$show" ]; then
+        local idem=false
+        if [ -n "$ver" ]; then
+            $PYTHON_BIN -m pip show "$show" 2>/dev/null | grep -qF "Version: ${ver}" && idem=true
+        else
+            $PYTHON_BIN -m pip show "$show" >/dev/null 2>&1 && idem=true
+        fi
+        if [ "$idem" = true ] && [ -n "$imp" ]; then
+            $PYTHON_BIN -c "$imp" >/dev/null 2>&1 || idem=false
+        fi
+        if [ "$idem" = true ]; then
+            log_success "${show} already installed — skipping pip install (${pack_name})"
+            return 0
+        fi
     fi
 
     # Install (network required; non-fatal if offline). PEP 668
     # (externally-managed-environment, Debian 12+/Ubuntu 23.04+) blocks plain
     # `pip install --user` — retry once with --break-system-packages; --user
     # keeps the install isolated to ~/.local, which is the risk PEP 668 guards.
-    log_info 'pip install --user "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0"'
+    log_info "pip install --user ${pkgs[*]}"
     local pip_err
     pip_err="$(mktemp)"
-    if $PYTHON_BIN -m pip install --user --no-warn-script-location "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0" >/dev/null 2>"$pip_err" \
+    if $PYTHON_BIN -m pip install --user --no-warn-script-location "${pkgs[@]}" >/dev/null 2>"$pip_err" \
         || { grep -q "externally-managed-environment" "$pip_err" \
-            && $PYTHON_BIN -m pip install --user --break-system-packages --no-warn-script-location "markitdown-mcp==0.0.1a7" "mcp[cli]>=2.1.1,<3.0.0" >/dev/null 2>>"$pip_err"; }; then
+            && $PYTHON_BIN -m pip install --user --break-system-packages --no-warn-script-location "${pkgs[@]}" >/dev/null 2>>"$pip_err"; }; then
         rm -f "$pip_err"
-        log_success "markitdown-mcp installed"
-
+        log_success "pack runtime installed: ${pack_name}"
         # Scripts-dir PATH check (#673) — per-OS, warn only
         check_user_scripts_path || true
     else
-        log_warn "pip install failed for markitdown-mcp (offline?). The server is opt-in (disabled: true) — OpenCode will work without it. Re-run setup when online to enable."
+        log_warn "pip install failed for ${pack_name} (offline?). The pack is opt-in (disabled: true) — OpenCode will work without it. Re-run setup when online to enable."
         log_warn "pip stderr (last 3 lines):"
         tail -n 3 "$pip_err" >&2
         rm -f "$pip_err"
     fi
-}
-
-# Install docling-mcp (heavy ~3-4 GB) — only when --enable-pack docling is
-# requested. Like markitdown, docling-mcp comes from
-# PyPI. First convert downloads ~hundreds of MB of models from huggingface.co.
-install_docling() {
-    if ! echo "$ENABLE_PACK" | grep -qw "docling"; then
-        return 0
-    fi
-
-    echo ""
-    log_info "Installing docling-mcp[local] (~3-4 GB with models)..."
-
-    # Working-python gate (#673): functional probe, per-OS hint on miss.
-    if ! resolve_python; then
-        return 0
-    fi
-
-    # PEP 668 (externally-managed-environment, Debian 12+/Ubuntu 23.04+)
-    # blocks plain `pip install --user` — retry once with
-    # --break-system-packages; --user keeps it isolated to ~/.local.
-    log_info "pip install --user docling-mcp[local]"
-    local pip_err
-    pip_err="$(mktemp)"
-    if $PYTHON_BIN -m pip install --user --no-warn-script-location "docling-mcp[local]" >/dev/null 2>"$pip_err" \
-        || { grep -q "externally-managed-environment" "$pip_err" \
-            && $PYTHON_BIN -m pip install --user --break-system-packages --no-warn-script-location "docling-mcp[local]" >/dev/null 2>>"$pip_err"; }; then
-        rm -f "$pip_err"
-        log_success "docling-mcp installed"
-
-        # Scripts-dir PATH check (#673) — per-OS, warn only
-        check_user_scripts_path || true
-        log_info "NOTE: first 'docling convert' will download ~hundreds of MB of models from huggingface.co (cached thereafter)."
-    else
-        log_warn "pip install failed for docling-mcp (offline, OOM, or PEP 668?). The pack is opt-in — OpenCode will work without it. Re-run setup when online to enable."
-    fi
-}
-
-# Provision the laya-guard Node sidecar (#671): copies the sidecar scripts +
-# pinned package.json into ~/.cache/laya-guard and npm-installs there, so the
-# opencode plugin file itself stays dependency-free. The ~1.7 GB model
-# pre-pull is opt-in (interactive prompt at deploy time, or LAYA_GUARD_WARM=1
-# headless); without it the model downloads lazily on the
-# first classify. Idempotent: the marker records the provisioned
-# package.json hash. Linux-only (Ubuntu target — non-Linux gets a skip
-# notice, which is also what Windows reaches through the setup.ps1 thin
-# launcher, #474). LAYA_GUARD_SKIP=1 escapes entirely.
-provision_laya_guard() {
-    if [ "${LAYA_GUARD_SKIP:-0}" = "1" ]; then
-        log_info "LAYA_GUARD_SKIP=1 — skipping laya-guard provisioning"
-        return 0
-    fi
-    if [ "$(uname -s)" != "Linux" ]; then
-        log_info "laya-guard provisioning is Linux-only (Ubuntu target) — skipped on $(uname -s); the plugin deploys but stays inert"
-        return 0
-    fi
-    if ! command_exists node; then
-        log_warn "node not found — cannot provision the laya-guard sidecar. Install Node >= 24 and re-run."
-        return 0
-    fi
-    local node_major
-    node_major="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
-    if [ "${node_major:-0}" -lt 24 ]; then
-        log_warn "Node >= 24 required for the laya-guard sidecar (found $(node --version 2>/dev/null || echo none)) — skipping; the plugin stays inert."
-        return 0
-    fi
-    if ! command_exists npm; then
-        log_warn "npm not found — cannot provision the laya-guard sidecar. Install npm and re-run."
-        return 0
-    fi
-
-    local src_dir="${REPO_DIR}/plugins/laya-guard"
-    local dest_dir="${LAYA_GUARD_DIR:-$HOME/.cache/laya-guard}"
-    local pkg_hash marker
-    pkg_hash="$(sha256sum "$src_dir/package.json" | cut -d' ' -f1)"
-    marker="$dest_dir/.provisioned"
-
-    if [ -f "$marker" ] && [ -f "$dest_dir/sidecar.mjs" ] && [ "$(cat "$marker" 2>/dev/null)" = "$pkg_hash" ]; then
-        log_info "laya-guard sidecar already provisioned ($dest_dir)"
-    else
-        echo ""
-        log_info "Provisioning the laya-guard sidecar (local decision-model runtime)..."
-        run_cmd mkdir -p "$dest_dir"
-        if [ "$DRY_RUN" = "true" ]; then
-            log_info "[DRY-RUN] Would copy sidecar + warm + package.json to $dest_dir and npm install there"
-        else
-            if cp "$src_dir/sidecar.mjs" "$dest_dir/sidecar.mjs" \
-                && cp "$src_dir/warm.mjs" "$dest_dir/warm.mjs" \
-                && cp "$src_dir/package.json" "$dest_dir/package.json"; then
-                if (cd "$dest_dir" && npm install --omit=dev --no-audit --no-fund >/dev/null 2>&1); then
-                    printf '%s
-' "$pkg_hash" > "$marker"
-                    log_success "laya-guard sidecar provisioned ($dest_dir)"
-                else
-                    log_warn "npm install failed for the laya-guard sidecar (offline?). OpenCode works without it; re-run setup when online."
-                    return 0
-                fi
-            else
-                log_warn "laya-guard sidecar copy failed — the plugin stays inert"
-                return 0
-            fi
-        fi
-    fi
-
-    # Model pre-pull: interactive prompt, or LAYA_GUARD_WARM=1 headless.
-    # Deliberately NOT --enable-pack: validate_enable_pack fail-fasts on
-    # non-MCP pack names, and run_pack_merger would choke on the missing
-    # pack partial — laya toggles no MCP servers (#672 post-merge fix).
-    local warm_model=false
-    if [ "${LAYA_GUARD_WARM:-0}" = "1" ]; then
-        warm_model=true
-    elif [ -t 0 ] && [ "$AUTO_ACCEPT" = false ]; then
-        if prompt_yes_no "Pre-pull the ~1.7 GB Laya model bundle now? (skip is fine — the first classify downloads it)" "n"; then
-            warm_model=true
-        fi
-    fi
-    if [ "$warm_model" = true ]; then
-        if [ "$DRY_RUN" = "true" ]; then
-            log_info "[DRY-RUN] Would pre-pull the ~1.7 GB Laya model bundle (node warm.mjs)"
-        elif [ -f "$dest_dir/node_modules/@receptron/laya/package.json" ]; then
-            log_info "Pre-pulling the ~1.7 GB Laya model bundle (one-time; laya-managed cache)..."
-            if (cd "$dest_dir" && node warm.mjs >/dev/null 2>&1); then
-                log_success "Laya model bundle ready — classification is fully offline from here"
-            else
-                log_warn "Model pre-pull failed (network?). The first classify downloads it instead."
-            fi
-        else
-            log_warn "Model pre-pull skipped — sidecar deps are missing (npm install failed earlier?)"
-        fi
-    fi
+    return 0
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -3326,14 +3388,18 @@ run_pack_merger() {
         return 1
     fi
 
-    # Install-on-enable: markitdown's Python server is pip-installed from PyPI,
-    # not baked into the target config — without this the enabled server fails
-    # to spawn. Mirrors install_docling gating. Skipped in dry-run
-    # (nothing real is deployed) and when the pack wasn't requested.
-    # grep -qw (not anchored) is safe: validate_enable_pack fail-fast restricts
-    # --enable-pack to real pack names, so no 'markitdown2' false positives.
-    if [ "$DRY_RUN" != true ] && echo "$ENABLE_PACK" | grep -qw "markitdown"; then
-        install_markitdown_mcp
+    # Install-on-enable (#677): each requested pack's install block runs —
+    # a Python/npm runtime is not baked into the target config, so without
+    # this the enabled server fails to spawn. install_pack_runtime no-ops for
+    # config-only packs. Skipped in dry-run (nothing real is deployed).
+    if [ "$DRY_RUN" != true ] && [ -n "$ENABLE_PACK" ]; then
+        local _pack _pack_list
+        IFS=',' read -ra _pack_list <<< "$ENABLE_PACK" || true
+        for _pack in "${_pack_list[@]:-}"; do
+            _pack=$(echo "$_pack" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            [ -z "$_pack" ] && continue
+            install_pack_runtime "$_pack"
+        done
     fi
     return 0
 }
@@ -3508,6 +3574,23 @@ deploy_plugins() {
         fi
         run_cmd cp -r "$item" "${PLUGINS_DEST_DIR}/"
         count=$((count + 1))
+    done
+
+    # Provision hooks (#677): a plugin dir may ship provision.sh for runtime
+    # setup (laya-guard sidecar is the first consumer). Non-fatal — a failed
+    # hook warns and the deploy continues. Env (DRY_RUN/AUTO_ACCEPT/REPO_DIR)
+    # passes through; the script owns its own gates.
+    local hook
+    for item in "${PLUGINS_SRC_DIR}"/*; do
+        [ -d "$item" ] || continue
+        hook="${item}/provision.sh"
+        [ -f "$hook" ] || continue
+        log_info "Running provision hook: $(basename "$item")/provision.sh"
+        if bash "$hook"; then
+            log_info "Provision hook completed: $(basename "$item")"
+        else
+            log_warn "Provision hook failed for $(basename "$item") (non-fatal) — the plugin may stay inert"
+        fi
     done
 
     if [ "$count" -gt 0 ]; then
@@ -3761,6 +3844,12 @@ PLAN_FAILED_COUNT=0
 # init.mjs update exits 2 on pre-#379 installs and #379 decided that is a
 # warning (one full re-run adopts the manifest), not a failure.
 build_plan() {
+    # Wizard plan (#677): apply before validation so plan-derived flags pass
+    # through the same gates as CLI flags. Applied once (cleared after).
+    if [ -n "$FROM_PLAN" ]; then
+        apply_install_plan
+        FROM_PLAN=""
+    fi
     validate_mode_conflicts
     PLAN_STEPS=()
     if [ "$ROLLBACK_MODE" = true ]; then
@@ -3815,8 +3904,8 @@ build_plan() {
             PLAN_STEPS+=("true|agents|Deploy agents|deploy_agents")
             PLAN_STEPS+=("true|plugins|Deploy plugins|deploy_plugins")
         fi
-        PLAN_STEPS+=("false|init-symlink|Install opencode-init shim|setup_opencode_init_symlink")
-        PLAN_STEPS+=("false|setup-symlink|Install opencode-setup shim|setup_opencode_setup_symlink")
+        PLAN_STEPS+=("false|init-symlink|Install civiltekk-init shim (+opencode-init compat)|setup_opencode_init_symlink")
+        PLAN_STEPS+=("false|setup-symlink|Install civiltekk-setup shim (+opencode-setup compat)|setup_opencode_setup_symlink")
         PLAN_STEPS+=("false|learnings|Set up learnings directory|setup_learnings_dir")
     else
         PLAN_MODE="full"
@@ -3845,8 +3934,8 @@ build_plan() {
             PLAN_STEPS+=("true|agents|Deploy agents|deploy_agents")
             PLAN_STEPS+=("true|plugins|Deploy plugins|deploy_plugins")
         fi
-        PLAN_STEPS+=("false|init-symlink|Install opencode-init shim|setup_opencode_init_symlink")
-        PLAN_STEPS+=("false|setup-symlink|Install opencode-setup shim|setup_opencode_setup_symlink")
+        PLAN_STEPS+=("false|init-symlink|Install civiltekk-init shim (+opencode-init compat)|setup_opencode_init_symlink")
+        PLAN_STEPS+=("false|setup-symlink|Install civiltekk-setup shim (+opencode-setup compat)|setup_opencode_setup_symlink")
         PLAN_STEPS+=("false|learnings|Set up learnings directory|setup_learnings_dir")
         PLAN_STEPS+=("false|shell-vars|Set up shell variables|setup_shell_vars")
     fi
@@ -3986,41 +4075,12 @@ seed_codex_provider() {
         echo "[DRY-RUN] Would append Z.AI provider block to ${codex_config}"
         return 0
     fi
-    if grep -q '^\[model_providers\.zai\]' "$codex_config" 2>/dev/null \
-        || grep -q '^model_providers\.zai\.' "$codex_config" 2>/dev/null; then
-        log_info "codex config already defines [model_providers.zai] - leaving ${codex_config} untouched"
-        return 0
-    fi
-    if grep -q '^\[profiles\.zai\]' "$codex_config" 2>/dev/null \
-        || grep -q '^profiles\.zai\.' "$codex_config" 2>/dev/null; then
-        log_info "codex config already defines [profiles.zai] - leaving ${codex_config} untouched"
-        return 0
-    fi
-    mkdir -p "${HOME}/.codex"
-    if cat >> "$codex_config" <<'EOF'
-
-# --- Z.AI provider (added by opencode setup, #573) ---
-# codex supports wire_api = "responses" only, so base_url points at Z.AI's
-# OpenAI Responses endpoint. Source of truth for the endpoint (verified
-# 2026-09-26): Z.AI devpack docs "Coding Endpoint" table lists
-#   Protocol "OpenAI Responses" -> base https://api.z.ai/api/v1
-# (https://docs.z.ai/devpack/tool/others). NOT the PAAS chat-completions
-# base pi uses (api/paas/v4 speaks openai-completions, not Responses).
-# If Z.AI revises this, update here + tests + README together.
-# env_key names the env var codex reads per invocation - the key itself is
-# never stored in this file.
-[model_providers.zai]
-name = "Z.AI"
-base_url = "https://api.z.ai/api/v1"
-env_key = "ZAI_API_KEY"
-
-# Opt-in activation: `codex --profile zai` (global default model untouched).
-[profiles.zai]
-model_provider = "zai"
-model = "glm-5.3"
-EOF
-    then
-        log_success "codex: zai provider appended to ${codex_config} (activate: codex --profile zai)"
+    # Guarded append (#677): the section-exists checks + TOML write live in
+    # deploy/seed-provider-auth.mjs seed-codex — appending a table that
+    # already exists is a TOML parse error, so existing sections skip with
+    # a note instead of corrupting the file.
+    if node "$SEED_AUTH_SCRIPT" seed-codex --config "$codex_config"; then
+        log_success "codex: zai provider ensured in ${codex_config} (activate: codex --profile zai)"
     else
         log_warn "codex: failed to append Z.AI provider block to ${codex_config} (non-fatal)"
     fi
@@ -4045,35 +4105,24 @@ setup_provider_credentials() {
     local chosen=""
     if [ -n "$PROVIDER" ]; then
         chosen="$PROVIDER"
-    else
-        # Derive the provider prefix from the deployed models map, falling back
-        # to the shipped defaults (local deploys omit primary → zai-coding-plan).
-        chosen="$(node -e '
-            const fs = require("fs");
-            const read = (f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return null; } };
-            const map = read(process.argv[1]) || read(process.argv[2]);
-            const primary = map && (map.primary || (map.tiers && map.tiers.primary));
-            if (primary) console.log(String(primary).split("/")[0]);
-        ' "$USER_MODELS_MAP" "$MODELS_DEFAULT_MAP" 2>/dev/null)"
+    fi
+
+    # One resolve call (#677): provider derivation (flag → models map primary
+    # → shipped defaults) + credential-block lookup (preset name OR auth_id
+    # match) live in deploy/seed-provider-auth.mjs now.
+    local resolved
+    resolved="$(node "$SEED_AUTH_SCRIPT" resolve \
+        --presets "$PROVIDER_PRESETS" \
+        ${PROVIDER:+--provider "$PROVIDER"} \
+        ${USER_MODELS_MAP:+--models-map "$USER_MODELS_MAP"} \
+        --default-map "$MODELS_DEFAULT_MAP" 2>/dev/null || true)"
+    if [ -z "$chosen" ]; then
+        chosen="$(node -e 'try { console.log(JSON.parse(process.argv[1]).provider || "") } catch { console.log("") }' "$resolved" 2>/dev/null)"
     fi
     [ -z "$chosen" ] && { log_info "No model provider selected - skipping credential capture"; return 0; }
 
-    # Credential block lookup: match preset name OR any of its auth_ids.
     local block
-    block="$(node -e '
-        const fs = require("fs");
-        const pp = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-        const presets = pp.presets || pp;
-        const chosen = process.argv[2];
-        for (const p of Object.values(presets)) {
-            const c = p.credential;
-            if (c && (p.primary || c.auth_ids) &&
-                (Object.keys(presets).find(n => presets[n] === p) === chosen || c.auth_ids.includes(chosen))) {
-                console.log(JSON.stringify(c));
-                break;
-            }
-        }
-    ' "$PROVIDER_PRESETS" "$chosen" 2>/dev/null)"
+    block="$(node -e 'try { const c = JSON.parse(process.argv[1]).credential; console.log(c ? JSON.stringify(c) : "") } catch { console.log("") }' "$resolved" 2>/dev/null)"
     [ -z "$block" ] && { log_info "Provider '${chosen}' needs no credential - skipping"; return 0; }
 
     local auth_ids env_var oauth
@@ -4492,8 +4541,9 @@ setx_env() {
 # existing entries (zai-coding-plan, gemini, ...). Idempotent. MCP servers still
 # read {env:ZAI_API_KEY} independently — this only authenticates the model provider.
 register_provider_auth() {
-    # Generalized auth.json seeder (#471): merge-never-clobber — writes only
-    # auth[auth_id], preserving every other entry. Dry-run and python3-safe.
+    # Generalized auth.json seeder (#471), moved to node in #677:
+    # merge-never-clobber — writes only auth[auth_id], preserving every other
+    # entry. Dry-run safe. Key travels via the AUTH_KEY env (never argv/ps).
     local auth_id="$1"
     local key="$2"
     [ -z "$key" ] && return 0
@@ -4501,46 +4551,10 @@ register_provider_auth() {
         echo "[DRY-RUN] Would register $auth_id credential in ~/.local/share/opencode/auth.json"
         return 0
     fi
-    if ! command_exists python3; then
-        log_warn "python3 not found — skipping auth.json registration for $auth_id (provider stays unauthenticated)"
+    if ! AUTH_KEY="$key" node "$SEED_AUTH_SCRIPT" seed --auth-id "$auth_id"; then
+        log_warn "auth.json registration failed for $auth_id (provider stays unauthenticated)"
         return 0
     fi
-    local auth_dir="${XDG_DATA_HOME:-$HOME/.local/share}/opencode"
-    local auth_file="${auth_dir}/auth.json"
-    AUTH_ID="$auth_id" AUTH_KEY="$key" python3 - "$auth_file" "$auth_dir" <<'PYEOF'
-import json, os, sys
-auth_file, auth_dir = sys.argv[1], sys.argv[2]
-auth_id = os.environ.get("AUTH_ID", "").strip()
-key = os.environ.get("AUTH_KEY", "").strip()
-if not auth_id or not key:
-    sys.exit(0)
-auth = {}
-try:
-    with open(auth_file) as f:
-        loaded = json.load(f)
-        if isinstance(loaded, dict):
-            auth = loaded
-        else:
-            raise ValueError("auth.json is not an object")
-except FileNotFoundError:
-    pass
-except ValueError:
-    # Merge-never-clobber must hold even for corrupt files (#471 review): a
-    # half-written auth.json must not be silently replaced (that would destroy
-    # every stored credential) — park it and start fresh, loudly.
-    backup = auth_file + ".corrupt.bak"
-    try:
-        os.replace(auth_file, backup)
-        print(f"  warning: auth.json was unparseable — moved to {backup}", file=sys.stderr)
-    except OSError:
-        pass
-auth[auth_id] = {"type": "api", "key": key}
-os.makedirs(auth_dir, exist_ok=True)
-with open(auth_file, "w") as f:
-    json.dump(auth, f, indent=2)
-os.chmod(auth_file, 0o600)  # API keys at rest — not group/world-readable
-print("  auth.json providers: " + ", ".join(sorted(auth.keys())))
-PYEOF
 }
 
 # Setup environment variables in shell config (bashrc, zshrc, etc.)
@@ -4875,20 +4889,10 @@ print_summary() {
         echo "    - ... and $(($(count_agents "${REPO_DIR}/agents") - 5)) more agents"
     fi
 
-    # MCP servers configured
+    # MCP servers configured — listing derived (#677), never hand-maintained
     if [ -f "$CONFIG_FILE" ]; then
-         echo "✓ Configured MCP servers:"
-         echo "    - codegraph - Code knowledge graph (auto-start)"
-         echo "    - web-reader - Web page reading (auto-start, needs ZAI_API_KEY)"
-         echo "    - web-search - Web search with cited results (auto-start, needs ZAI_API_KEY)"
-         echo "    - atlassian - JIRA and Confluence (opt-in per-project)"
-         echo "    - next-devtools - Next.js DevTools (opt-in)"
-         echo "    - markitdown - Document-to-Markdown (upstream markitdown-mcp), opt-in"
-         echo "    - docling - Layout-aware document extraction, opt-in (~3-4 GB)"
-         echo "    - chrome-devtools - Live Chrome automation, opt-in"
-         echo "    - playwright - Logged-in web automation, opt-in"
-         echo "    - alpha-vantage - Market/macro data (needs ALPHA_VANTAGE_API_KEY), opt-in"
-         echo "    - nanobanana - Nano Banana image generation (needs GEMINI_API_KEY), opt-in"
+         echo "✓ Configured MCP servers (derived from the deployed config):"
+         mcp_state_lines | sed 's/^/     /'
 
     # Secret masking
     if [ -f "${CONFIG_DIR}/vibeguard.config.json" ]; then
@@ -4976,12 +4980,11 @@ print_next_steps() {
     echo "  Run 'opencode --skill <name> \"prompt\"' to use a skill"
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-     echo "                     🔌 MCP Servers (4)"
+     echo "                     🔌 MCP Servers ($(mcp_state_count))"
      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
      echo ""
-     echo "  Auto-start: codegraph, web-reader, web-search"
-      echo "  Opt-in per-project: atlassian"
-     echo "  Opt-in global packs: next-devtools, markitdown, docling, chrome-devtools, playwright, alpha-vantage, nanobanana"
+    mcp_state_lines | sed 's/^/  /'
+     echo "  Enable a group: ./setup.sh --enable-pack <$(mcp_pack_names)>"
     echo ""
     echo "  Auth: opencode mcp auth atlassian / opencode mcp auth github"
     echo ""
@@ -5003,68 +5006,78 @@ print_next_steps() {
 # MAIN EXECUTION
 ################################################################################
 
-# Setup the opencode-init symlink (project-scoped selective installer CLI).
-# Symlinks <repo>/installer/init.mjs -> ~/.local/bin/opencode-init so the CLI is on
-# PATH and invocable from any project (the LLM uses it via the routing rule in
-# AGENTS.md). Idempotent: refreshes a stale link, skips a correct one. Additive —
-# does not touch any other setup.sh behavior.
+# Setup the civiltekk-init symlink (project-scoped selective installer CLI).
+# Symlinks <repo>/installer/init.mjs -> ~/.local/bin/civiltekk-init so the CLI
+# is on PATH and invocable from any project (the LLM uses it via the routing
+# rule in AGENTS.md); opencode-init stays as a compat shim (#677). Idempotent:
+# refreshes stale links, skips correct ones. Additive — does not touch any
+# other setup.sh behavior.
 setup_opencode_init_symlink() {
     local init_src="${REPO_DIR}/installer/init.mjs"
     if [ ! -f "$init_src" ]; then
-        log_warn "opencode-init source not found at ${init_src}; skipping symlink"
+        log_warn "civiltekk-init source not found at ${init_src}; skipping symlink"
         return 0
     fi
     local user_bin="${HOME}/.local/bin"
     # Dry-run safe (#469, same class as #467): bare mkdir/ln here would really
     # create the PATH shim during a preview.
     run_cmd mkdir -p "$user_bin"
-    local link="${user_bin}/opencode-init"
-    # Refresh if missing or pointing elsewhere; leave alone if already correct.
-    if [ -L "$link" ] && [ "$(readlink -f "$link" 2>/dev/null)" = "$(readlink -f "$init_src" 2>/dev/null)" ]; then
-        log_info "opencode-init symlink already correct at ${link}"
-    else
-        run_cmd ln -sf "$init_src" "$link"
-        log_success "opencode-init installed to ${link}"
-    fi
+    # Primary name + compat shim (#677): both resolve to the same script so
+    # existing scripts and docs referencing opencode-init keep working.
+    local link compat
+    link="${user_bin}/civiltekk-init"
+    compat="${user_bin}/opencode-init"
+    for target in "$link" "$compat"; do
+        if [ -L "$target" ] && [ "$(readlink -f "$target" 2>/dev/null)" = "$(readlink -f "$init_src" 2>/dev/null)" ]; then
+            log_info "$(basename "$target") symlink already correct at ${target}"
+        else
+            run_cmd ln -sf "$init_src" "$target"
+            log_success "$(basename "$target") installed to ${target}"
+        fi
+    done
     # PATH check (mirrors the markitdown pattern ~line 2587)
     case ":${PATH}:" in
         *":${user_bin}:"*) ;;
-        *) log_warn "${user_bin} is not on your PATH. Add it to your shell rc to use opencode-init:" \
+        *) log_warn "${user_bin} is not on your PATH. Add it to your shell rc to use civiltekk-init:" \
            && echo "    export PATH=\"${user_bin}:\$PATH\"" >&2 ;;
     esac
     log_info "Tip: individual skills/agents can also be installed via: npx github:darellchua2/civiltekk-opencode-claude-skills add <name>"
 }
 
-# Setup the opencode-setup symlink (full-deploy entrypoint shim).
-# Symlinks <repo>/deploy/setup.sh -> ~/.local/bin/opencode-setup so the full
+# Setup the civiltekk-setup symlink (full-deploy entrypoint shim).
+# Symlinks <repo>/deploy/setup.sh -> ~/.local/bin/civiltekk-setup so the full
 # configurator deploy is on PATH and runnable from any directory (safe only
-# because the SCRIPT_DIR resolution above follows symlinks). Idempotent:
-# refreshes a stale link, skips a correct one. Additive — does not touch any
-# other setup.sh behavior.
+# because the SCRIPT_DIR resolution above follows symlinks); opencode-setup
+# stays as a compat shim (#677). Idempotent: refreshes stale links, skips
+# correct ones. Additive — does not touch any other setup.sh behavior.
 setup_opencode_setup_symlink() {
     local setup_src="${REPO_DIR}/deploy/setup.sh"
     if [ ! -f "$setup_src" ]; then
-        log_warn "setup.sh source not found at ${setup_src}; skipping symlink"
+        log_warn "civiltekk-setup source not found at ${setup_src}; skipping symlink"
         return 0
     fi
     local user_bin="${HOME}/.local/bin"
     # Dry-run safe (#469, same class as #467): run_cmd only logs in preview.
     run_cmd mkdir -p "$user_bin"
-    local link="${user_bin}/opencode-setup"
-    # Refresh if missing or pointing elsewhere; leave alone if already correct.
-    if [ -L "$link" ] && [ "$(readlink -f "$link" 2>/dev/null)" = "$(readlink -f "$setup_src" 2>/dev/null)" ]; then
-        log_info "opencode-setup symlink already correct at ${link}"
-    else
-        run_cmd ln -sf "$setup_src" "$link"
-        log_success "opencode-setup installed to ${link}"
-    fi
-    # PATH check (mirrors the opencode-init pattern ~line 4788)
+    # Primary name + compat shim (#677).
+    local link compat
+    link="${user_bin}/civiltekk-setup"
+    compat="${user_bin}/opencode-setup"
+    for target in "$link" "$compat"; do
+        if [ -L "$target" ] && [ "$(readlink -f "$target" 2>/dev/null)" = "$(readlink -f "$setup_src" 2>/dev/null)" ]; then
+            log_info "$(basename "$target") symlink already correct at ${target}"
+        else
+            run_cmd ln -sf "$setup_src" "$target"
+            log_success "$(basename "$target") installed to ${target}"
+        fi
+    done
+    # PATH check (mirrors the civiltekk-init pattern)
     case ":${PATH}:" in
         *":${user_bin}:"*) ;;
-        *) log_warn "${user_bin} is not on your PATH. Add it to your shell rc to use opencode-setup:" \
+        *) log_warn "${user_bin} is not on your PATH. Add it to your shell rc to use civiltekk-setup:" \
            && echo "    export PATH=\"${user_bin}:\$PATH\"" >&2 ;;
     esac
-    log_info "Tip: full redeploys from any directory: opencode-setup"
+    log_info "Tip: full redeploys from any directory: civiltekk-setup (compat: opencode-setup)"
 }
 
 main() {
@@ -5081,7 +5094,7 @@ main() {
     # own banners inside their steps).
     case "$PLAN_MODE" in
         skills-only)
-            echo "=== OpenCode Skills Deployment v${SCRIPT_VERSION} ==="
+            echo "=== CivilTekk Skills Deployment v${SCRIPT_VERSION} ==="
             echo ""
             ;;
         update)
@@ -5089,7 +5102,7 @@ main() {
             echo ""
             ;;
         full)
-            echo "=== OpenCode Configuration Setup v${SCRIPT_VERSION} ==="
+            echo "=== CivilTekk Skills Setup v${SCRIPT_VERSION} ==="
             echo ""
             ;;
     esac
@@ -5131,6 +5144,9 @@ main() {
             echo "                      Setup Mode Selection"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo ""
+            if [ "$NO_TUI" != true ]; then
+                echo "  0) Guided setup (TUI wizard — recommended first time)"
+            fi
             echo "  1) Quick setup (config + skills only)"
             echo "  2) Skills-only setup"
             echo "  3) Full setup (API keys, Node.js, OpenCode)"
@@ -5138,15 +5154,32 @@ main() {
             echo "  5) Install PeonPing (sound notifications)            [add-on]"
             echo "  6) Select items to deploy (skills/agents/packs/plugins) [add-on]"
             echo ""
-            echo "  Pick ONE base (1-4, or standalone 4) plus any add-ons, e.g. 2,6 or 3,5,6"
+            if [ "$NO_TUI" = true ]; then
+                echo "  Pick ONE base (1-4, or standalone 4) plus any add-ons, e.g. 2,6 or 3,5,6"
+            else
+                echo "  Pick ONE base (0-4, or standalone 4) plus any add-ons, e.g. 2,6 or 3,5,6"
+            fi
             echo ""
 
             # Multi-pick menu (#673): parse_menu_selection validates the pick
             # and re-prompts on a named error; blank takes the default (2).
-            local setup_option
+            # Base 0 (#677) launches the TUI wizard inline — a cancelled wizard
+            # re-prompts instead of deploying anything.
+            local setup_option plan_tmp
             while true; do
                 setup_option=$(prompt_user "Select [default: 2; combos like 2,6]" "2")
                 if parse_menu_selection "$setup_option"; then
+                    if [ "$MENU_BASE" = "0" ]; then
+                        plan_tmp="$(mktemp "${TMPDIR:-/tmp}/opencode-install-plan.XXXXXX")"
+                        echo ""
+                        log_info "Guided setup: launching the install wizard..."
+                        if node "$TUI_SCRIPT" install-wizard --out "$plan_tmp"; then
+                            FROM_PLAN="$plan_tmp"
+                        else
+                            log_warn "Wizard cancelled - back to the mode menu"
+                            continue
+                        fi
+                    fi
                     break
                 fi
             done
@@ -5213,7 +5246,7 @@ main() {
             ;;
     esac
 
-    log "INFO" "=== OpenCode Setup Completed at $(date) ==="
+    log "INFO" "=== CivilTekk Skills Setup Completed at $(date) ==="
 
     # Truthful exit (#470): non-zero iff a critical step failed.
     if [ -n "$PLAN_FAILED_CRITICAL" ]; then

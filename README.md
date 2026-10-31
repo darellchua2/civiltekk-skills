@@ -24,7 +24,15 @@ The first two compose: `/create-ticket` makes the ticket, `/run-worktree-pipelin
 
 ## Installation
 
-Three ways in, pick by appetite. All commands below work from any clone of this repo.
+Five ways in, pick by appetite. All commands below work from any clone of this repo.
+
+| You want… | Route |
+|-----------|-------|
+| One skill/agent, no clone | `npx github:… add <name>` — the shadcn model (§1) |
+| The whole stack, guided | `civiltekk-setup` — the TUI wizard: mode → provider → MCP packs → skill profile → review → install (§2) |
+| The whole stack, scripted/CI | `civiltekk-setup --quick --yes` (§2) |
+| A curated set per project | `civiltekk-init --project . --preset <p>` (§3) |
+| Already inside an OpenCode session | `civiltekk-install-assistant` (skills/agents) · `mcp-install-assistant-skill` / `opencode-repo-setup-skill` (MCP servers) |
 
 ### 1. Take one skill (or agent) — the shadcn model
 
@@ -68,17 +76,18 @@ The catalog is also consumable via the ecosystem CLI: `npx skills add darellchua
 
 ### 2. Full deploy — the whole stack
 
-Copies config + agents + skills to `~/.config/opencode/` and installs two PATH commands (`opencode-setup` to re-run the deploy from anywhere, `opencode-init` for project-scoped installs).
+Copies config + agents + skills to `~/.config/opencode/` and installs four PATH commands (`civiltekk-setup` to re-run the deploy from anywhere, `civiltekk-init` for project-scoped installs; `opencode-setup`/`opencode-init` remain as compat symlinks for existing scripts).
 
 ```bash
-./deploy/setup.sh                 # interactive — multi-pick: one base (1-3) + add-ons (5, 6), e.g. 2,6 or 3,5,6
-./deploy/setup.sh --quick --yes   # non-interactive: config + skills, skip dependency checks
+civiltekk-setup                    # interactive — menu: 0 guided TUI wizard, or multi-pick: one base (1-3) + add-ons (5, 6), e.g. 2,6 or 3,5,6
+civiltekk-setup --quick --yes      # non-interactive: config + skills, skip dependency checks
+civiltekk-setup --from-plan plan.json   # execute a wizard-emitted install plan headlessly
 # Windows: powershell -ExecutionPolicy Bypass -File .\deploy\setup.ps1 -Quick -Yes
 # Windows cmd: deploy\setup.cmd -Quick -Yes   (forwards to setup.ps1)
-# No clone? npx -p github:darellchua2/civiltekk-opencode-claude-skills opencode-setup --quick --yes
+# No clone? npx -p github:darellchua2/civiltekk-opencode-claude-skills civiltekk-setup --quick --yes
 ```
 
-The interactive menu is **multi-pick** (#673): one base mode (1 quick / 2 skills-only / 3 full) plus any add-ons (5 PeonPing, 6 per-item picker) — `2,6` or `3,5,6`; `4` (CLI update) runs standalone. The same combos are first-class flags: `--skills-only --select`, `--quick --peonping`. Pack installs need a working Python (`python3`/`python`/`py` — the Windows Store `python3` alias stub is detected and skipped over); setup prints a runtime-context banner (OS, invocation route, node/python versions) before it acts.
+The **guided TUI wizard** (menu option 0, or `deploy/tui.mjs install-wizard`) walks mode → provider → MCP packs → skill profile with an OpenCode-style review screen showing the exact actions before anything runs (including each pack's runtime install command); it emits an `install-plan.json` that `--from-plan` executes — the wizard only collects decisions, setup.sh's plan executor is the single execution owner. The classic multi-pick menu stays as the `--no-tui` fallback (#673): one base mode (1 quick / 2 skills-only / 3 full) plus any add-ons (5 PeonPing, 6 per-item picker) — `2,6` or `3,5,6`; `4` (CLI update) runs standalone. The same combos are first-class flags: `--skills-only --select`, `--quick --peonping`. Pack installs need a working Python (`python3`/`python`/`py` — the Windows Store `python3` alias stub is detected and skipped over); setup prints a runtime-context banner (OS, invocation route, node/python versions) before it acts.
 
 Provider swap (Z.AI default): `./deploy/setup.sh --provider anthropic|openai|openrouter|zai` — agent models are tier-based and provider-agnostic (details in the collapsed reference below). Full flag table: `./deploy/setup.sh --help`, or the [collapsed reference](#full-setup-reference) at the end.
 
@@ -86,12 +95,12 @@ Provider swap (Z.AI default): `./deploy/setup.sh --provider anthropic|openai|ope
 
 ### 3. Per-project subset — presets
 
-Not every project needs 34 agents + 122 skills. `opencode-init` installs a curated preset into `./.opencode/` (clean-slate isolation; additive over a global deploy — it warns):
+Not every project needs 34 agents + 122 skills. `civiltekk-init` installs a curated preset into `./.opencode/` (clean-slate isolation; additive over a global deploy — it warns):
 
 ```bash
-opencode-init --list categories                              # introspect (JSON)
-opencode-init --expand review                                # preview the resolved set
-opencode-init --project . --preset review --yes              # install
+civiltekk-init --list categories                              # introspect (JSON)
+civiltekk-init --expand review                                # preview the resolved set
+civiltekk-init --project . --preset review --yes              # install
 npx github:darellchua2/civiltekk-opencode-claude-skills --project . --preset review --yes   # no prior deploy needed
 ```
 
@@ -116,7 +125,7 @@ civiltekk-opencode-claude-skills/
 ├── agents/                      # 34 subagent .md files (source of truth)
 ├── plugins/                     # Local OpenCode plugins (vibeguard, ponytail, learnings, auto-continue, question-repair, location-keepalive, laya-guard)
 │   └── vibeguard.config.json    # Secret-masking regex patterns
-├── deploy/                      # User-space deployment (setup.sh = bin: opencode-setup; opencode.json = config source of truth)
+├── deploy/                      # User-space deployment (setup.sh = bins: civiltekk-setup (+opencode-setup compat); opencode.json = config source of truth)
 ├── installer/                   # npx installer (init.mjs = bin: opencode-skill; registry, tiers, presets)
 ├── tests/                       # bats test suite (guards counts, isolation, portability)
 ├── PLANS/                       # Execution plans per ticket (git-committed history)
@@ -316,7 +325,7 @@ Current count: **122** (history: 123 after the BT-142 pptx migration → consoli
 | **CAD & Hardware Design** (15) | cad-generation-skill, cad-viewer-skill, cad-step-parts-skill, cad-dxf-skill, cad-urdf-skill, cad-srdf-skill, cad-sdf-skill, cad-sendcutsend-skill, cad-gcode-skill, cad-bambu-labs-skill, cad-implicit-skill, autodesk-aps-skill, civil-3d-skill, open3d-skill, cad-redraw-skill | Parametric CAD (STEP/STL/3MF/GLB), CAD Viewer previews, off-the-shelf parts, DXF drawings, evidence-aware drawing redraw, robot descriptions (URDF/SRDF/SDF), G-code slicing, 3D printing, SendCutSend validation, implicit CAD, Autodesk APS, Civil 3D, Open3D |
 | **Media Generation** (1) | civiltekk-zai-media-skill | Z.AI media endpoints: text-to-image (GLM-Image), text/image-to-video (CogVideoX-3), audio transcription (GLM-ASR), layout-aware OCR (GLM-OCR) — artifacts saved to local files |
 
-Browse live: the [GitHub Pages catalog](https://darellchua2.github.io/civiltekk-opencode-claude-skills/) (deployed on every `main` push), or `opencode-init --list skills`.
+Browse live: the [GitHub Pages catalog](https://darellchua2.github.io/civiltekk-opencode-claude-skills/) (deployed on every `main` push), or `civiltekk-init --list skills`.
 </details>
 
 <details>
@@ -458,13 +467,15 @@ Two setup scripts: `setup.sh` (macOS/Linux/WSL/Git Bash — full feature set) an
 | `--models-only` | `-ModelsOnly` | Re-resolve models only |
 | `--migrate` | `-Migrate` | Run v1.x → v2.0 migration |
 | `--force` | `-Force` | Re-resolve, ignoring preserved hand-edits |
-| `--enable-pack <p>` | `-EnablePack <p>` | Provider packs (see MCP section) |
+| `--enable-pack <p>` | `-EnablePack <p>` | Provider packs (see MCP section); each pack's JSON `install` block declares its runtime (pip/npm) — new packs need no setup.sh edits |
+| `--from-plan <file>` | `-FromPlan <file>` | Execute a wizard-emitted install-plan.json (TUI collects decisions, the plan executor runs them) — #677 |
+| `--no-tui` | `-NoTui` | Hide the guided-setup wizard option in the interactive menu (classic menu only) |
 | `--skill-profile <p>` | `-SkillProfile <p>` | lean (default) \| full |
 | `--help` | `-Help` | Detailed help + examples |
 
 Subcommands (aliases over the flags): `install \| update \| rollback \| peonping \| plan \| check-catalog`
 
-**What setup does:** copies `deploy/.AGENTS.md` → `~/.config/opencode/AGENTS.md`; copies `skills/` and agents; copies `deploy/opencode.json` → `~/.config/opencode/opencode.json` (single source of truth — v2 reads only `opencode.json`/`opencode.jsonc`; a coexisting `opencode.jsonc` is parked as `.legacy-ignored`, never deleted); backs up before overwriting. Installed `opencode-setup` symlinks back to the clone it deployed from — edit files there, re-run here.
+**What setup does:** copies `deploy/.AGENTS.md` → `~/.config/opencode/AGENTS.md`; copies `skills/` and agents; copies `deploy/opencode.json` → `~/.config/opencode/opencode.json` (single source of truth — v2 reads only `opencode.json`/`opencode.jsonc`; a coexisting `opencode.jsonc` is parked as `.legacy-ignored`, never deleted); backs up before overwriting. Installed `civiltekk-setup` (+`opencode-setup` compat) symlinks back to the clone it deployed from — edit files there, re-run here.
 </details>
 
 ## License

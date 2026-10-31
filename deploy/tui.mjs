@@ -16,7 +16,166 @@
 
 import {
   parseArgs, flowProviderPicker, flowMigrationReview, flowOverrideEditor, flowTierEditor,
+  singleSelect, multiSelect, confirm, readJsonMaybe, B, DIM, CY,
 } from "../installer/tui-primitives.mjs";
+
+// ───────────────────────── install-wizard (#677) ─────────────────────────
+// Guided setup session. The TUI ONLY COLLECTS DECISIONS — it emits an
+// install-plan JSON consumed by setup.sh --from-plan; execution has exactly
+// one owner (setup.sh's plan executor), so TUI and CLI cannot drift.
+//   --print-plan --defaults  headless escape hatch (zero TTY reads)
+//   --out <file>             write the plan JSON there (else stdout)
+//   --packs-dir <dir>        packs source (default deploy/packs)
+//   --profiles <file>        skill-profiles.json (default deploy/skill-profiles.json)
+// Non-TTY without --print-plan: exit 2 (flow convention).
+
+import node_fs from "node:fs";
+
+const WIZ_DIR = () => dirname(fileURLToPath(import.meta.url));
+const firstSentence = (c) => (c || "").split(/(?<=\.)\s/)[0].replace(/\s+/g, " ").trim();
+
+// sync JSON read tolerating $comment keys (startup-only, small files)
+function readJsonSyncMaybe(p) {
+  try {
+    return JSON.parse(node_fs.readFileSync(p, "utf8").replace(/^[ \t]*"\$comment"[ \t]*:.*$(\r?\n)?/gm, ""));
+  } catch {
+    return null;
+  }
+}
+
+function loadWizardCatalog(opts) {
+  const packsDir = opts.packsDir || join(WIZ_DIR(), "packs");
+  const packs = [];
+  try {
+    for (const f of node_fs.readdirSync(packsDir).sort()) {
+      const m = f.match(/^pack-(.+)\.json$/);
+      if (!m) continue;
+      const p = readJsonSyncMaybe(join(packsDir, f));
+      if (!p) continue;
+      packs.push({
+        name: m[1],
+        description: firstSentence(p.$comment),
+        runtime: (p.install && p.install.runtime) || "none",
+        packages: (p.install && p.install.packages) || [],
+      });
+    }
+  } catch { /* no packs dir — empty list */ }
+  let profiles = ["lean", "full"];
+  const profFile = readJsonSyncMaybe(opts.profiles || join(WIZ_DIR(), "skill-profiles.json"));
+  if (profFile && typeof profFile === "object") {
+    const keys = Object.keys(profFile).filter((k) => !k.startsWith("$"));
+    if (keys.length) profiles = keys;
+  }
+  let providers = ["zai", "anthropic", "openai", "openrouter", "local-llm", "vllm", "ollama"];
+  const pp = readJsonSyncMaybe(opts.presets || join(WIZ_DIR(), "..", "installer", "provider-presets.json"));
+  if (pp) {
+    const names = Object.keys(pp.presets || pp).filter((k) => !k.startsWith("$"));
+    if (names.length) providers = names;
+  }
+  return { packs, profiles, providers };
+}
+
+export async function flowInstallWizard(_parsed) {
+  // Local arg parsing: the shared parseArgs has a fixed bool-flag set, and
+  // --print-plan/--defaults are booleans while --out/--packs-dir… take
+  // values — getting that wrong silently swallows the next flag (#473).
+  const BOOL = new Set(["printPlan", "defaults"]);
+  const VALUE = new Set(["out", "packsDir", "profiles", "presets"]);
+  const opts = {};
+  const raw = process.argv.slice(3);
+  for (let i = 0; i < raw.length; i++) {
+    const a = raw[i];
+    if (!a.startsWith("--")) continue;
+    const key = a.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    if (BOOL.has(key)) opts[key] = true;
+    else if (VALUE.has(key)) opts[key] = raw[++i];
+  }
+
+  const defaults = opts.defaults;
+  if (!defaults && !(process.stdin.isTTY && process.stdout.isTTY)) {
+    console.error("install-wizard needs a TTY (or --print-plan --defaults for headless)");
+    process.exit(2);
+  }
+  const catalog = loadWizardCatalog(opts);
+
+  const state = {
+    mode: "skills-only",
+    provider: "zai",
+    packs: [],
+    skillProfile: catalog.profiles.includes("lean") ? "lean" : catalog.profiles[0],
+  };
+
+  if (defaults) {
+    emitPlan(state, opts);
+    return;
+  }
+
+  // Step: deploy mode
+  const mode = await singleSelect("CivilTekk Skills Setup — deploy mode", [
+    { label: "Skills-only (recommended) — skills + agents, no dependency checks", value: "skills-only" },
+    { label: "Quick — config + skills only", value: "quick" },
+    { label: "Full — API keys, Node.js, OpenCode, the works", value: "full" },
+    { label: "Update the OpenCode CLI only", value: "update" },
+  ], 0);
+  if (mode.aborted) { console.error("cancelled"); process.exit(1); }
+  state.mode = mode.value;
+
+  // Step: provider
+  const prov = await singleSelect("Model provider", [...catalog.providers, "skip"].map((p, i) => ({
+    label: i === 0 ? `${p} (recommended default)` : p,
+    value: p,
+  })), 0);
+  if (prov.aborted) { console.error("cancelled"); process.exit(1); }
+  state.provider = prov.value === "skip" ? "" : prov.value;
+
+  // Step: MCP packs (off by default — mirrors the main deploy default)
+  if (catalog.packs.length) {
+    const picked = await multiSelect("MCP provider packs (all default OFF)", catalog.packs.map((p) => ({
+      label: `${p.name} — ${p.description || "provider pack"}${p.runtime !== "none" ? `  [installs via ${p.runtime}: ${p.packages.join(" ")}]` : ""}`,
+      value: p.name,
+    })));
+    if (picked.aborted) { console.error("cancelled"); process.exit(1); }
+    state.packs = picked.selected || [];
+  }
+
+  // Step: skill profile
+  const prof = await singleSelect("Skill profile (primary-session visibility)", catalog.profiles.map((p) => ({
+    label: p === "lean" ? "lean (recommended) — primary sees the lean set; subagents see all" : `${p} — shipped allowlist verbatim`,
+    value: p,
+  })), 0);
+  if (prof.aborted) { console.error("cancelled"); process.exit(1); }
+  state.skillProfile = prof.value;
+
+  // Review — the OpenCode-style confirm before anything runs
+  const actions = [];
+  actions.push(`Deploy mode: ${state.mode}`);
+  if (state.provider) actions.push(`Provider: ${state.provider} (writes models.json)`);
+  if (state.packs.length) {
+    actions.push(`Enable packs: ${state.packs.join(", ")}`);
+    for (const name of state.packs) {
+      const p = catalog.packs.find((x) => x.name === name);
+      if (p && p.runtime !== "none") actions.push(`  ${p.runtime} install: ${p.packages.join(" ")}`);
+    }
+  }
+  actions.push(`Skill profile: ${state.skillProfile}`);
+  const ok = await confirm(`Install with this plan?\n${actions.map((a) => `  ${a}`).join("\n")}`, true);
+  if (!ok.value) { console.error("cancelled — nothing written"); process.exit(1); }
+
+  emitPlan(state, opts);
+}
+
+function emitPlan(state, opts) {
+  const plan = {
+    schema: "civiltekk-install-plan/1",
+    mode: state.mode,
+    provider: state.provider,
+    packs: state.packs,
+    skillProfile: state.skillProfile,
+  };
+  const text = JSON.stringify(plan, null, 2) + "\n";
+  if (opts.out) node_fs.writeFileSync(opts.out, text);
+  else process.stdout.write(text);
+}
 
 const flow = process.argv[2];
 const parsed = parseArgs(process.argv.slice(3));
@@ -27,8 +186,9 @@ const parsed = parseArgs(process.argv.slice(3));
     case "migration-review": await flowMigrationReview(parsed); break;
     case "override-editor": await flowOverrideEditor(parsed); break;
     case "tier-editor": await flowTierEditor(parsed); break;
+    case "install-wizard": await flowInstallWizard(parsed); break;
     default:
-      console.error("usage: tui.mjs <provider-picker|migration-review|override-editor|tier-editor|select-items> [opts]");
+      console.error("usage: tui.mjs <provider-picker|migration-review|override-editor|tier-editor|select-items|install-wizard> [opts]");
       process.exit(2);
   }
   // Explicit exit — singleSelect/multiSelect resume stdin for keypress capture,
