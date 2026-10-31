@@ -76,6 +76,7 @@
 ## Trace
 GATE 2d65bec0 tier=light lint=n.a typecheck=n.a build=n.a unit=n.a e2e=n.a — Phase 1 prose-only; gate evidence = Done-when greps (write-instruction purge, negation count 59→58, 73 bodies intact)
 GATE 2d65bec0 tier=light lint=n.a typecheck=n.a build=n.a unit=n.a e2e=n.a — Phase 2 sync; gate evidence = 5/5 md5 pairs identical
+GATE f6a7e22 tier=full lint=n.a typecheck=n.a build=n.a unit=n.a e2e=n.a — red-fix round 1 (CI registry drift guard): regenerated installer/registry.json (main 586e626 landed stale, 113 vs 103 — pre-existing, confirmed main Release run red); local re-gate = build-registry --check green + bats 726/726; LEARNINGS 1 solution captured
 GATE 2d65bec0 tier=full lint=n.a typecheck=n.a build=n.a unit=n.a e2e=n.a — ticket exit gate: 8/8 ACs verified (untrack held, instruction purge grep-clean, negations + bodies intact, sync checksummed); bats suite carries CI (test_dry_run_leaks unaffected — user-level index, assertion direction unchanged)
 
 ## Technical Notes
