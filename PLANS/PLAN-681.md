@@ -77,18 +77,21 @@
     — **Done:** repo-wide grep: only CHANGELOG.md + PLANS/PLAN-681.md (self-referential run record — documented exception, AC intent is live docs); files: none; fixes: none
 
 ### Phase 3: Deployed-copy sync + local deletion
-- [ ] **3.1** Sync the two deployed user-space copies from updated source: `cp deploy/.AGENTS.md ~/.config/opencode/AGENTS.md` and `cp plugins/opencode-learnings-autoinject.README.md ~/.config/opencode/plugins/`
+- [x] **3.1** Sync the two deployed user-space copies from updated source: `cp deploy/.AGENTS.md ~/.config/opencode/AGENTS.md` and `cp plugins/opencode-learnings-autoinject.README.md ~/.config/opencode/plugins/`
     — **Why:** house rule is edit-source-then-sync (never hand-edit deployed copies); a full `setup.sh` redeploy is unnecessary for two byte-copies
     — **Done when:** `grep -i superlocalmemory ~/.config/opencode/AGENTS.md ~/.config/opencode/plugins/opencode-learnings-autoinject.README.md` returns nothing and file checksums match source
     — **Consumers affected:** every future OpenCode session (prompt instructions)
-- [ ] **3.2** Commit repo prose changes (Phase 2 edits) and push
+    — **Done:** both deployed copies synced via cp; grep = 0 mentions; md5 pairs identical (1438187f…, 47abdab8…); files: ~/.config/opencode/AGENTS.md, ~/.config/opencode/plugins/opencode-learnings-autoinject.README.md; fixes: none
+- [x] **3.2** Commit repo prose changes (Phase 2 edits) and push
     — **Why:** pipeline convention — per-phase atomic commits on `feat/681`
     — **Done when:** `git log origin/feat/681` shows the prose-purge commit; `git status` clean in the worktree
     — **Consumers affected:** PR review (Step 9/10)
-- [ ] **3.3** Delete `~/.superlocalmemory/` — only after 1.4 passed
+    — **Done:** satisfied by Phase 2 atomic commit 5b811b3 (docs(memory)); origin/feat/681 shows it; worktree tracked-clean; files: none; fixes: none
+- [x] **3.3** Delete `~/.superlocalmemory/` — only after 1.4 passed
     — **Why:** AC requires the last physical plugin remnant removed, strictly gated on verified upload
     — **Done when:** `ls ~/.superlocalmemory` errors with "No such file or directory"
     — **Consumers affected:** none
+    — **Done:** ~/.superlocalmemory/ removed after 1.4 gate (ls exits 2: No such file or directory); files: none; fixes: none
 
 ## Trace
 GATE 29e3961 tier=light lint=n.a typecheck=n.a build=n.a unit=n.a e2e=n.a — docs/ops-only phase, no tracked-file diff; gate evidence = the four Done-when verifications (all pass)
