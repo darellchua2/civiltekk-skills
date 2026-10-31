@@ -2135,3 +2135,9 @@
 - **Scope**: project
 - **Summary**: a merge watcher that pipes `gh pr checks --watch` through tail inherits tail's exit 0 and auto-merged a red PR (#674); merge gates must capture the watcher's own status (pipefail/no pipe) and define green as zero FAILURE/TIMED_OUT/CANCELLED in the rollup — and a test failure in a diff-intersecting file is unclassified until its assertion text is read, even when a per-file sweep bins it as environmental
 - **Date**: 2026-10-13
+
+- **File**: `LEARNINGS/anti-patterns/plan-tick-backfill-must-key-on-step-id.md`
+- **Confidence**: 1.0
+- **Scope**: project
+- **Summary**: PLAN tick/Done-line backfills driven by "nearest preceding step line" scans misattribute evidence across phase boundaries — key each emitted line on the parsed step ID (N.M) and assert Done-line count == done-set size before committing (#681 Phase 1; reverted and redone keyed)
+- **Date**: 2026-10-31

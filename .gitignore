@@ -98,3 +98,4 @@ docs/OpenCode-Agent-Tooling-Research-2026-09-24.interactive.html
 !LEARNINGS/anti-patterns/rename-sweep-must-skip-deployed-artifact-names.md
 !LEARNINGS/patterns/tui-emits-plan-single-executor-consumes.md
 !LEARNINGS/solutions/shell-key-value-parser-gotchas.md
+!LEARNINGS/anti-patterns/plan-tick-backfill-must-key-on-step-id.md

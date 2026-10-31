@@ -367,7 +367,7 @@ Skills like `continuous-learning` persist knowledge across sessions:
 | `LEARNINGS/` in target projects | Curated, git-committed | Patterns, ADRs, anti-patterns, solutions, conventions |
 | `~/.config/opencode/learnings/` | User-level, cross-project | Personal preferences and patterns |
 
-The `memory` tool's V1 plugin has no v2 release — `LEARNINGS/*.md` + the auto-inject plugin + `AGENTS.md` discovery is the memory layer (watch-list for v2-compatible re-adds in `AGENTS.md` § Project Learnings).
+The `memory` tool's V1 plugin has no v2 release — `LEARNINGS/*.md` + the auto-inject plugin + `AGENTS.md` discovery is the memory layer.
 
 **How it works:** `setup.sh` creates `~/.config/opencode/learnings/` at user level; `continuous-learning` auto-provisions `LEARNINGS/` in target projects; review agents save findings as report content; agents discover learnings via the auto-injected manifest + explicit file reads. In this repo, `LEARNINGS/` ships as an empty skeleton — locally-written entries are gitignored (maintainer memory stays local).
 </details>
