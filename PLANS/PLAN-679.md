@@ -239,3 +239,5 @@ LOG phase-5 fix: phase-3's registry regen had been reverted by a gate-time `git 
 
 ## Trace
 GATE 3651923 tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
+LOG phase-5 deviation: the review-fix commit fe95801 swept the staged LEARNINGS bodies/_index/.gitignore negations + PLAN deliverables (intended for a separate end-of-ticket chore(learnings) commit); contents identical, single-commit rule bent — noted per the inline reviewer discipline.
+GATE fe95801 tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
