@@ -102,3 +102,4 @@ LOG phase-1/2: single-pass family (both members already router-shaped). Full gat
 
 (appended at execution: phase commits, gate memos, deliverables)
 GATE (final tree, pre-commit) tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
+GATE 3f2a5d46 tier=full lint=t typecheck=n.a build=t unit=t e2e=n.a
