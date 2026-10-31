@@ -267,20 +267,21 @@ Usage: `/run-worktree-pipeline [--dry-run] [base-branch] <ticket-refs...>`
    through the run — Step 8 phase commits never stage them (canonical
    rule: `continuous-learning-skill` step 6). For each candidate, write
    `LEARNINGS/<category>/<slug>.md` in the worktree (skip if the file
-   already exists; suffix `-2` on a genuine distinct-entry collision) and
-   append its `_index.md` entry. At end of ticket — after the bounded
-   review loop, before Step 10a — land **one dedicated `chore(learnings)`
-   commit** sweeping every LEARNINGS write of the run (phase-time captures
-   plus review candidates: all bodies + `_index.md`), never folded into a
-   review-fix commit. In repos that ignore `LEARNINGS/**/*.md`, that same
+   already exists; suffix `-2` on a genuine distinct-entry collision) —
+   never `LEARNINGS/_index.md` (it is a local derived cache; committing it
+   recreates the multi-writer merge hotspot it was untracked to kill). At
+   end of ticket — after the bounded review loop, before Step 10a — land
+   **one dedicated `chore(learnings)` commit** sweeping every LEARNINGS write of the run (phase-time captures
+   plus review candidates: all bodies + `.gitignore` negation appends),
+   never folded into a review-fix commit. In repos that ignore `LEARNINGS/**/*.md`, that same
    commit also appends each new body's `!LEARNINGS/<category>/<slug>.md`
    negation to `.gitignore` — the add otherwise errors on / silently drops
    the ignored body file. Any PLAN re-ticks / gate-memo appends from review
    fixes fold into this same commit — its tree is docs-only and its memo
    names the gated implementation SHA Step 10a cites; anything code-shaped
-   riding it is a fix commit and takes the re-gate rule. Refresh any
-   tracked `_index.md` entry restating the learnings-timing rule (e.g. the
-   #445 single-writer row) in this same commit.
+   riding it is a fix commit and takes the re-gate rule. If any tracked file restates
+   the learnings-timing rule (e.g. the #445 single-writer row), refresh it
+   in this same commit.
    **Bounded loop: max 2
    fix-and-re-review iterations** — exhaustion → halt per §Failure Policy.
 10. **PR + merge watching** — split: 10a foreground, 10b background.

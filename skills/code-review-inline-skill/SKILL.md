@@ -46,7 +46,7 @@ re-implement it from memory; never paraphrase it into this file's authority.
 5. **Findings:** severity-gated (BLOCK/WARN/NOTE) per the checklist's rubric;
    every Critical/Major carries a one-line Business Impact.
 6. **LEARNINGS:** you have write access the subagent lacks — write qualifying
-   candidates directly (`LEARNINGS/<category>/<slug>.md` + `_index.md` entry),
+   candidates directly (`LEARNINGS/<category>/<slug>.md` body + end-of-file `.gitignore` negation),
    deduped against existing entries. List written files in Output.
 7. **Fix loop (only when the caller grants fix authority):** fix findings
    severity ≥ Major (Minor by judgment), max **2 fix-and-re-review

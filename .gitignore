@@ -35,7 +35,6 @@ docs/registry.json
 
 # Local knowledge persistence (maintainer memory) — see AGENTS.md §Project Learnings
 LEARNINGS/**/*.md
-!LEARNINGS/_index.md
 !LEARNINGS/patterns/by-reference-docs-mechanize-no-duplication-with-sentinel-greps.md
 !LEARNINGS/patterns/dest-flip-legacy-sweep.md
 !LEARNINGS/anti-patterns/flag-conflict-guard-vs-value-flag-parser.md
