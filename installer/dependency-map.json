@@ -22,15 +22,6 @@
     "requirements-inline-skill": [
       "grilling-skill",
       "civiltekk-requirements-specs-skill"
-    ],
-    "autoresearch-code-skill": [
-      "autoresearch-core-skill"
-    ],
-    "autoresearch-ml-skill": [
-      "autoresearch-core-skill"
-    ],
-    "autoresearch-research-skill": [
-      "autoresearch-core-skill"
     ]
   },
   "shipsPlugins": {

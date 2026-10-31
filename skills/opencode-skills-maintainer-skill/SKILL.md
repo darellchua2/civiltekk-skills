@@ -105,9 +105,9 @@ Report the top-10 heaviest with a redundancy estimate (repeated examples, vendor
 
 ## Citation drift audit (autoresearch protocol)
 
-1. **Keyword-presence-without-citation**: flag any SKILL.md containing iteration-related keywords (`{"pass"`, `Iterations:`, `results.tsv`, `keep/revert`, `stuck detection`, `autoresearch`) WITHOUT a corresponding `autoresearch-core-skill/references/` path citation.
+1. **Keyword-presence-without-citation**: flag any SKILL.md containing iteration-related keywords (`{"pass"`, `Iterations:`, `results.tsv`, `keep/revert`, `stuck detection`, `autoresearch`) WITHOUT a corresponding `autoresearch-skill/references/` path citation.
 2. **Frontmatter-section mismatch**: `metadata.protocol: autoresearch-opt-in` MUST be present in frontmatter iff `## Iteration Protocol (opt-in)` section is present in body. Flag mismatches in either direction.
-3. **Reference existence**: every cited `autoresearch-core-skill/references/<name>.md` path must resolve.
+3. **Reference existence**: every cited `autoresearch-skill/references/<name>.md` path must resolve.
 
 Report: skill path + violation type + suggested fix.
 
@@ -128,11 +128,11 @@ If invoked on an iterative task, prompt ONCE per session: "This looks iterative.
 
 ### Skill-specific patterns
 
-**Citation-drift check** (rule): flag any SKILL.md containing iteration-related keywords (`{"pass"`, `Iterations:`, `results.tsv`, `keep/revert`, `stuck detection`) WITHOUT a corresponding `autoresearch-core-skill/references/` citation. Also verify `metadata.protocol: autoresearch-opt-in` frontmatter is present iff `## Iteration Protocol` section is present. **Stuck detection:** 3 consecutive audits with same finding → escalate severity. See `evaluator-contract.md` + `stuck-detection.md`.
+**Citation-drift check** (rule): flag any SKILL.md containing iteration-related keywords (`{"pass"`, `Iterations:`, `results.tsv`, `keep/revert`, `stuck detection`) WITHOUT a corresponding `autoresearch-skill/references/` citation. Also verify `metadata.protocol: autoresearch-opt-in` frontmatter is present iff `## Iteration Protocol` section is present. **Stuck detection:** 3 consecutive audits with same finding → escalate severity. See `evaluator-contract.md` + `stuck-detection.md`.
 
 ### Citations
-- `autoresearch-core-skill/references/evaluator-contract.md`
-- `autoresearch-core-skill/references/stuck-detection.md`
+- `autoresearch-skill/references/evaluator-contract.md`
+- `autoresearch-skill/references/stuck-detection.md`
 
 ### Imperative gating
 When `AUTORESEARCH_PROTOCOL` is unset, this section is descriptive only. Default behavior is documented in all sections above.

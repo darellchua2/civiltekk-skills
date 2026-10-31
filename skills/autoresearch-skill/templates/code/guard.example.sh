@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # guard.example.sh
 #
-# Example safety-net (Guard) command pattern for autoresearch-code-skill.
+# Example safety-net (Guard) command pattern for the code route.
 # A Guard is a separate command from the Verify evaluator: it does NOT emit
 # {"pass":bool,"score":N}; it exits 0 (green) or non-zero (forces revert).
 #
 # Typical use: "I'm optimizing bundle size (Verify), but the test suite
 # (Guard) MUST stay green at every iteration."
 #
-# See autoresearch-core-skill/references/iteration-safety.md §Verify vs Guard.
+# See references/iteration-safety.md §Verify vs Guard.
 
 set -euo pipefail
 

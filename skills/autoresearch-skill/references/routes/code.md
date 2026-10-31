@@ -1,15 +1,7 @@
----
-name: autoresearch-code-skill
-description: >-
-  Autonomous code optimization loop — modify, verify by benchmark, keep/revert
-  against any metric (coverage, bundle size, runtime, error count).
-  TDD-flavored.
-license: Apache-2.0
-compatibility: opencode
-metadata:
-  protocol: autoresearch-default-on
-category: Autoresearch
----
+# Route: CODE
+
+**Load when:** the task autonomously optimizes code against a metric (coverage, bundle size, runtime, error count) — iterate to target, keep/revert by mechanical evaluator. TDD-flavored; pairs with `tdd-workflow-skill` (single-cycle RED→GREEN vs this loop's overnight iteration). **Skip when:** ML training (Route: `ml`) or literature review (Route: `research`).
+
 
 ## What I do
 
@@ -17,7 +9,7 @@ I run an autonomous code-optimization loop. Each iteration: read the audit trail
 
 ## Triggers
 
-Load me (or route to `autoresearch-code-subagent`) when the user says any of:
+Load this route (or route to `autoresearch-code-subagent`) when the user says any of:
 
 - "optimize code", "optimize until", "iteratively improve"
 - "test coverage", "increase coverage to N%"
@@ -26,15 +18,15 @@ Load me (or route to `autoresearch-code-subagent`) when the user says any of:
 - "fix errors", "reduce error count", "drive failures to zero"
 - "autoresearch code", "git-as-memory optimization"
 
-Do **not** trigger for ML training (→ `autoresearch-ml-skill`) or literature review (→ `autoresearch-research-skill`).
+Do **not** trigger for ML training (→ the `ml` route) or literature review (→ the `research` route).
 
 ## Citations
 
-- `autoresearch-core-skill/references/evaluator-contract.md` — the `{"pass":bool,"score":N}` shape my benchmark evaluator emits.
-- `autoresearch-core-skill/references/stuck-detection.md` — 3-strike pivot (switch from micro-opt to algorithmic change; target a different hotspot).
-- `autoresearch-core-skill/references/iteration-safety.md` — Verify/Guard separation; never modify `.env`, `node_modules/`, or run `rm -rf`.
-- `autoresearch-core-skill/references/audit-trail.md` — the 8-column TSV I append to (`<skill>-results.tsv`).
-- `autoresearch-core-skill/references/crash-recovery.md` — syntax error → free fix; guard failure → revert.
+- `references/evaluator-contract.md` — the `{"pass":bool,"score":N}` shape my benchmark evaluator emits.
+- `references/stuck-detection.md` — 3-strike pivot (switch from micro-opt to algorithmic change; target a different hotspot).
+- `references/iteration-safety.md` — Verify/Guard separation; never modify `.env`, `node_modules/`, or run `rm -rf`.
+- `references/audit-trail.md` — the 8-column TSV I append to (`<skill>-results.tsv`).
+- `references/crash-recovery.md` — syntax error → free fix; guard failure → revert.
 
 ## Skill-specific overrides
 
@@ -54,9 +46,9 @@ Do **not** trigger for ML training (→ `autoresearch-ml-skill`) or literature r
 
 ## Templates
 
-- `autoresearch-code-skill/templates/benchmark.py.template` — emits `{"pass":bool,"score":N}` JSON; parameterized `{{COMMAND}}`, `{{METRIC_NAME}}`, `{{TARGET_VALUE}}`.
-- `autoresearch-code-skill/templates/research.md.code-template` — inline Goal/Scope/Metric/Verify/Guard format with worked examples (coverage, bundle size, runtime).
-- `autoresearch-code-skill/templates/guard.example.sh` — example safety-net pattern (`npm test` must pass while optimizing bundle size).
+- `templates/benchmark.py.template` — emits `{"pass":bool,"score":N}` JSON; parameterized `{{COMMAND}}`, `{{METRIC_NAME}}`, `{{TARGET_VALUE}}`.
+- `templates/research.md.code-template` — inline Goal/Scope/Metric/Verify/Guard format with worked examples (coverage, bundle size, runtime).
+- `templates/guard.example.sh` — example safety-net pattern (`npm test` must pass while optimizing bundle size).
 
 ## NEVER STOP / NEVER ASK
 

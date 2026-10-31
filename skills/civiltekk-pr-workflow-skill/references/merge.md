@@ -187,6 +187,6 @@ This skill expects the loading agent to have:
 
 The skill-wide Iteration Protocol (opt-in) lives in the host `SKILL.md`,
 stated once — including the merge route's CI auto-fix crash-recovery
-pattern with its `autoresearch-core-skill/references/evaluator-contract.md`
-and `autoresearch-core-skill/references/crash-recovery.md` citations.
+pattern with its `autoresearch-skill/references/evaluator-contract.md`
+and `autoresearch-skill/references/crash-recovery.md` citations.
 Not restated here.

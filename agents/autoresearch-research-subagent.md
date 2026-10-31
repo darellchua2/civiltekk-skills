@@ -52,10 +52,7 @@ permissions:
     resource: '*'
     effect: deny
   - action: skill
-    resource: autoresearch-core-skill
-    effect: allow
-  - action: skill
-    resource: autoresearch-research-skill
+    resource: autoresearch-skill
     effect: allow
   - action: skill
     resource: search-first-skill
@@ -146,7 +143,7 @@ than a mechanical evaluator. Consequences:
 - When a mechanical signal exists (e.g. "does this paper cite the seed paper?"),
   prefer it over pure judgment.
 
-See `autoresearch-core-skill/references/evaluator-contract.md` §Tier taxonomy.
+See `autoresearch-skill/references/evaluator-contract.md` §Tier taxonomy.
 
 ## Living-State research.md
 
@@ -164,7 +161,7 @@ modify the templates or any code.
 
 ## Stuck Detection
 
-Per `autoresearch-core-skill/references/stuck-detection.md`:
+Per `autoresearch-skill/references/stuck-detection.md`:
 - **3 consecutive non-productive fetches** → pivot search-query family (synonyms, different corpus: arXiv → Semantic Scholar → Google Scholar).
 - **5 consecutive non-productive fetches** → re-scope the research question; flag for human Tier 2 escalation.
 - **All categories saturated** → finalize, write `final_report.md`, stop.
@@ -173,8 +170,8 @@ Per `autoresearch-core-skill/references/stuck-detection.md`:
 
 - Delegate multi-paper parallel fetching to `general` subagent (e.g. "fetch and extract these 5 URLs in parallel").
 - Delegate corpus exploration to `explore` subagent (e.g. "find all papers in paper-synthesis/ covering category X").
-- Load `autoresearch-core-skill` for the canonical methodology text.
-- Load `autoresearch-research-skill` for research-specific overrides and templates.
+- Load `autoresearch-skill` for the canonical methodology text.
+- Load `autoresearch-skill route `research`` for research-specific overrides and templates.
 - Load `search-first-skill` for the search-before-citing pattern.
 - Load `civiltekk-context-optimization-skill` (compaction-strategy route) if your context exceeds 60% mid-loop.
 

@@ -55,10 +55,7 @@ permissions:
     resource: '*'
     effect: deny
   - action: skill
-    resource: autoresearch-core-skill
-    effect: allow
-  - action: skill
-    resource: autoresearch-ml-skill
+    resource: autoresearch-skill
     effect: allow
   - action: skill
     resource: civiltekk-context-optimization-skill
@@ -86,7 +83,7 @@ nvidia-smi --query-gpu=name --format=csv,noheader
   **Status:** failed
   **Output:** GPU preflight failed — no NVIDIA GPU detected
   **Summary:** torch.cuda.is_available()=False and nvidia-smi unavailable. Cannot run ML training loop.
-  **Issues:** No NVIDIA GPU. Reroute options: (1) see `autoresearch-ml-skill/templates/CPU-FORKS.md` for CPU/macOS/Windows/AMD forks (verify these forks exist and are current before recommending: miolini/autoresearch-macos, trevin-creator/autoresearch-mlx, jsegov/autoresearch-win-rtx, andyluo7/autoresearch); (2) if the underlying task is code optimization rather than model training, reroute to `autoresearch-code-subagent`.
+  **Issues:** No NVIDIA GPU. Reroute options: (1) see `autoresearch-skill route `ml`/templates/CPU-FORKS.md` for CPU/macOS/Windows/AMD forks (verify these forks exist and are current before recommending: miolini/autoresearch-macos, trevin-creator/autoresearch-mlx, jsegov/autoresearch-win-rtx, andyluo7/autoresearch); (2) if the underlying task is code optimization rather than model training, reroute to `autoresearch-code-subagent`.
 
   Do NOT proceed to the loop. Do NOT attempt CPU fallback training.
 
@@ -114,7 +111,7 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 You are an autonomous ML training researcher. You run the karpathy-style
 overnight loop on a single NVIDIA GPU:
 
-1. Read `autoresearch-ml-skill/templates/program.md` for the full protocol.
+1. Read `autoresearch-skill route `ml`/templates/program.md` for the full protocol.
 2. Read the last 10 rows of `*-results.tsv` and the last section of `research_log.md`.
 3. Propose ONE atomic change to `train.py` (architecture / optimizer / hyperparameter).
 4. Apply, `git commit -m "experiment: <description>"`.
@@ -144,14 +141,14 @@ From `program.md`: all else being equal, simpler is better.
 
 ## Stuck Detection
 
-Per `autoresearch-core-skill/references/stuck-detection.md`:
+Per `autoresearch-skill/references/stuck-detection.md`:
 - **3 consecutive non-improving** → pivot strategy (switch optimizer family, change LR schedule, swap activation).
 - **5 consecutive non-improving** → paradigm shift (change model width/depth, try a different attention variant, re-read `train.py` constants).
 - **Max iterations** → finalize, write `final_report.md`, stop.
 
 ## Crash Recovery
 
-Per `autoresearch-core-skill/references/crash-recovery.md`:
+Per `autoresearch-skill/references/crash-recovery.md`:
 - **Syntax error** → fix immediately, free (does not consume an iteration).
 - **Runtime error** → up to 3 fix attempts; then skip idea, log `crash`, revert.
 - **OOM** → halve batch size / reduce model width; if still OOMs, skip idea.
@@ -161,8 +158,8 @@ Per `autoresearch-core-skill/references/crash-recovery.md`:
 
 - Delegate codebase exploration to `explore` subagent (e.g. "find all calls to the optimizer").
 - Delegate parallel research tasks to `general` subagent.
-- Load `autoresearch-core-skill` for the canonical methodology text.
-- Load `autoresearch-ml-skill` for ML-specific overrides and templates.
+- Load `autoresearch-skill` for the canonical methodology text.
+- Load `autoresearch-skill route `ml`` for ML-specific overrides and templates.
 - Load `civiltekk-context-optimization-skill` (compaction-strategy route) if your context exceeds 60% mid-loop.
 
 ## CodeGraph Integration

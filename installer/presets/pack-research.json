@@ -9,10 +9,7 @@
     "loop-operator-subagent"
   ],
   "skills": [
-    "autoresearch-code-skill",
-    "autoresearch-core-skill",
-    "autoresearch-ml-skill",
-    "autoresearch-research-skill",
+    "autoresearch-skill",
     "civiltekk-context-optimization-skill",
     "continuous-learning-skill",
     "eval-harness-skill",

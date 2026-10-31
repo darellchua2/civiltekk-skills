@@ -42,10 +42,7 @@ permissions:
     resource: '*'
     effect: deny
   - action: skill
-    resource: autoresearch-core-skill
-    effect: allow
-  - action: skill
-    resource: autoresearch-code-skill
+    resource: autoresearch-skill
     effect: allow
   - action: skill
     resource: continuous-learning-skill
@@ -177,7 +174,7 @@ the symbols this iteration touched. Both are required.
 
 ## Safety Blocks (hard refusals)
 
-Per `autoresearch-core-skill/references/iteration-safety.md`, never:
+Per `autoresearch-skill/references/iteration-safety.md`, never:
 - Write to `.env`, `node_modules/`, lock files
 - Run `rm -rf`, fork bombs, `curl|sh`, `mkfs`, block-device writes
 - `git push --force` to shared branches
@@ -186,14 +183,14 @@ Per `autoresearch-core-skill/references/iteration-safety.md`, never:
 
 ## Stuck Detection
 
-Per `autoresearch-core-skill/references/stuck-detection.md`:
+Per `autoresearch-skill/references/stuck-detection.md`:
 - **3 consecutive non-improving** → pivot (switch from micro-opt to algorithmic change, target a different hotspot).
 - **5 consecutive non-improving** → paradigm shift (reconsider whether the benchmark measures the right thing, profile before continuing).
 - **Max iterations** → finalize, write `final_report.md`, stop.
 
 ## Crash Recovery
 
-Per `autoresearch-core-skill/references/crash-recovery.md`:
+Per `autoresearch-skill/references/crash-recovery.md`:
 - **Syntax error** → fix immediately, free (does not consume an iteration).
 - **Runtime error** → up to 3 fix attempts; then skip idea, log `crash`, revert.
 - **Timeout** → kill, revert, log `crash`.
@@ -205,8 +202,8 @@ Per `autoresearch-core-skill/references/crash-recovery.md`:
 
 - Delegate codebase exploration to `explore` subagent (find hotspots, map call graphs).
 - Delegate parallel independent optimizations to `general` subagent.
-- Load `autoresearch-core-skill` for the canonical methodology text.
-- Load `autoresearch-code-skill` for code-specific overrides and templates.
+- Load `autoresearch-skill` for the canonical methodology text.
+- Load `autoresearch-skill route `code`` for code-specific overrides and templates.
 - Load `continuous-learning-skill` to persist findings from failed experiments.
 - Load `civiltekk-context-optimization-skill` (compaction-strategy route) if your context exceeds 60% mid-loop.
 

@@ -3,7 +3,7 @@
 # code-review-inline-skill contract guard (#635).
 # The skill is a thin wrapper whose authority is the deployed agent file;
 # these pins hold the wrapper thin — checklist never duplicated, no-subagent
-# pin, stop-on-unresolvable — and the wiring (map edge <-> HANDOFF3 invariant,
+# pin, stop-on-unresolvable — and the wiring (map edge <-> HANDOFF2 invariant,
 # preset membership, lean visibility, runtime allow rule).
 
 SKILL_MD="skills/code-review-inline-skill/SKILL.md"
@@ -37,7 +37,7 @@ SKILL_MD="skills/code-review-inline-skill/SKILL.md"
     [ "$output" = "0" ]
 }
 
-@test "cr_inline: dependency-map edge mirrors guard HANDOFF3" {
+@test "cr_inline: dependency-map edge mirrors guard HANDOFF2" {
     run node -e "
     const m = require('./installer/dependency-map.json').requiresSkills;
     const edge = m['code-review-inline-skill'] || [];
@@ -45,8 +45,8 @@ SKILL_MD="skills/code-review-inline-skill/SKILL.md"
     if (want.some(w => !edge.includes(w))) process.exit(1);
     "
     [ "$status" -eq 0 ]
-    grep -q 'HANDOFF3_OWNER="code-review-inline-skill"' tests/test_skill_isolation.bats
-    grep -q 'HANDOFF3_TARGETS="reviewer-baseline-skill language-review-checklists-skill"' tests/test_skill_isolation.bats
+    grep -q 'HANDOFF2_OWNER="code-review-inline-skill"' tests/test_skill_isolation.bats
+    grep -q 'HANDOFF2_TARGETS="reviewer-baseline-skill language-review-checklists-skill"' tests/test_skill_isolation.bats
 }
 
 @test "cr_inline: pack-inline-workers membership + description" {

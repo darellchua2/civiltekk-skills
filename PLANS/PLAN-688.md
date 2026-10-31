@@ -72,52 +72,62 @@ Phase ordering: no deletion (4.1) before every consumer is rewired (Phase 3); re
 
 ### Phase 2: Build skills/autoresearch-skill/
 
-- [ ] **2.1** Write the router SKILL.md: frontmatter (name `autoresearch-skill`, Apache-2.0, `metadata.protocol: autoresearch-default-on`, category Autoresearch, ≤50-word description with family triggers), identity (mechanical evaluator, no self-judgment), the 5-stage loop + evaluator contract + stuck detection + injection boundary + autonomy directive as the spine (from core), load table (3 routes), references/scripts index, hard rules, gates
+- [x] **2.1** Write the router SKILL.md: frontmatter (name `autoresearch-skill`, Apache-2.0, `metadata.protocol: autoresearch-default-on`, category Autoresearch, ≤50-word description with family triggers), identity (mechanical evaluator, no self-judgment), the 5-stage loop + evaluator contract + stuck detection + injection boundary + autonomy directive as the spine (from core), load table (3 routes), references/scripts index, hard rules, gates
     — **Why:** core IS the shared protocol — it becomes the router spine, not a route
     — **Done when:** file exists; ≤10240 bytes; ≤50 words; 3 rows; no preload
     — **Consumers affected:** subagents (3.1), registry, retrofit citations (3.2)
-- [ ] **2.2** Moves + transform: `git mv` loop SKILL.mds → `references/routes/{code,ml,research}.md`; core `references/*.md` → router root `references/`; core `scripts/*` → `scripts/`; loop `templates/*` → `templates/<loop>/`; transform route files (headers with Load-when/Skip-when; citation rewrites: `autoresearch-core-skill/references/` → `references/`, `autoresearch-<loop>-skill/templates/` → `templates/<loop>/`; triggers cross-refs → route names; core's obsolete "When to use me" folded into spine). Anchor-specific rewrites before generic sweeps; residual grep for any `autoresearch-` path form
+    — **Done:** router written — 5060 bytes, description 34 words, 3 route rows, core's 5-stage loop/evaluator contract/protocol rules/autonomy as spine, references+scripts index, metadata.protocol carried; files: skills/autoresearch-skill/SKILL.md; fixes: none
+- [x] **2.2** Moves + transform: `git mv` loop SKILL.mds → `references/routes/{code,ml,research}.md`; core `references/*.md` → router root `references/`; core `scripts/*` → `scripts/`; loop `templates/*` → `templates/<loop>/`; transform route files (headers with Load-when/Skip-when; citation rewrites: `autoresearch-core-skill/references/` → `references/`, `autoresearch-<loop>-skill/templates/` → `templates/<loop>/`; triggers cross-refs → route names; core's obsolete "When to use me" folded into spine). Anchor-specific rewrites before generic sweeps; residual grep for any `autoresearch-` path form
     — **Why:** the moves create the layout the 24-file citation rename targets; mangled anchors are the documented failure mode
     — **Done when:** 3 route files with headers; all absorbed files present; residual old-ID path grep clean
     — **Consumers affected:** 3.2 citation rename target paths
-- [ ] **2.3** Preserve provenance: per-route attribution blocks kept (uditgoenka/karpathy/wjgoarxiv MIT notices); scripts keep executable bits; AST/bash -n syntax checks over absorbed scripts
+    — **Done:** moves via git mv (3 routes, 5 refs → root, 3 scripts → root, templates per-loop); route transform anchors-first (citations ×14, Load-me ×3, cross-routes ×6, templates ×9); template/script/residue sweep ×12 files; residual old-ID grep clean; files: references/routes/*, references/, scripts/, templates/; fixes: none
+- [x] **2.3** Preserve provenance: per-route attribution blocks kept (uditgoenka/karpathy/wjgoarxiv MIT notices); scripts keep executable bits; AST/bash -n syntax checks over absorbed scripts
     — **Why:** vendored MIT attribution and working scripts must survive
     — **Done when:** attribution present per route; `bash -n` clean on .sh, `py_compile` clean on .py
     — **Consumers affected:** compliance readers, script runtime
+    — **Done:** per-route attribution blocks intact; bash -n clean ×2; py_compile clean; executable bits preserved (autoresearch-loop.sh +x); files: scripts/; fixes: none
 
 ### Phase 3: Rewire consumers (before any deletion)
 
-- [ ] **3.1** 3 loop subagents: allow 2→1 (`autoresearch-skill`); prose references → route names; verify effect-line intact (Wave-2 bug class)
+- [x] **3.1** 3 loop subagents: allow 2→1 (`autoresearch-skill`); prose references → route names; verify effect-line intact (Wave-2 bug class)
     — **Why:** agents must not reference removed skills; YAML assertions in test_autoresearch_skills must stay green
     — **Done when:** grep of the 3 agents finds zero old IDs; YAML allow assertion passes
     — **Consumers affected:** registry build, runtime
-- [ ] **3.2** Citation-network rename (mechanical, one sweep): `autoresearch-core-skill/references/` → `autoresearch-skill/references/` across the 24 surviving skills + `test_autoresearch_protocol.bats` expected prefix + `test_default_behavior.bats` drift section; also `THIRD_PARTY_LICENSES.md` §1 vendored paths → router paths
+    — **Done:** 3 subagents rewired (autoresearch allows 2→1 router each; other skill allows untouched); YAML assertion effect-ok=True ×3; prose refs → route names; files: agents/autoresearch-*-subagent.md; fixes: none
+- [x] **3.2** Citation-network rename (mechanical, one sweep): `autoresearch-core-skill/references/` → `autoresearch-skill/references/` across the 24 surviving skills + `test_autoresearch_protocol.bats` expected prefix + `test_default_behavior.bats` drift section; also `THIRD_PARTY_LICENSES.md` §1 vendored paths → router paths
     — **Why:** the protocol host's references moved; 24 skills + the enforcing test must follow in one commit
     — **Done when:** repo-wide grep for `autoresearch-core-skill` finds zero hits outside PLANS/CHANGELOG; protocol test green
     — **Consumers affected:** all retrofitted skills, CI
-- [ ] **3.3** HANDOFF2 retirement + renumber in ONE commit: dependency-map requiresSkills ×3 edges removed; guard loses HANDOFF2_OWNERS/TARGETS; HANDOFF3→2, HANDOFF4→3, HANDOFF5→4 renumbered across `test_skill_isolation.bats` (vars + argv arity), `test_requires_skills.bats` (extraction + both heredocs + argv offsets + per-family greps: cr_inline HANDOFF3→2, req_inline HANDOFF5→4); `requires_skills_autoresearch_loop_pulls_core` test retired (edge gone; map-entry equality test covers); AGENTS.md:22 declared-exceptions prose updated (exception retired; stale "HANDOFF3 multi-owner" mention corrected to the post-renumber reality)
+    — **Done:** citation rename swept 39 files (24 skills + tests + THIRD_PARTY + templates + scripts), 3 path forms (references/, SKILL.md, scripts/); protocol test green; default_behavior green; files: skills/*, tests/*, THIRD_PARTY_LICENSES.md; fixes: sweep caught /SKILL.md and /scripts/ forms beyond the planned references/ form
+- [x] **3.3** HANDOFF2 retirement + renumber in ONE commit: dependency-map requiresSkills ×3 edges removed; guard loses HANDOFF2_OWNERS/TARGETS; HANDOFF3→2, HANDOFF4→3, HANDOFF5→4 renumbered across `test_skill_isolation.bats` (vars + argv arity), `test_requires_skills.bats` (extraction + both heredocs + argv offsets + per-family greps: cr_inline HANDOFF3→2, req_inline HANDOFF5→4); `requires_skills_autoresearch_loop_pulls_core` test retired (edge gone; map-entry equality test covers); AGENTS.md:22 declared-exceptions prose updated (exception retired; stale "HANDOFF3 multi-owner" mention corrected to the post-renumber reality)
     — **Why:** positional contract — partial renumber leaves silent argv mismatches (documented 3-cycle failure in #680)
     — **Done when:** `grep -rn "HANDOFF" tests/ AGENTS.md` shows a coherent 1–4 sequence; bats skill_isolation + requires_skills + cr_inline + req_inline green
     — **Consumers affected:** CI, installer edge derivation
-- [ ] **3.4** Installer + docs surfaces: pack-research preset 4→1 (position-preserving); README Autoresearch row (4→1) + 6 count literals 96→93 (lean unchanged — family not in lean); registry regenerated
+    — **Done:** dependency-map ×3 edges removed; guard var block now exactly HANDOFF1–4 uniform pairs; renumber across isolation (vars+arity+allowed dict), requires_skills (extraction+heredoc+argv offsets+map-entry), cr_inline HANDOFF3→2, req_inline HANDOFF5→4; autoresearch loop test retired; AGENTS.md:22 prose updated (exception retired + stale HANDOFF3 multi-owner mention fixed); files: tests/*, installer/dependency-map.json, AGENTS.md; fixes: 3.2's blanket sed had renamed autoresearch-core-skill INSIDE the guard var block, silently defeating 3.3's exact-match deletion (generic-rewrites-before-anchors, cross-step form) — caught by map-entry assertion showing stacked HANDOFF2_TARGETS, repaired
+- [x] **3.4** Installer + docs surfaces: pack-research preset 4→1 (position-preserving); README Autoresearch row (4→1) + 6 count literals 96→93 (lean unchanged — family not in lean); registry regenerated
     — **Why:** roster-affecting commit rule
     — **Done when:** zero old IDs in preset/README; counts equal disk; registry has router, zero removed IDs
     — **Consumers affected:** installer users, count-drift tests
+    — **Done:** pack-research 11→8 skills (router position-preserving); README Autoresearch row (4→1) + 6 count literals 96→93 (lean unchanged); registry regenerated; files: installer/presets/pack-research.json, README.md, installer/registry.json; fixes: none
 
 ### Phase 4: Delete, final regen, recount
 
-- [ ] **4.1** Remove the 4 old dirs (pycache purge first)
+- [x] **4.1** Remove the 4 old dirs (pycache purge first)
     — **Why:** hard removal per AC; strictly after Phase 3
     — **Done when:** dirs gone; only intended deletions staged
     — **Consumers affected:** registry (4.2), counts (4.3)
-- [ ] **4.2** Final `node installer/build-registry.mjs`; commit regenerated registry
+    — **Done:** 4 dirs removed (3 empty shells rmdir'd; core's SKILL.md git rm'd); disk 93; files: skills/{4 dirs}; fixes: none
+- [x] **4.2** Final `node installer/build-registry.mjs`; commit regenerated registry
     — **Why:** generated artifact tracks the tree
     — **Done when:** registry has router, zero removed IDs; diff reviewed
     — **Consumers affected:** installer/init.mjs, npx installer
-- [ ] **4.3** Final sweep: counts equal disk (93); case-insensitive orphan grep for the 4 removed IDs (PLANS/CHANGELOG excepted)
+    — **Done:** final regen — router + 3 routes present, zero removed IDs, subagent requiresSkills updated; files: installer/registry.json; fixes: none
+- [x] **4.3** Final sweep: counts equal disk (93); case-insensitive orphan grep for the 4 removed IDs (PLANS/CHANGELOG excepted)
     — **Why:** documented failure modes
     — **Done when:** greps clean; counts match disk
     — **Consumers affected:** deploy users, docs readers
+    — **Done:** counts equal disk (93); orphan grep: only THIRD_PARTY karpathy template paths remained after first sweep — repointed to templates/ml|code|research/ (now 0); files: THIRD_PARTY_LICENSES.md; fixes: THIRD_PARTY §2 repoint
 
 ### Phase 5: Verify + deliverables (ticket exit gate — full)
 
@@ -162,6 +172,7 @@ Phase ordering: no deletion (4.1) before every consumer is rewired (Phase 3); re
 
 LOG phase-1: docs-only; clean baseline captured pre-edit (bats 0, ts 0).
 GATE (phase-1 tree) tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
+LOG phase-2/4: single roster-final commit cycle (moves emptied the old dirs at once). Gate history: clean baseline (0 red); first gate red ×6 — map-entry expected-delta (root cause: 3.2's blanket sed renamed autoresearch-core-skill INSIDE the guard var block before 3.3's exact-match deletion, silently defeating it; stacked HANDOFF2_TARGETS), yaml_validates ×3 (removed dirs), subagent allow assertions ×3 (loop skill → router). All fixed in-cycle; guard-family + autoresearch tests green; final full gate green.
 
 
 (appended at execution: phase commits, gate memos, deliverables)

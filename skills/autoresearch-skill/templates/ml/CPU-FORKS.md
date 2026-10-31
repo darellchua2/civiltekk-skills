@@ -1,6 +1,6 @@
 # CPU / macOS / Windows / AMD Forks
 
-The baseline `autoresearch-ml-skill` targets a single NVIDIA GPU (tested on H100).
+The baseline `the ml route` targets a single NVIDIA GPU (tested on H100).
 For non-GPU or non-NVIDIA platforms, use one of these notable forks of
 karpathy/autoresearch instead — they tune the defaults for smaller compute.
 
