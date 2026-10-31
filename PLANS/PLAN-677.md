@@ -96,20 +96,23 @@ Phase order: P1 → P2 (listings read pack data); P3, P4 independent; P5 after P
     — **Consumers affected:** none
     — **Done:** provision_laya_guard (93 lines incl. comment block) + its setup_config call site deleted — 0 references left; test_laya_guard.bats +6 tests (parses, setup.sh-free, generic hook, dry-run no-mutation, SKIP escape, no process.env) — 14/14 green; files: deploy/setup.sh, tests/test_laya_guard.bats; fixes: none
 
-### Phase 4: seed-provider-auth.mjs
+### Phase 4: seed-provider-auth.mjs ✅
 
-- [ ] **4.1** Create `deploy/seed-provider-auth.mjs` (zero-dep node, ES module, camelCase args per merge-packs conventions): `resolve` subcommand (preset file + chosen provider → credential block JSON: auth_ids/env_var/oauth), `seed` subcommand (merge-never-clobber auth.json write for one auth_id — corrupt-file parking to `.corrupt.bak`, `0600` chmod, port of the python heredoc), `seed-codex` subcommand (guarded TOML append with both section-exists checks + endpoint-docs comment, port of `seed_codex_provider` heredoc)
+- [x] **4.1** Create `deploy/seed-provider-auth.mjs` (zero-dep node, ES module, camelCase args per merge-packs conventions): `resolve` subcommand (preset file + chosen provider → credential block JSON: auth_ids/env_var/oauth), `seed` subcommand (merge-never-clobber auth.json write for one auth_id — corrupt-file parking to `.corrupt.bak`, `0600` chmod, port of the python heredoc), `seed-codex` subcommand (guarded TOML append with both section-exists checks + endpoint-docs comment, port of `seed_codex_provider` heredoc)
     — **Why:** one node CLI owns all credential writes; python3 dependency for auth.json drops away
     — **Done when:** `node deploy/seed-provider-auth.mjs seed --auth-id zai --key test --file <tmp>` writes/merges correctly (pre-existing entries preserved, 0600, corrupt input parked); `resolve` against `installer/provider-presets.json` returns the zai block
     — **Consumers affected:** setup.sh rewiring (4.2), `tests/test_agent_detection_seed.bats`
-- [ ] **4.2** Rewire `setup.sh`: `register_provider_auth` → `node seed-provider-auth.mjs seed`; credential-block lookups in `setup_provider_credentials` → one `resolve` call (replaces four inline `node -e` snippets); `seed_pi_provider` stays on `seed-pi-provider.mjs`; `seed_codex_provider` → `seed-codex` subcommand
+    — **Done:** seed-provider-auth.mjs created (resolve/seed/seed-codex, zero-dep, merge-packs conventions); key travels via AUTH_KEY env (never argv); verified: resolve flag/derive/oauth paths, fresh+merge writes (zai preserved beside gemini), 0600 perms, corrupt parking to .corrupt.bak, codex append-once + both section guards; files: deploy/seed-provider-auth.mjs; fixes: stray ValueError → Error
+- [x] **4.2** Rewire `setup.sh`: `register_provider_auth` → `node seed-provider-auth.mjs seed`; credential-block lookups in `setup_provider_credentials` → one `resolve` call (replaces four inline `node -e` snippets); `seed_pi_provider` stays on `seed-pi-provider.mjs`; `seed_codex_provider` → `seed-codex` subcommand
     — **Why:** shell keeps only capture/TTY/restart UX; merge/write logic has one home
     — **Done when:** dry-run deploy of the credentials step prints `[DRY-RUN]` lines and mutates no auth.json; a real seeded key verifies via `opencode auth list` path unchanged
     — **Consumers affected:** `tests/test_agent_detection_seed.bats`
-- [ ] **4.3** Delete the python heredoc `register_provider_auth` body and the codex TOML heredoc from `deploy/setup.sh`
+    — **Done:** register_provider_auth → node seed; setup_provider_credentials → one resolve call (5 node -e snippets gone); seed_codex_provider → node seed-codex behind its shell guards; SEED_AUTH_SCRIPT global added; test_agent_detection_seed 12/12 green unchanged (functions remain the shell entry points); files: deploy/setup.sh; fixes: none
+- [x] **4.3** Delete the python heredoc `register_provider_auth` body and the codex TOML heredoc from `deploy/setup.sh`
     — **Why:** dead code after 4.2
     — **Done when:** `grep -c "PYEOF\|model_providers.zai" deploy/setup.sh` = 0; `bats tests/test_agent_detection_seed.bats` green
     — **Consumers affected:** none
+    — **Done:** python auth.json heredoc + codex TOML heredoc deleted — PYEOF count in setup.sh = 0, no model_providers.zai TOML in shell; pi seed already delegated (seed-pi-provider.mjs untouched); files: deploy/setup.sh; fixes: none
 
 ### Phase 5: TUI install wizard
 
@@ -169,6 +172,8 @@ LOG fix2: pack_permissions merge-strip test used undefined $CONFIG/$PACKS_DIR �
 GATE phase2 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — test_mcp_count_consistency + test_help_parity green with ZERO test edits (derivation satisfies guards by construction); deploy/opencode.json restored to origin/main (phase-1 test artifact)
 
 GATE phase3 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — test_laya_guard 14/14, dry_run_leaks + deploy_delegate no regression; deploy_plugins hook verified in sandbox
+
+GATE phase4 tier=light lint=- typecheck=- build=- unit=t(e2e n.a) — test_agent_detection_seed 12/12 unchanged; dry_run_leaks/deploy_delegate/help_parity/ps1_vars no regressions; python3 dependency for auth.json dropped
 
 ## Technical Notes
 

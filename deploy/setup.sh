@@ -364,6 +364,7 @@ MIGRATE_ONLY=false       # --migrate (migration + resolve only)
 MIX_MODE=false           # --mix (per-category provider/model editor)
 ENABLE_PACK=""           # --enable-pack <csv> (provider packs — the vocabulary is deploy/packs/pack-*.json)
 SKILL_PROFILE="lean"     # --skill-profile lean|full (default lean: primary-visible skills per deploy/skill-profiles.json; full = the shipped opencode.json skill set)
+SEED_AUTH_SCRIPT="${DEPLOY_DIR}/seed-provider-auth.mjs"  # credential seeding CLI (#677)
 
 # API Keys (initialize to empty to avoid unbound variable errors)
 # Capture from environment if they exist
@@ -3992,41 +3993,12 @@ seed_codex_provider() {
         echo "[DRY-RUN] Would append Z.AI provider block to ${codex_config}"
         return 0
     fi
-    if grep -q '^\[model_providers\.zai\]' "$codex_config" 2>/dev/null \
-        || grep -q '^model_providers\.zai\.' "$codex_config" 2>/dev/null; then
-        log_info "codex config already defines [model_providers.zai] - leaving ${codex_config} untouched"
-        return 0
-    fi
-    if grep -q '^\[profiles\.zai\]' "$codex_config" 2>/dev/null \
-        || grep -q '^profiles\.zai\.' "$codex_config" 2>/dev/null; then
-        log_info "codex config already defines [profiles.zai] - leaving ${codex_config} untouched"
-        return 0
-    fi
-    mkdir -p "${HOME}/.codex"
-    if cat >> "$codex_config" <<'EOF'
-
-# --- Z.AI provider (added by opencode setup, #573) ---
-# codex supports wire_api = "responses" only, so base_url points at Z.AI's
-# OpenAI Responses endpoint. Source of truth for the endpoint (verified
-# 2026-09-26): Z.AI devpack docs "Coding Endpoint" table lists
-#   Protocol "OpenAI Responses" -> base https://api.z.ai/api/v1
-# (https://docs.z.ai/devpack/tool/others). NOT the PAAS chat-completions
-# base pi uses (api/paas/v4 speaks openai-completions, not Responses).
-# If Z.AI revises this, update here + tests + README together.
-# env_key names the env var codex reads per invocation - the key itself is
-# never stored in this file.
-[model_providers.zai]
-name = "Z.AI"
-base_url = "https://api.z.ai/api/v1"
-env_key = "ZAI_API_KEY"
-
-# Opt-in activation: `codex --profile zai` (global default model untouched).
-[profiles.zai]
-model_provider = "zai"
-model = "glm-5.3"
-EOF
-    then
-        log_success "codex: zai provider appended to ${codex_config} (activate: codex --profile zai)"
+    # Guarded append (#677): the section-exists checks + TOML write live in
+    # deploy/seed-provider-auth.mjs seed-codex — appending a table that
+    # already exists is a TOML parse error, so existing sections skip with
+    # a note instead of corrupting the file.
+    if node "$SEED_AUTH_SCRIPT" seed-codex --config "$codex_config"; then
+        log_success "codex: zai provider ensured in ${codex_config} (activate: codex --profile zai)"
     else
         log_warn "codex: failed to append Z.AI provider block to ${codex_config} (non-fatal)"
     fi
@@ -4051,35 +4023,23 @@ setup_provider_credentials() {
     local chosen=""
     if [ -n "$PROVIDER" ]; then
         chosen="$PROVIDER"
-    else
-        # Derive the provider prefix from the deployed models map, falling back
-        # to the shipped defaults (local deploys omit primary → zai-coding-plan).
-        chosen="$(node -e '
-            const fs = require("fs");
-            const read = (f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return null; } };
-            const map = read(process.argv[1]) || read(process.argv[2]);
-            const primary = map && (map.primary || (map.tiers && map.tiers.primary));
-            if (primary) console.log(String(primary).split("/")[0]);
-        ' "$USER_MODELS_MAP" "$MODELS_DEFAULT_MAP" 2>/dev/null)"
+    fi
+
+    # One resolve call (#677): provider derivation (flag → models map primary
+    # → shipped defaults) + credential-block lookup (preset name OR auth_id
+    # match) live in deploy/seed-provider-auth.mjs now.
+    local resolved
+    resolved="$(node "$SEED_AUTH_SCRIPT" resolve \
+        --presets "$PROVIDER_PRESETS" \
+        ${USER_MODELS_MAP:+--models-map "$USER_MODELS_MAP"} \
+        --default-map "$MODELS_DEFAULT_MAP" 2>/dev/null || true)"
+    if [ -z "$chosen" ]; then
+        chosen="$(node -e 'try { console.log(JSON.parse(process.argv[1]).provider || "") } catch { console.log("") }' "$resolved" 2>/dev/null)"
     fi
     [ -z "$chosen" ] && { log_info "No model provider selected - skipping credential capture"; return 0; }
 
-    # Credential block lookup: match preset name OR any of its auth_ids.
     local block
-    block="$(node -e '
-        const fs = require("fs");
-        const pp = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-        const presets = pp.presets || pp;
-        const chosen = process.argv[2];
-        for (const p of Object.values(presets)) {
-            const c = p.credential;
-            if (c && (p.primary || c.auth_ids) &&
-                (Object.keys(presets).find(n => presets[n] === p) === chosen || c.auth_ids.includes(chosen))) {
-                console.log(JSON.stringify(c));
-                break;
-            }
-        }
-    ' "$PROVIDER_PRESETS" "$chosen" 2>/dev/null)"
+    block="$(node -e 'try { const c = JSON.parse(process.argv[1]).credential; console.log(c ? JSON.stringify(c) : "") } catch { console.log("") }' "$resolved" 2>/dev/null)"
     [ -z "$block" ] && { log_info "Provider '${chosen}' needs no credential - skipping"; return 0; }
 
     local auth_ids env_var oauth
@@ -4498,8 +4458,9 @@ setx_env() {
 # existing entries (zai-coding-plan, gemini, ...). Idempotent. MCP servers still
 # read {env:ZAI_API_KEY} independently — this only authenticates the model provider.
 register_provider_auth() {
-    # Generalized auth.json seeder (#471): merge-never-clobber — writes only
-    # auth[auth_id], preserving every other entry. Dry-run and python3-safe.
+    # Generalized auth.json seeder (#471), moved to node in #677:
+    # merge-never-clobber — writes only auth[auth_id], preserving every other
+    # entry. Dry-run safe. Key travels via the AUTH_KEY env (never argv/ps).
     local auth_id="$1"
     local key="$2"
     [ -z "$key" ] && return 0
@@ -4507,46 +4468,10 @@ register_provider_auth() {
         echo "[DRY-RUN] Would register $auth_id credential in ~/.local/share/opencode/auth.json"
         return 0
     fi
-    if ! command_exists python3; then
-        log_warn "python3 not found — skipping auth.json registration for $auth_id (provider stays unauthenticated)"
+    if ! AUTH_KEY="$key" node "$SEED_AUTH_SCRIPT" seed --auth-id "$auth_id"; then
+        log_warn "auth.json registration failed for $auth_id (provider stays unauthenticated)"
         return 0
     fi
-    local auth_dir="${XDG_DATA_HOME:-$HOME/.local/share}/opencode"
-    local auth_file="${auth_dir}/auth.json"
-    AUTH_ID="$auth_id" AUTH_KEY="$key" python3 - "$auth_file" "$auth_dir" <<'PYEOF'
-import json, os, sys
-auth_file, auth_dir = sys.argv[1], sys.argv[2]
-auth_id = os.environ.get("AUTH_ID", "").strip()
-key = os.environ.get("AUTH_KEY", "").strip()
-if not auth_id or not key:
-    sys.exit(0)
-auth = {}
-try:
-    with open(auth_file) as f:
-        loaded = json.load(f)
-        if isinstance(loaded, dict):
-            auth = loaded
-        else:
-            raise ValueError("auth.json is not an object")
-except FileNotFoundError:
-    pass
-except ValueError:
-    # Merge-never-clobber must hold even for corrupt files (#471 review): a
-    # half-written auth.json must not be silently replaced (that would destroy
-    # every stored credential) — park it and start fresh, loudly.
-    backup = auth_file + ".corrupt.bak"
-    try:
-        os.replace(auth_file, backup)
-        print(f"  warning: auth.json was unparseable — moved to {backup}", file=sys.stderr)
-    except OSError:
-        pass
-auth[auth_id] = {"type": "api", "key": key}
-os.makedirs(auth_dir, exist_ok=True)
-with open(auth_file, "w") as f:
-    json.dump(auth, f, indent=2)
-os.chmod(auth_file, 0o600)  # API keys at rest — not group/world-readable
-print("  auth.json providers: " + ", ".join(sorted(auth.keys())))
-PYEOF
 }
 
 # Setup environment variables in shell config (bashrc, zshrc, etc.)
