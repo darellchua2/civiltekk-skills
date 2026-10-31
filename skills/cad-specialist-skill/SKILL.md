@@ -59,7 +59,7 @@ npx github:darellchua2/civiltekk-opencode-claude-skills add <skill>
 | Browser preview / review links for artifacts | `cad-viewer-skill` |
 
 Contract: dry-run first, show the resolved install set, install only with user
-consent (civiltekk-install-assistant conventions). Never auto-install. On
+consent (install-assistant-skill conventions). Never auto-install. On
 decline or install failure, report the capability as unavailable — do not
 improvise the tooling.
 

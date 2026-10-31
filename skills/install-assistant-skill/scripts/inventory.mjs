@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// mcp-install-assistant-skill — read-only MCP inventory (zero deps).
+// install-assistant-skill (mcp route) — read-only MCP inventory (zero deps).
 // Reports every MCP server in the deployed OpenCode config: state, type,
 // install model, required env keys (and whether they are set), owning pack.
 // Read-only by design: enablement is delegated to `setup.sh --enable-pack`

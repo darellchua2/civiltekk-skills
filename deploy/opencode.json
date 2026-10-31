@@ -362,7 +362,7 @@
     },
     {
       "action": "skill",
-      "resource": "mcp-install-assistant-skill",
+      "resource": "install-assistant-skill",
       "effect": "allow"
     },
     {
