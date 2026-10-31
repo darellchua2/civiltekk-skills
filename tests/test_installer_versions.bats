@@ -69,9 +69,9 @@ console.log(r && r.installedRef && typeof r.updateAvailable === 'boolean' ? 'row
 
 @test "--ref <older-tag> pins the installed ref exactly" {
     tag_probe_ok || skip "network unreachable — ls-remote probe failed"
-    run inst add code-principles-skill --ref v12.18.0 --target opencode --yes --no-deps
+    run inst add ticketing-skill --ref v12.18.0 --target opencode --yes --no-deps
     [ "$status" -eq 0 ]
-    local sc="${TEST_HOME}/.config/opencode/skills/code-principles-skill/.skill-source.json"
+    local sc="${TEST_HOME}/.config/opencode/skills/ticketing-skill/.skill-source.json"
     [ -f "$sc" ]
     run node -e "
 const m = JSON.parse(require('fs').readFileSync('${sc}', 'utf8'));
