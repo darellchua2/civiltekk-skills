@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [17.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v16.0.0...v17.0.0) (2026-10-31)
+
+### ⚠ BREAKING CHANGES
+
+* consolidate document ladder into solution-docs-skill router (#689) (#694)
+
+### Features
+
+* consolidate document ladder into solution-docs-skill router ([#689](https://github.com/darellchua2/civiltekk-skills/issues/689)) ([#694](https://github.com/darellchua2/civiltekk-skills/issues/694)) ([9885d10](https://github.com/darellchua2/civiltekk-skills/commit/9885d101d0a9a42e79f7df21739b00dd8740520b))
+
 ## [16.0.0](https://github.com/darellchua2/civiltekk-skills/compare/v15.0.0...v16.0.0) (2026-10-31)
 
 ### ⚠ BREAKING CHANGES
