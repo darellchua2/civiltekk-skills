@@ -33,18 +33,53 @@
 
 Phase ordering constraint: no deletion (4.1) before every consumer is rewired (Phase 3); registry regeneration rides every roster-affecting commit (project anti-pattern: skill-moves-are-roster-changes).
 
+## Audit Notes (Phase 1 — detector pass, 2026-10-31)
+
+### Boundary (step 1.2)
+
+**All 11 merge — zero siblings.** Every member is text + house-authored scripts; no vendored third-party apps (the Wave-1 sibling trigger never fires). The pptx trio merges with ONE `scripts/_common` tree (byte-identical verified: tree-hash 655335a4 ×3). `interactive-document-rendering-skill` is in-family: it is the shared HTML/DOCX output standard consumed by vision-creation + civiltekk-requirements-specs (both rewired in 3.5). Flat `scripts/` layout for the trio: every `SKILL_DIR`-relative sys.path snippet survives; the modifier's `SLIDE_SKILL_DIR` cross-skill mechanism collapses to `$SKILL_DIR/scripts` (same dir now) and its "only handoff in this catalog" note retires with HANDOFF1.
+
+Routes: `docx`, `xlsx`, `pdf`, `slides` (pptx-generate-slide), `template` (pptx-generate-template), `modifier` (pptx-template-modifier), `markitdown`, `docling`, `ooxml`, `thumbnails`, `rendering` (interactive-document-rendering).
+
+### Consumer list (step 1.2, complete — repo-wide all-filetype grep)
+
+9 subagents (office-document-router, docx-creation, xlsx-specialist, pptx-specialist, documentation, discovery, requirements-specialist, startup-founder, technical-design-specialist) · `deploy/skill-profiles.json` lean (docling, markitdown, pdf) · `installer/dependency-map.json` (impliesMcp ×2; HANDOFF1 requiresSkills) · `installer/init.mjs:2040` help example + `tests/test_help_parity.bats:43` assertion · `tests/test_skill_isolation.bats` (rule 4 + HANDOFF vars, positional args) + `tests/test_requires_skills.bats` (HANDOFF1 blocks) · `installer/presets/pack-business.json` + `pack-docs.json` · `AGENTS.md` routing section · `README.md` (counts incl. Configuration category + primary-visible) · `THIRD_PARTY_LICENSES.md:251` · 7 surviving skills (civiltekk-diagram; civiltekk-requirements-specs SKILL.md+brd.md+srs.md; civiltekk-startup-docs pitch-deck.md; horseshoe-paper-writing; research-paper-generation; technical-design-creation; vision-creation — the last two via `interactive-document-rendering-skill` name references) · registry (regen). Verified NON-consumers: `deploy/packs/*.json` (MCP-only), `deploy/opencode.json` (MCP server infra), `test_pack_permissions.bats` (MCP infra), `docs/opencode-agent-tooling-research-2026-09-24.md` (dated history — justified residual).
+
+### Named-entity dispositions (step 1.1)
+
+- **Reword (origin artifacts, 2):** docx "tracked-change/comment author = **'Claude'**" → "the agent's display identity"; docling "follow the AGENTS.md → Office Document Extraction Routing rule" → "follow the router's extraction ladder" (ownership inverts — the router spine now owns the ladder the AGENTS.md section informally carried).
+- **Reword (cross-skill mechanics, 3):** pptx-modifier's `SLIDE_SKILL_DIR` sibling default + `npx add pptx-generate-slide-skill` handoff note → single-skill wording; pptx-template's `SKILL_DIR` export example path → router path; pptx-slide/template/modifier "Peer skills" lines → route names.
+- **Keep (attribution/provenance):** #262/#370/#487/#437/#47/BT-142/US-x/MAJOR-2 issue refs; "Removed 2026-09" trailers; PLAN-GIT-56 provenance line (marked historical); upstream links (microsoft/markitdown, docling PyPI).
+- **Keep (domain vocabulary/standards):** tool names (pandoc, docx-js, LibreOffice, openpyxl, pandas, python-pptx, pypdf, qpdf, poppler, pytesseract, pdfplumber, reportlab, defusedxml, pptxgenjs, playwright, sharp), WCAG 2.1 / ECMA-376 / IEEE 830, DXA numbers, financial color codes, density budgets, version pins.
+
+### Constants audit
+
+All kept: DXA page geometry (universal), WCAG thresholds (standard), pptx density budgets + form-fill coordinate rules (protocol contracts), markitdown `>=0.1.1,<0.2.0` / docling `>=2.0,<3.0` pins (trust-boundary contracts). No case-local numbers found.
+
+### Cross-reference resolution (pass 8)
+
+- The extraction ladder (AGENTS.md informal table + markitdown decision tree + docling tiers) unifies in the ROUTER SPINE; route files keep specifics and point back. markitdown/docling keep their consent-gated `--enable-pack` / CLI-on-demand enablement (AC: install-assistant conventions — never auto-install; impliesMcp auto-enable edges removed in 3.2 for on-demand parity).
+- Shared scripts: `soffice.py` appears in docx/pdf/thumbnail trees (+ xlsx prose reference) — dedupe to ONE copy at router `scripts/` (byte-check first; keep the superset).
+- Shared spine candidates promoted once: design-aesthetics "no generic AI slop" principle (docx+xlsx both carry it); extraction ladder; MCP opt-in enablement pattern.
+
+### Category note
+
+Family categories were Framework / Presentation / Configuration / Office Utilities. Router ships as `Office & Documents`; Configuration count drops by 2 (markitdown, docling leave) — README Configuration literal + configuration-category test re-verified in 4.3 (the test reads both sides dynamically).
+
 ## Implementation Phases
 
 ### Phase 1: Generalizer audit (detector pass + boundary)
 
-- [ ] **1.1** Run named-entity, anecdote→rule, constants, and contradiction detectors over the 11 SKILL.mds; record every proper noun / anecdote / magic number with its disposition in a new `## Audit Notes` section of this PLAN
+- [x] **1.1** Run named-entity, anecdote→rule, constants, and contradiction detectors over the 11 SKILL.mds; record every proper noun / anecdote / magic number with its disposition in a new `## Audit Notes` section of this PLAN
     — **Why:** the detector pass drives route-file content and catches cross-skill references before the merge
     — **Done when:** zero un-dispositioned named entities remain; notes list findings + dispositions
     — **Consumers affected:** Phase 2 route files
-- [ ] **1.2** Confirm the merge/sibling boundary per the sizing rule; decide `interactive-document-rendering-skill` (in-family or out) and whether the pptx trio merges with a single `_common` tree; map every consumer hit from the repo-wide ID grep into the Phase 3 rewire list
+    — **Done:** all 11 files read in full; 5 disposition classes recorded (2 origin rewords, 3 mechanics rewords, provenance keeps, vocabulary keeps, constants all-keep); files: PLANS/PLAN-680.md; fixes: none
+- [x] **1.2** Confirm the merge/sibling boundary per the sizing rule; decide `interactive-document-rendering-skill` (in-family or out) and whether the pptx trio merges with a single `_common` tree; map every consumer hit from the repo-wide ID grep into the Phase 3 rewire list
     — **Why:** the Phase 4 deletion list and Phase 3 rewire list must be exact before building
     — **Done when:** audit notes name the final merge set with the rule outcome each, plus the complete consumer list (subagents, presets, profiles, guards, AGENTS.md, README)
     — **Consumers affected:** Phases 2–4
+    — **Done:** all-11-merge boundary recorded (no siblings — no vendored apps); interactive = in-family rendering route; consumer list complete incl. 7 surviving skills, THIRD_PARTY_LICENSES, init.mjs example + parity test; verified non-consumers recorded; files: PLANS/PLAN-680.md; fixes: none
 
 ### Phase 2: Build skills/office-document-router-skill/
 
@@ -114,7 +149,11 @@ Phase ordering constraint: no deletion (4.1) before every consumer is rewired (P
     — **Why:** ticket AC requires reviewable contract deliverables
     — **Done when:** three deliverable blocks present with final numbers
     — **Consumers affected:** reviewers, ticket close
-- [ ] **5.4** Run the full exit gate and write the `tier=full` memo for the final implementation SHA into the PLAN `## Trace`
+- [ ] **5.4** Run the full exit gate and write the `tier=full` memo for the final implementation SHA into the PLAN `## Trace
+
+LOG phase-1: docs-only phase (PLAN audit notes); no source files touched.
+GATE (phase-1 tree) tier=light lint=n.a typecheck=n.a build=- unit=n.a e2e=n.a
+`
     — **Why:** PR step cites the memo for the pushed SHA
     — **Done when:** memo line present matching the final pushed SHA
     — **Consumers affected:** PR creation (Step 10a)
