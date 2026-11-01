@@ -50,7 +50,7 @@ npx github:darellchua2/civiltekk-opencode-claude-skills remove code-principles-s
 ```bash
 npx github:darellchua2/civiltekk-opencode-claude-skills add <skill>                 # latest vX.Y.Z release
 npx github:darellchua2/civiltekk-opencode-claude-skills#v12.18.0 add <skill>        # pinned — rollback = older tag
-npx github:darellchua2/civiltekk-opencode-claude-skills --ref main add <skill>      # unreleased main tree
+npx github:darellchua2/civiltekk-opencode-claude-skills --ref dev add <skill>      # unreleased dev tree
 npx github:darellchua2/civiltekk-opencode-claude-skills list installed              # installed vs latest + update marker
 ```
 
@@ -324,7 +324,7 @@ Current count: **84** (history: 123 after the BT-142 pptx migration → consolid
 | **CAD & Hardware Design** (6) | cad-specialist-skill, cad-generation-skill, cad-viewer-skill, cad-dxf-skill, cad-implicit-skill, cad-redraw-skill | Router for robot descriptions (URDF/SRDF/SDF), G-code slicing, 3D printing, SendCutSend validation, step.parts catalog, Autodesk APS, Civil 3D, Open3D; parametric CAD (STEP/STL/3MF/GLB), DXF drawings, evidence-aware drawing redraw, implicit CAD, CAD Viewer previews |
 | **Media Generation** (1) | civiltekk-zai-media-skill | Z.AI media endpoints: text-to-image (GLM-Image), text/image-to-video (CogVideoX-3), audio transcription (GLM-ASR), layout-aware OCR (GLM-OCR) — artifacts saved to local files |
 
-Browse live: the [GitHub Pages catalog](https://darellchua2.github.io/civiltekk-opencode-claude-skills/) (deployed on every `main` push), or `civiltekk-init --list skills`.
+Browse live: the [GitHub Pages catalog](https://darellchua2.github.io/civiltekk-opencode-claude-skills/) (deployed on every `dev` push), or `civiltekk-init --list skills`.
 </details>
 
 <details>

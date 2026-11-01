@@ -2,6 +2,10 @@
 
 Repo conventions only. Usage docs (install, deploy commands, file tree, chaining syntax) live in `README.md` and user-level `deploy/.AGENTS.md` (deploys to `~/.config/opencode/AGENTS.md`). Do not duplicate here.
 
+## Branch & Releases
+
+The default branch is `dev` (opencode convention). Base branches and worktrees on `origin/dev`, target PRs at `dev`, and diff against `origin/dev` unless told otherwise. Releases are cut from `dev` by the semantic-release pipeline (`.releaserc.json`); do not add Changeset files.
+
 ## Repository Purpose
 
 Multi-mode OpenCode configurator: user-space deploy (`./deploy/setup.sh` → `~/.config/opencode/`) and shadcn-style individual installs (`npx github:darellchua2/civiltekk-opencode-claude-skills add <name>`) with per-skill prerequisites (`installer/dependency-map.json` `requiresSkills`; `--no-deps` opts out).
