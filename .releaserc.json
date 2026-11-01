@@ -2,10 +2,6 @@
   "branches": [
     "dev",
     {
-      "name": "pre-dev",
-      "prerelease": "pre-dev"
-    },
-    {
       "name": "uat",
       "prerelease": "uat"
     }
