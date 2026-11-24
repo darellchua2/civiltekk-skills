@@ -1,5 +1,5 @@
 {
-  "$comment": "Provider presets for the interactive picker (tui.mjs provider-picker flow) and the --provider CLI flag. Each preset is a complete {primary, tiers} map. Selecting a preset writes ~/.config/opencode/models.json from the chosen entry. Local presets (local-llm/vllm) map all tiers to the single locally-loaded model. Edit model IDs here as providers release newer versions.",
+  "$comment": "Provider presets for the interactive picker (tui.mjs provider-picker flow) and the --provider CLI flag. Each preset is a complete {primary, tiers} map. Selecting a preset writes ~/.config/opencode/models.json from the chosen entry. Local presets (vllm/ollama) map all tiers to the single locally-loaded model. Edit model IDs here as providers release newer versions.",
   "zai": {
     "label": "Z.AI (default)",
     "primary": "zai-coding-plan/glm-5.3",
@@ -88,16 +88,6 @@
       "oauth": false
     }
   },
-  "local-llm": {
-    "label": "Local LLM (llama.cpp, gemma-4-E4B q4_0)",
-    "primary": "local-llm/local/gemma-4-E4B-q4_0",
-    "tiers": {
-      "reasoning": "local-llm/local/gemma-4-E4B-q4_0",
-      "fast": "local-llm/local/gemma-4-E4B-q4_0",
-      "docs": "local-llm/local/gemma-4-E4B-q4_0",
-      "vision": "local-llm/local/gemma-4-E4B-q4_0"
-    }
-  },
   "vllm": {
     "label": "Local LLM (vLLM, Nemotron-3-Nano-4B-FP8)",
     "primary": "vllm/local/nemotron-3-nano",
@@ -109,7 +99,7 @@
     }
   },
   "ollama": {
-    "$comment": "Same standardized @ai-sdk/openai-compatible entry as local-llm/vllm - any OpenAI-compatible server (LM Studio, llama.cpp box, etc.) can reuse this pattern by changing baseURL. Model IDs must match the serving host (ollama list).",
+    "$comment": "Same standardized @ai-sdk/openai-compatible entry as vllm - any OpenAI-compatible server (LM Studio, llama.cpp box, etc.) can reuse this pattern by changing baseURL. Model IDs must match the serving host (ollama list).",
     "label": "Local LLM (Ollama, qwen3-coder a3b)",
     "primary": "ollama/qwen3-coder:a3b",
     "tiers": {

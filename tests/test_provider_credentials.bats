@@ -17,7 +17,7 @@ PRESETS="installer/provider-presets.json"
     // LOCAL allowlist (prefix-keyed-guard-silent-exemption): anything NOT in
     // it is remote and MUST carry a valid credential block — a future provider
     // added without one fails here instead of silently skipping capture.
-    const LOCAL = new Set(["local-llm", "vllm", "ollama"]);
+    const LOCAL = new Set(["vllm", "ollama"]);
     for (const [name, p] of Object.entries(presets)) {
       if (name.startsWith("$")) continue;
       if (!p || typeof p !== "object" || !p.primary) {

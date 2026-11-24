@@ -16,7 +16,7 @@ DEFAULTS="installer/models.default.json"
 # Presets with no catalog-backed provider (template pin or local runtime).
 # A NEW remote preset missing from provider-models.json FAILS the coverage
 # test below instead of silently escaping.
-LOCAL_PRESETS="openrouter local-llm vllm ollama"
+LOCAL_PRESETS="openrouter vllm ollama"
 
 # Shared checker: exits non-zero listing every unresolvable pin.
 # argv: <provider-models.json> <presets.json> [tier-map.json]
