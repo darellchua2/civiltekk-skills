@@ -490,24 +490,6 @@
     }
   },
   "providers": {
-    "local-llm": {
-      "package": "aisdk:@ai-sdk/openai-compatible",
-      "name": "Local LLM (llama.cpp)",
-      "settings": {
-        "baseURL": "http://127.0.0.1:17851/v1"
-      },
-      "models": {
-        "local/gemma-4-E4B-q4_0": {
-          "name": "gemma-4-E4B (local q4_0)",
-          "capabilities": {
-            "input": [
-              "text",
-              "image"
-            ]
-          }
-        }
-      }
-    },
     "vllm": {
       "package": "aisdk:@ai-sdk/openai-compatible",
       "name": "Local LLM (vLLM)",

@@ -679,7 +679,7 @@ USAGE:
 
   MODEL RESOLUTION (v2.0):
     --provider <name>     Non-interactive provider preset: zai|anthropic|openai|
-                          openrouter|local-llm|vllm|ollama (writes ~/.config/opencode/models.json)
+                          openrouter|vllm|ollama (writes ~/.config/opencode/models.json)
     --models-only         Provider selection + model resolution only (no other setup)
     --migrate             Run v1.x -> v2.0 migration + model resolution only
     --force               Re-resolve all agents (ignore preserved hand-edits)
@@ -981,7 +981,7 @@ parse_arguments() {
                 if [ -n "$2" ]; then
                     PROVIDER="$2"
                 else
-                    log_error "--provider requires an argument (zai|anthropic|openai|openrouter|local-llm|vllm|ollama)"
+                    log_error "--provider requires an argument (zai|anthropic|openai|openrouter|vllm|ollama)"
                     exit 1
                 fi
                 shift 2

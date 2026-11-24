@@ -66,7 +66,7 @@ function loadWizardCatalog(opts) {
     const keys = Object.keys(profFile).filter((k) => !k.startsWith("$"));
     if (keys.length) profiles = keys;
   }
-  let providers = ["zai", "anthropic", "openai", "openrouter", "local-llm", "vllm", "ollama"];
+  let providers = ["zai", "anthropic", "openai", "openrouter", "vllm", "ollama"];
   const pp = readJsonSyncMaybe(opts.presets || join(WIZ_DIR(), "..", "installer", "provider-presets.json"));
   if (pp) {
     const names = Object.keys(pp.presets || pp).filter((k) => !k.startsWith("$"));
