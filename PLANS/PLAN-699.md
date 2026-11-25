@@ -45,5 +45,5 @@
 - The repo-local config change only affects new OpenCode sessions that load this configuration; user-specific overrides may still enable Atlassian. Keep optional setup intact for projects that need it.
 
 ## Trace
-LOG Full gate selected because Phase 1 changes a configuration anchor with cross-module consumers; 727 Bats tests, JSON parsing, and `git diff --check` passed. No typed build target exists; E2E is not applicable because no frontend changed.
-GATE c8a5be15 tier=full lint=t typecheck=n.a build=- unit=t e2e=n.a
+LOG Full gate selected because Phase 1 changes a configuration anchor with cross-module consumers; 727 Bats tests, JSON parsing, and `git diff --check` passed on the implementation tree, committed as a61f6293. No typed build target exists; E2E is not applicable because no frontend changed.
+GATE a61f6293 tier=full lint=t typecheck=n.a build=- unit=t e2e=n.a
