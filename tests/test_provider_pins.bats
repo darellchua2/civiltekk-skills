@@ -18,6 +18,17 @@ DEFAULTS="installer/models.default.json"
 # test below instead of silently escaping.
 LOCAL_PRESETS="openrouter vllm ollama"
 
+# Scratch dirs a test creates, removed by teardown(). A test must not install
+# its own EXIT trap: in bats 1.13.0 that replaces the trap bats uses to report
+# a failing test, which then prints no "not ok" line, only the warning
+# "Executed N-1 instead of expected N tests".
+SCRATCH_DIRS=()
+
+teardown() {
+  local dir
+  for dir in "${SCRATCH_DIRS[@]}"; do rm -rf "$dir"; done
+}
+
 # Shared checker: exits non-zero listing every unresolvable pin.
 # argv: <provider-models.json> <presets.json> [tier-map.json]
 PIN_CHECK='
@@ -95,7 +106,7 @@ if (all.length) throw new Error("unresolvable pins:\n  " + all.join("\n  "));
   # the checker must catch it (claude-haiku-4-6 is not in the catalog).
   local dir
   dir="$(mktemp -d)"
-  trap 'rm -rf "$dir"' EXIT
+  SCRATCH_DIRS+=("$dir")
   cp "$MODELS" "$dir/models.json"
   sed 's/claude-haiku-4-5/claude-haiku-4-6/g' "$PRESETS" > "$dir/presets.json"
   run env LOCAL_PRESETS="$LOCAL_PRESETS" node -e "$PIN_CHECK" "$dir/models.json" "$dir/presets.json"
@@ -109,7 +120,7 @@ if (all.length) throw new Error("unresolvable pins:\n  " + all.join("\n  "));
   # that silent-skip is exactly what let the historical breakage through.
   local dir
   dir="$(mktemp -d)"
-  trap 'rm -rf "$dir"' EXIT
+  SCRATCH_DIRS+=("$dir")
   cp "$MODELS" "$dir/models.json"
   cat > "$dir/presets.json" <<'JSON'
 {
@@ -122,4 +133,49 @@ JSON
   [ "$status" -ne 0 ]
   [[ "$output" == *'broken-shape: preset object has no "primary" pin'* ]]
   [[ "$output" == *"not-an-object: preset entry is not an object"* ]]
+}
+
+# Astra pin through the deploy-time guard (#703). The guard reads the same
+# provider-models.json; a pin the live catalog serves must pass it. Both tests
+# run the real resolver in --dry-run with no config paths, so nothing is
+# written and the real $HOME is never read.
+ASTRA_PIN='{"primary":"openai/gpt-6.2-astra","tiers":{"reasoning":"openai/gpt-6.2-astra"}}'
+
+@test "astra_pin_passes_the_deploy_time_guard" {
+  # Before gpt-6.2-astra was listed, this exact run exited 1.
+  local dir
+  dir="$(mktemp -d)"
+  SCRATCH_DIRS+=("$dir")
+  printf '%s' "$ASTRA_PIN" > "$dir/models.json"
+  run node installer/resolve-models.mjs \
+    --tiers installer/agent-tiers.json \
+    --default-map "$DEFAULTS" \
+    --user-map "$dir/models.json" \
+    --provider-models "$MODELS" \
+    --dry-run
+  [ "$status" -eq 0 ]
+}
+
+@test "astra_pin_rejected_when_catalog_lacks_it" {
+  # Negative fixture: drop the id from a scratch copy of the catalog list.
+  # The same pin must then fail the guard and name the missing model.
+  local dir
+  dir="$(mktemp -d)"
+  SCRATCH_DIRS+=("$dir")
+  printf '%s' "$ASTRA_PIN" > "$dir/models.json"
+  node -e '
+    const fs = require("fs");
+    const [from, to] = process.argv.slice(1);
+    const m = JSON.parse(fs.readFileSync(from, "utf8"));
+    m.openai = m.openai.filter((id) => id !== "gpt-6.2-astra");
+    fs.writeFileSync(to, JSON.stringify(m, null, 2) + "\n");
+  ' "$MODELS" "$dir/catalog.json"
+  run node installer/resolve-models.mjs \
+    --tiers installer/agent-tiers.json \
+    --default-map "$DEFAULTS" \
+    --user-map "$dir/models.json" \
+    --provider-models "$dir/catalog.json" \
+    --dry-run
+  [ "$status" -ne 0 ]
+  [[ "$output" == *'NOT exposed by provider "openai"'* ]]
 }

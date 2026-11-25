@@ -21,3 +21,5 @@ trailing newline before appending a closing brace.
 Quote redirection characters in case patterns; wrapper-delimited values need
 both ends stripped; never trust line-based tooling on sources containing
 multi-line string literals.
+
+**Recurrence** (2026-11-26, #703): an in-place edit that replaced the tail of a PLAN's last line left the file without a trailing newline. The next `>>` append glued a `GATE` memo onto the previous Trace line (pushed in 1378ecc8, repaired in 5931c616). The rule holds for any append after an edit: `[ "$(tail -c1 f | xxd -p)" = 0a ] || printf '\n' >> f`.

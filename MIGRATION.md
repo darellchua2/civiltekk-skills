@@ -182,6 +182,47 @@ Then `./deploy/setup.sh --models-only`.
 > all categories and overrides any hand-mixed `models.json`. To use a mixed map,
 > resolve **without** `--provider` (mixing is stored in `models.json`).
 
+### GPT-6.2 Astra context window under ChatGPT sign-in (#703)
+
+When you sign in with ChatGPT, OpenCode v2.4.1 caps Astra models at 272,000
+input tokens. The cap comes from the OpenCode plugin
+`opencode.provider.openai-context-caps`. The cap is a usage choice, and the
+model accepts a larger input.
+
+`deploy/opencode.json` sets a limit for one model, `openai/gpt-6.2-astra`, so
+Astra keeps its published window. The values are in `providers.openai.models`
+in that file. Keep all three keys, `context`, `input`, and `output`. OpenCode
+merges a limit key by key, and the plugin writes `input`. An override without
+`input` leaves the input cap in place.
+
+- **OpenAI models appear in the picker for everyone.** Naming `openai` under
+  `providers` turns the provider on. OpenCode lists its models even when it
+  has no OpenAI credentials.
+- **Only `gpt-6.2-astra` changes.** Other Astra models keep the cap.
+- **Long Astra sessions use more of your ChatGPT plan.** OpenAI charges
+  higher rates for requests above 272K input tokens.
+- **The test pins the configured values, not the live window.**
+  `tests/test_astra_context_override.bats` checks the three values in the
+  deployed config. OpenCode v2.4.1 applies a configured limit after the
+  plugin. That order comes from the OpenCode source. It was not tested with
+  a ChatGPT sign-in.
+
+**Add the override to an existing install.** The override reaches new setups
+only. When you re-run `./deploy/setup.sh` on a machine that already has
+`~/.config/opencode/opencode.json`, setup asks `Do you want to overwrite it?`.
+The default answer is `n`, and `--yes` takes the default. Your current file
+then stays as it is. `./deploy/setup.sh --models-only` does not ask. It always
+patches your current file and keeps it.
+
+To add the override and replace your file with the shipped config, answer
+`y`. Setup backs up your current file first. To keep your file, copy the
+`openai` entry from `deploy/opencode.json` into the `providers` object of
+`~/.config/opencode/opencode.json`.
+
+**Remove the override.** Delete the `openai` entry under `providers` in
+`~/.config/opencode/opencode.json`. If you deploy again and accept the
+overwrite, also delete the entry from `deploy/opencode.json`.
+
 ### Personal config: small_model + vision fallback (GIT-357)
 
 Two settings are deliberately **not shipped** — add them to
