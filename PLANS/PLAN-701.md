@@ -6,16 +6,16 @@
 
 ## Acceptance Criteria
 
-- [ ] Route source CAD, usable PDF vectors, mixed/scanned PDFs, and raster-only references separately; report conversion loss.
+- [x] Route source CAD, usable PDF vectors, mixed/scanned PDFs, and raster-only references separately; report conversion loss.
 - [x] Keep the four image evidence profiles separate from the geometry-only output switch; enforce per-view calibration and supplied-dimension agreement in strict mode.
-- [ ] Detect OS, architecture, and installed tool capabilities; consider AutoCAD Core Console only on native Windows and never launch Windows tools implicitly from WSL.
-- [ ] Use CADCraft headlessly for DXF inspection and preview when selected; report version, skipped records, read-loss notes, and unsupported-record information, and reject partial reads.
-- [ ] Recommend a matching official CADCraft binary and checksum verification before offering a pinned source build; never install without consent.
-- [ ] Keep CAD Viewer optional for headless redraws and label unavailable required checks as skipped, unvalidated, or blocked.
+- [x] Detect OS, architecture, and installed tool capabilities; consider AutoCAD Core Console only on native Windows and never launch Windows tools implicitly from WSL.
+- [x] Use CADCraft headlessly for DXF inspection and preview when selected; report version, skipped records, read-loss notes, and unsupported-record information, and reject partial reads.
+- [x] Recommend a matching official CADCraft binary and checksum verification before offering a pinned source build; never install without consent.
+- [x] Keep CAD Viewer optional for headless redraws and label unavailable required checks as skipped, unvalidated, or blocked.
 - [x] Prevent output/report paths from overwriting protected inputs, including aliases and symlinks.
 - [x] Detect moved interior geometry in fingerprints and reject strict dimensions that conflict with measured geometry.
-- [ ] Add regressions for geometry, dimension, path-collision, PDF-routing, tool-selection, and CADCraft partial-read cases; document a headless smoke run when available.
-- [ ] Update redraw references, generated prompt claims, and the specialist/router handoff without changing existing skill IDs or CLI entry points.
+- [x] Add regressions for geometry, dimension, path-collision, PDF-routing, tool-selection, and CADCraft partial-read cases; document a headless smoke run when available.
+- [x] Update redraw references, generated prompt claims, and the specialist/router handoff without changing existing skill IDs or CLI entry points.
 
 ## Dependency & Consumer Map
 
@@ -72,32 +72,37 @@ Every step is atomic and has a rationale, completion signal, and consumer list.
 
 ### Phase 2: Route input evidence and headless tools
 
-- [ ] **2.1** Classify PDF pages by actual vector paths, page-frame-only geometry, text, and raster images before extraction.
+- [x] **2.1** Classify PDF pages by actual vector paths, page-frame-only geometry, text, and raster images before extraction.
     — **Why:** extracted text or a page border alone is not reusable CAD geometry, while mixed pages need both vector and image evidence.
     — **Done when:** text-only and border-only fixtures are rejected as usable vector CAD; a mixed vector/raster fixture is identified and can emit a page raster for image evidence; converted DXF output is labeled PDF-derived.
     — **Consumers affected:** PDF redraw users, `pdf_vector_to_dxf.py`, input decision tree.
+    — **Done:** added vector/text/raster/page-frame routing, optional separate 150-DPI raster evidence, PDF-derived DXF provenance, and a JSON loss report; page frames and unsupported paths are excluded/reported; text-only and frame-only pages do not emit DXF; 42 focused regressions pass; PyMuPDF is absent, so the real-PDF self-check remains unavailable.
 
-- [ ] **2.2** Add an OS/architecture/tool capability probe to `headless_validate.py`, with native-Windows-only AutoCAD Core Console detection.
+- [x] **2.2** Add an OS/architecture/tool capability probe to `headless_validate.py`, with native-Windows-only AutoCAD Core Console detection.
     — **Why:** executable presence is not enough; a preview-only tool cannot satisfy structural validation, and WSL must not cross-launch Windows programs implicitly.
-    — **Done when:** simulated Windows, Linux, macOS, and WSL cases report OS/architecture and capability-qualified tools; WSL never probes or launches Windows executables; CADCraft `info`/`convert`, ezdxf structural checks, and render-only alternatives are distinguished.
+    — **Done when:** simulated Windows, Linux, macOS, and WSL cases report OS/architecture and capability-qualified tools; WSL never launches Windows executables; CADCraft `info`/`convert`, ezdxf structural checks, and render-only alternatives are distinguished.
     — **Consumers affected:** redraw users, `headless_validate.py`, validation workflow.
+    — **Done:** probe reports normalized OS/architecture and CADCraft, ezdxf, Matplotlib, and native-Windows Core Console capability; CADCraft commands are split between readback and PNG preview; simulated Linux, Windows, macOS, and WSL tests pass, with Windows-mounted executables skipped without execution in WSL.
 
-- [ ] **2.3** Add CADCraft readback-and-preview execution to `headless_validate.py`.
+- [x] **2.3** Add CADCraft readback-and-preview execution to `headless_validate.py`.
     — **Why:** a zero exit code can still hide skipped DXF records or other read losses.
     — **Done when:** it uses the shared path-safety helper, captures the installed version, parses `info` output, reports `skipped`/`readNotes`, creates a PNG with `convert`, and exits nonzero for a partial read; fake-CLI tests cover clean and lossy reads, and an actual headless smoke run is recorded when the binary is available.
     — **Consumers affected:** redraw users, CADCraft validation reports, `headless_validate.py`.
+    — **Done:** uses shared path-alias safety, captures the verified version, validates required info fields, records entity counts/`skipped`/`readNotes`, creates an optional fresh PNG with `convert`, and fails partial/unknown reads; preview writes use a temporary sibling directory so stale files and coarse timestamps cannot pass. Fake CLI regressions pass. Live CADCraft 0.18.0 smoke: 46 entities, zero skipped records, no read notes, 110,482-byte PNG, exit 0.
 
 ### Phase 3: Align guidance and verify consumers
 
-- [ ] **3.1** Rewrite the redraw entry point and references around separate source-CAD, PDF, image, and validation decision trees.
+- [x] **3.1** Rewrite the redraw entry point and references around separate source-CAD, PDF, image, and validation decision trees.
     — **Why:** users need the correct evidence path before they choose a conversion or validation tool.
     — **Done when:** documentation states four image profiles plus the separate geometry-only output flag, OS/tool capability checks, verified CADCraft CLI syntax, release/checksum/source-build consent guidance, PDF conversion losses, and honest skipped-check dispositions; it retains useful upstream evidence/fingerprint-first practices without copying code or Windows COM/DWG assumptions; the skill description no longer claims Linux-only support, fingerprint-generated prompts describe the implemented geometry checks, and `node installer/build-registry.mjs` regenerates `installer/registry.json`.
     — **Consumers affected:** CAD users, all changed redraw scripts/references, generated prompts.
+    — **Done:** updated the entry point and validation reference with capability preflight, verified CLI syntax, PDF losses, binary/checksum/source-build consent guidance, dispositions, and exact geometry-signature claims; registry regenerated without changing skill IDs.
 
-- [ ] **3.2** Make CAD Viewer optional for headless redraws and scope the CAD agent's millimeter default to new authoring.
+- [x] **3.2** Make CAD Viewer optional for headless redraws and scope the CAD agent's millimeter default to new authoring.
     — **Why:** mandatory viewer startup can block headless jobs, and a default unit can silently mis-scale evidence-based reconstruction.
     — **Done when:** the specialist router permits redraw to skip viewer startup unless requested, while the CAD agent says redraw units follow source evidence; other authoring workflows keep their existing handoff/default behavior.
     — **Consumers affected:** CAD specialist router, CAD specialist agent, redraw users.
+    — **Done:** redraw skips CAD Viewer unless interactive review is requested; the CAD agent's millimeter default now applies only to new authoring, while redraw units follow source evidence.
 
 - [ ] **3.3** Run the redraw regression set, skill-isolation guard, and repository verification gate against the complete branch diff.
     — **Why:** the change spans executable scripts, skill packaging, and shared CAD handoff guidance.

@@ -60,7 +60,8 @@ Exactly one per run, in the final response:
   `unreadable` load-bearing values, `inferred` geometry in a
   `strict-dimensioned` context.
 - `blocked` — required source evidence missing (no scale anchor for a
-  dimensioned profile, unreadable spec errors).
+  dimensioned profile, unreadable spec errors), or a required validation tool
+  is unavailable. Label the check `skipped`/`unvalidated`; do not report a pass.
 - `fail` — output corrupt or a mandatory check failed (fingerprint diff red
   on Mode A, draw failure, constraint violation).
 
@@ -69,10 +70,34 @@ take the lower one and state why.
 
 ## Report contract
 
-Every run reports: files produced, checks actually run (never "validated"
-in the abstract), fingerprint-diff result, evidence-level counts
-(`known/scaled/inferred/unreadable`), assumptions, warnings, and the
-disposition with its trigger.
+Every redraw run reports: files produced, checks actually run (never
+"validated" in the abstract), fingerprint-diff result when applicable,
+evidence-level counts (`known/scaled/inferred/unreadable`), assumptions,
+warnings, and the disposition with its trigger.
+
+## Headless CADCraft readback
+
+Run `python scripts/headless_validate.py --probe` before selecting installed
+validation or rendering tools. The probe reports OS, architecture, CADCraft
+commands/version, ezdxf audit capability, render-only alternatives, and
+native-Windows-only Core Console availability. It never launches Core Console
+and skips Windows-mounted executables under WSL.
+
+For CADCraft readback and an optional PNG:
+
+```text
+python scripts/headless_validate.py --input outputs/redraw.dxf \
+  --preview reports/cadcraft-preview.png \
+  --report reports/cadcraft-validation.json
+```
+
+The report captures the CADCraft version, entity counts, `skipped` records,
+`readNotes`, preview status, and disposition. Any skipped records or non-empty
+`readNotes` makes readback partial, skips the preview, and fails the command.
+Unknown `info` JSON shapes fail closed. Exit codes are 0 for pass, 1 for
+failure, and 2 for blocked/unavailable validation. `cadcraft-cli convert` only
+renders; it does not prove structural or dimensional accuracy. A viewer is
+optional for headless redraws and is reported as skipped unless requested.
 
 ## Visual comparison anchors
 

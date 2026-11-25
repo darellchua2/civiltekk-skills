@@ -63,6 +63,10 @@ consent (install-assistant-skill conventions). Never auto-install. On
 decline or install failure, report the capability as unavailable — do not
 improvise the tooling.
 
+For headless drawing redraws, do not offer or install `cad-viewer-skill`
+unless the user requests interactive browser review; `cad-redraw-skill` owns
+the skipped-viewer status.
+
 ## Shared spine (all routes)
 
 - `gen_urdf()` / `gen_srdf()` / `gen_sdf()` Python sources are the source of
@@ -75,8 +79,9 @@ improvise the tooling.
 - Validate every generated artifact at generation time; run consumer smoke
   tests when available.
 - Viewer handoff: after creating or modifying a viewable artifact, hand the
-  file path(s) to `cad-viewer-skill` (install-if-missing). Report when
-  unavailable — never silently omit.
+  file path(s) to `cad-viewer-skill` (install-if-missing). Redraw is the
+  exception: follow `cad-redraw-skill` and skip the viewer unless interactive
+  review was requested. Report skipped/unavailable handoffs explicitly.
 - Report assumptions, skipped checks, and unresolved risks; route files define
   their own report shapes (the sdf route carries the canonical example).
 
