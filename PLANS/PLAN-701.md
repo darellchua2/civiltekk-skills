@@ -21,12 +21,16 @@
 
 | Node (file/module) | Depends on (must precede) | Consumers (who depends on this) | Change risk |
 |-------------------|---------------------------|---------------------------------|-------------|
-| `skills/cad-redraw-skill/scripts/fingerprint.py` | — | `fingerprint_diff.py`, redraw users, generated redraw prompt | high |
-| `skills/cad-redraw-skill/scripts/fingerprint_diff.py` | fingerprint representation | redraw users, validation reference | high |
-| `skills/cad-redraw-skill/scripts/spec_to_dxf.py` | spec contract | redraw users, generated DXF/report | high |
-| `skills/cad-redraw-skill/scripts/preflight_image.py` | evidence-profile contract | image redraw users, preflight report | medium |
-| `skills/cad-redraw-skill/scripts/pdf_vector_to_dxf.py` | PDF routing contract | PDF redraw users, intermediate DXF/raster evidence | high |
-| `skills/cad-redraw-skill/scripts/headless_validate.py` | installed-tool capability model and CADCraft CLI behavior | redraw users, validation report and preview | high |
+| `skills/cad-redraw-skill/scripts/fingerprint.py` | path-safety helper | `fingerprint_diff.py`, redraw users, generated redraw prompt | high |
+| `skills/cad-redraw-skill/scripts/fingerprint_diff.py` | fingerprint representation, path-safety helper | redraw users, validation reference | high |
+| `skills/cad-redraw-skill/scripts/spec_to_dxf.py` | spec contract, path-safety helper | redraw users, generated DXF/report | high |
+| `skills/cad-redraw-skill/scripts/preflight_image.py` | evidence-profile contract, path-safety helper | image redraw users, preflight report | medium |
+| `skills/cad-redraw-skill/scripts/pdf_vector_to_dxf.py` | PDF routing contract, path-safety helper | PDF redraw users, intermediate DXF/raster evidence | high |
+| `skills/cad-redraw-skill/scripts/path_safety.py` | — | all redraw CLI writers, protected input files | high |
+| `skills/cad-redraw-skill/scripts/render_preview.py` | path-safety helper | redraw users, PNG/PDF previews | medium |
+| `skills/cad-redraw-skill/scripts/compare_visual.py` | path-safety helper | redraw users, comparison artifacts | medium |
+| `skills/cad-redraw-skill/scripts/to_dwg.py` | path-safety helper | users requesting optional DWG output | medium |
+| `skills/cad-redraw-skill/scripts/headless_validate.py` | installed-tool capability model, CADCraft CLI behavior, path-safety helper | redraw users, validation report and preview | high |
 | `skills/cad-redraw-skill/tests/test_redraw.py` | scripts and report contracts | skill maintainers, CI, `tests/test_skill_isolation.bats` | medium |
 | `skills/cad-redraw-skill/references/redraw-spec.md` | spec validator | spec authors, `spec_to_dxf.py` | high |
 | `skills/cad-redraw-skill/references/validation.md` | fingerprint and validation scripts | redraw users, `SKILL.md` | high |
@@ -52,14 +56,14 @@ Every step is atomic and has a rationale, completion signal, and consumer list.
     — **Done when:** strict validation requires declared units, usable calibration on each dimensioned view, and measured dimension geometry matching its authoritative value within a documented tolerance; tests reject missing calibration, DPI-only evidence, and a mismatched dimension; the four evidence profiles remain supported.
     — **Consumers affected:** image redraw users, `preflight_image.py`, `spec_to_dxf.py`, redraw-spec and validation references.
 
-- [ ] **1.3** Reject spec, DXF output, and report path collisions in spec validation and draw modes.
-    — **Why:** an aliased report path can destroy the source spec before users can recover it.
-    — **Done when:** same-path, symlink, and existing hard-link collisions fail before writing in both `--check-only` and draw modes; distinct paths still work.
-    — **Consumers affected:** redraw users, `spec_to_dxf.py`, validation reports.
+- [ ] **1.3** Add one stdlib path-safety helper and apply it to redraw CLI input/output/report paths.
+    — **Why:** an aliased output can overwrite a source or another report before users can recover it.
+    — **Done when:** same-path, symlink, and existing hard-link collisions fail before writing for fingerprint, diff, preflight, PDF, spec, preview, visual-compare, DWG, and CADCraft validation commands; distinct paths still work.
+    — **Consumers affected:** redraw users, `path_safety.py`, all redraw CLI writers.
 
 - [ ] **1.4** Add focused stdlib regression tests for fingerprint, strict-evidence, and path-safety behavior.
     — **Why:** these failures affect geometry trust and source-file integrity, so each needs a runnable regression.
-    — **Done when:** `python3 -m unittest discover -s skills/cad-redraw-skill/tests` passes and fails against the affected pre-fix behavior.
+    — **Done when:** `python3 -m unittest discover -s skills/cad-redraw-skill/tests` covers same-path, symlink, and hard-link guards, including `--check-only --report` against the spec path, and passes.
     — **Consumers affected:** skill maintainers and the Phase 1 scripts.
 
 ### Phase 2: Route input evidence and headless tools
@@ -103,6 +107,15 @@ Every step is atomic and has a rationale, completion signal, and consumer list.
 - Use the official CADCraft release page dynamically. Match the current OS and architecture, verify the published checksum/signature, and offer a pinned upstream source build only when no compatible binary exists. Do not install packages, Rust, or applications without consent.
 - CADCraft's observed CLI uses `cadcraft-cli info` and `cadcraft-cli convert`; verify exact shipped behavior with `--help` and smoke tests rather than copying unverified syntax.
 - No CodeGraph index was created because `.codegraph/` is not ignored on this branch; impact analysis uses repository search.
+
+### Upstream workflow delta
+
+| Practice reviewed | PLAN action |
+|-------------------|-------------|
+| Image redraw evidence levels and visual-vs-dimensional separation | Keep four evidence profiles and enforce independent calibration/dimension checks in 1.2 and 3.1. |
+| Source-CAD inventory and fingerprint-first reconstruction | Extend canonical geometry fingerprints in 1.1; document the source-CAD branch in 3.1. |
+| Windows COM automation and DWG-first output assumptions | Drop; DXF remains primary and AutoCAD Core Console is only an optional native-Windows capability in 2.2. |
+| Upstream implementation code | Drop; use methodology only and maintain the local Python/ezdxf workflow. |
 
 ## Dependencies
 
