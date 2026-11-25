@@ -104,3 +104,9 @@ docs/OpenCode-Agent-Tooling-Research-2026-09-24.interactive.html
 !LEARNINGS/anti-patterns/handoff-renumber-positional-contract.md
 !LEARNINGS/decisions/untrack-derived-indices-local-cache-not-tracked.md
 !LEARNINGS/solutions/registry-drifts-on-prose-edits-rebuild-after-any-skill-edit.md
+!LEARNINGS/anti-patterns/plan-step-rationale-window-borrows-next-step.md
+!LEARNINGS/anti-patterns/backgrounded-and-list-dollar-bang-is-wrapper-not-daemon.md
+!LEARNINGS/decisions/providers-block-force-enables-provider-picker-has-no-credential-filter.md
+!LEARNINGS/anti-patterns/bats-passes-done-when-has-no-pre-edit-counterexample.md
+!LEARNINGS/anti-patterns/bats-exit-trap-in-test-swallows-failure-report.md
+!LEARNINGS/anti-patterns/opencode-sandbox-runtime-verification-gotchas.md
