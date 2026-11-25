@@ -10,7 +10,7 @@
           "mcp-remote",
           "https://mcp.atlassian.com/v1/mcp"
         ],
-        "disabled": false
+        "disabled": true
       }
     }
   },

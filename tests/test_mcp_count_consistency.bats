@@ -57,6 +57,14 @@ actual_mcp_count() {
   python3 -c "import json; d=json.load(open('${CONFIG}')); assert d['mcp']['servers']['atlassian']['disabled'] is True, 'atlassian must be opt-in'"
 }
 
+@test "mcp_count_root_atlassian_is_disabled_by_default" {
+  python3 -c "import json; d=json.load(open('opencode.json')); assert d['mcp']['servers']['atlassian']['disabled'] is True, 'repo-local atlassian must be disabled by default'"
+}
+
+@test "mcp_count_alpha_vantage_is_disabled_by_default" {
+  python3 -c "import json; d=json.load(open('${CONFIG}')); assert d['mcp']['servers']['alpha-vantage']['disabled'] is True, 'alpha-vantage must be disabled by default'"
+}
+
 @test "mcp_count_zai_zread_and_vision_removed" {
   # zai-zread removed (GIT-332); zai-vision-mcp removed (GIT-364 — native
   # multimodal vision tier + inline agent fallback recipes are the only paths)
