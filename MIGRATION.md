@@ -211,7 +211,8 @@ merges a limit key by key, and the plugin writes `input`. An override without
 only. When you re-run `./deploy/setup.sh` on a machine that already has
 `~/.config/opencode/opencode.json`, setup asks `Do you want to overwrite it?`.
 The default answer is `n`, and `--yes` takes the default. Your current file
-then stays as it is.
+then stays as it is. `./deploy/setup.sh --models-only` does not ask. It always
+patches your current file and keeps it.
 
 To add the override and replace your file with the shipped config, answer
 `y`. Setup backs up your current file first. To keep your file, copy the
