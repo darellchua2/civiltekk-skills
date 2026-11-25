@@ -67,7 +67,7 @@ This subagent helps users:
 - Slice meshes into G-code for 3D printing
 - Upload and manage Bambu Lab print jobs
 - Validate files for SendCutSend manufacturing
-- Preview CAD/G-code/robot files in CAD Viewer
+- Preview CAD/G-code/robot files in CAD Viewer when interactive review is requested
 - Integrate Autodesk Platform Services (APS) APIs
 - Work with Civil 3D workflows (corridors, surfaces, pipe networks)
 - Process 3D data with Open3D (point clouds, meshes, reconstruction)
@@ -122,6 +122,10 @@ consent, never auto-install): `cad-generation-skill` (parametric CAD),
 `cad-dxf-skill` (DXF authoring), `cad-redraw-skill` (drawing redraw),
 `cad-implicit-skill` (implicit CAD), `cad-viewer-skill` (browser preview).
 
+For redraw tasks, follow `cad-redraw-skill`'s tool preflight and validation
+contract. CAD Viewer is optional; do not install or launch it unless the user
+requests interactive browser review.
+
 **IMPORTANT:** The router's `civil3d` and `open3d` routes carry MANDATORY
 version-detection sections (installed-software APIs differ by version). Follow
 the STOP-and-ask-for-version instructions before providing API guidance. The
@@ -161,15 +165,19 @@ the STOP-and-ask-for-version instructions before providing API guidance. The
 - **Autodesk APS credentials** — for API integration (router route `aps`)
 - **Civil 3D installed** — for COM/.NET API usage (router route `civil3d`)
 
-## Default Assumptions
+## Default Assumptions for New Authoring
 
-Use these defaults unless the user specifies otherwise:
+Use these defaults for new CAD authoring unless the user specifies otherwise:
 - **Units:** millimeters
 - **Origin:** center of main part or assembly
 - **Base plane:** XY
 - **Up/extrusion axis:** positive Z
 - **Output geometry:** closed, positive-volume solids
 - **STEP** is the primary CAD artifact; STL/3MF/GLB are secondary exports
+
+These authoring defaults do not apply to redraws. Follow the source units and
+the redraw evidence contract; use unitless output when no reliable scale anchor
+exists.
 
 ## Autodesk MCP Servers
 

@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from itertools import combinations
 from pathlib import Path
 
 try:
@@ -16,14 +17,13 @@ try:
 except ImportError:  # pragma: no cover - environment guard
     print("ezdxf is required: pip install ezdxf", file=sys.stderr)
     sys.exit(2)
+from path_safety import ensure_safe_outputs
 
 SPEC_VERSION = 1
 ENTITY_TYPES = frozenset(
     {"line", "arc", "circle", "lwpolyline", "text", "mtext", "dimension"}
 )
-PROFILES = frozenset(
-    {"strict-dimensioned", "general", "hybrid", "visual-trace", "geometry-only"}
-)
+PROFILES = frozenset({"strict-dimensioned", "general", "hybrid", "visual-trace"})
 EVIDENCE_LEVELS = frozenset({"known", "scaled", "inferred", "unreadable"})
 CONSTRAINT_KINDS = frozenset(
     {"sum", "positive", "inside", "count", "spacing", "parallel", "aligned"}
@@ -33,6 +33,7 @@ ANNOTATION_TYPES = frozenset({"text", "mtext", "dimension"})
 ANNOTATION_LAYERS = frozenset({"TEXT", "DIM"})
 STRICT_EVIDENCE = frozenset({"known", "scaled"})
 TOLERANCE = 1e-9
+DIMENSION_TOLERANCE = 1e-6
 TOP_LEVEL_FIELDS = (
     "spec_version",
     "profile",
@@ -54,7 +55,11 @@ def _num(value) -> float | None:
     """Return value as float when it is a real number (bools excluded), else None."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
-    return float(value)
+    try:
+        number = float(value)
+    except OverflowError:
+        return None
+    return number if math.isfinite(number) else None
 
 
 def _point(value) -> tuple[float, float] | None:
@@ -115,6 +120,8 @@ def _entity_bbox(entity: dict) -> tuple[float, float, float, float] | None:
 def _numeric_value(entity: dict) -> float | None:
     """Resolve the numeric value an entity contributes to constraints, or None."""
     geometry = entity.get("geometry") or {}
+    if not isinstance(geometry, dict):
+        return None
     etype = entity.get("type")
     if etype in ("circle", "arc"):
         return _num(geometry.get("radius"))
@@ -158,6 +165,59 @@ def _assumption_texts(assumptions) -> list[str]:
                 str(v) for v in entry.values() if isinstance(v, (str, int, float))
             )
     return texts
+
+
+def _calibration_problem(view: dict) -> str | None:
+    """Return why a view lacks usable, evidence-backed pixel-to-CAD calibration."""
+    calibration = view.get("calibration")
+    if not isinstance(calibration, dict):
+        return "calibration is missing"
+    kind = calibration.get("type")
+    if not isinstance(kind, str):
+        return "calibration type is missing or invalid"
+    minimum = {"affine": 2, "dimension": 2, "homography": 4}.get(kind)
+    if minimum is None:
+        return f"calibration type {kind!r} is unsupported"
+    evidence = calibration.get("evidence")
+    if not isinstance(evidence, str) or evidence not in STRICT_EVIDENCE:
+        return "calibration evidence must be 'known' or 'scaled'"
+    pixels, cad = calibration.get("anchors_px"), calibration.get("anchors_cad")
+    if (
+        not isinstance(pixels, list)
+        or not isinstance(cad, list)
+        or len(pixels) != len(cad)
+        or len(pixels) < minimum
+    ):
+        return f"{kind} calibration needs at least {minimum} paired anchors"
+    pixel_points = _finite_points(pixels)
+    cad_points = _finite_points(cad)
+    if pixel_points is None or cad_points is None:
+        return "calibration anchors must be finite [x, y] pairs"
+    if len(set(pixel_points)) < minimum or len(set(cad_points)) < minimum:
+        return "calibration anchors must be distinct in both coordinate systems"
+    if kind == "homography":
+        for points in (pixel_points, cad_points):
+            if any(
+                abs(
+                    (b[0] - a[0]) * (c[1] - a[1])
+                    - (b[1] - a[1]) * (c[0] - a[0])
+                )
+                <= TOLERANCE
+                for a, b, c in combinations(points, 3)
+            ):
+                return "homography anchors must contain no three collinear points"
+    return None
+
+
+def _finite_points(values: list) -> list[tuple[float, float]] | None:
+    """Return finite points for a calibration anchor list, else None."""
+    points = []
+    for value in values:
+        point = _point(value)
+        if point is None or not all(math.isfinite(coordinate) for coordinate in point):
+            return None
+        points.append(point)
+    return points
 
 
 def _has_matching_assumption(entity_id: str, texts: list[str]) -> bool:
@@ -737,17 +797,69 @@ def validate_spec(spec) -> dict:
                     " than 'unitless'",
                 )
             )
+        views_by_id = {
+            view["id"]: view
+            for view in spec.get("views") or []
+            if isinstance(view, dict) and isinstance(view.get("id"), str)
+        }
+        dimension_views = {
+            entity.get("view")
+            if isinstance(entity.get("view"), str)
+            else None
+            for entity in entities
+            if entity.get("type") == "dimension"
+        }
+        for view_id in sorted(dimension_views, key=lambda value: value or ""):
+            view = views_by_id.get(view_id)
+            problem = (
+                "view is missing" if view is None else _calibration_problem(view)
+            )
+            if problem:
+                errors.append(
+                    _error(
+                        "calibration",
+                        str(view_id),
+                        f"strict-dimensioned view '{view_id}' is not calibrated: {problem}",
+                    )
+                )
         for entity in entities:
-            if (
-                entity.get("type") == "dimension"
-                and entity.get("evidence") not in STRICT_EVIDENCE
-            ):
+            if entity.get("type") != "dimension":
+                continue
+            eid = entity.get("id")
+            if entity.get("evidence") not in STRICT_EVIDENCE:
                 errors.append(
                     _error(
                         "profile",
-                        entity.get("id"),
-                        f"strict-dimensioned blocked: dimension '{entity.get('id')}' evidence"
+                        eid,
+                        f"strict-dimensioned blocked: dimension '{eid}' evidence"
                         f" is '{entity.get('evidence')}' (requires known/scaled)",
+                    )
+                )
+            geometry = entity.get("geometry")
+            if not isinstance(geometry, dict):
+                continue  # _validate_geometry already reported the schema error
+            p1, p2 = _point(geometry.get("p1")), _point(geometry.get("p2"))
+            value = _num(geometry.get("value"))
+            if p1 is None or p2 is None or value is None:
+                errors.append(
+                    _error(
+                        "profile",
+                        eid,
+                        f"strict-dimensioned requires a readable numeric value and "
+                        f"measurable geometry for dimension '{eid}'",
+                    )
+                )
+                continue
+            measured = math.dist(p1, p2)
+            allowed = DIMENSION_TOLERANCE * max(1.0, abs(measured), abs(value))
+            if abs(measured - value) > allowed:
+                errors.append(
+                    _error(
+                        "dimension_mismatch",
+                        eid,
+                        f"dimension '{eid}' value {value:g} differs from measured "
+                        f"geometry {measured:g} by {abs(measured - value):g} "
+                        f"(tolerance {allowed:g})",
                     )
                 )
     elif profile == "visual-trace":
@@ -763,18 +875,6 @@ def validate_spec(spec) -> dict:
                     "visual-trace output cannot claim scale; declared units will not be asserted",
                 )
             )
-    elif profile == "geometry-only":
-        for entity in entities:
-            if entity.get("type") in ANNOTATION_TYPES:
-                warnings.append(
-                    _error(
-                        "geometry_only",
-                        entity.get("id"),
-                        f"geometry-only output drops {entity.get('type')} entity"
-                        f" '{entity.get('id')}'",
-                    )
-                )
-
     return {
         "valid": not errors,
         "errors": errors,
@@ -1183,7 +1283,15 @@ def main(argv: list[str] | None = None) -> int:
     if not args.check_only and not args.output:
         parser.error("--output is required in draw mode (or pass --check-only)")
 
-    spec = load_spec(Path(args.spec))
+    spec_path = Path(args.spec)
+    outputs = [Path(path) for path in (args.output, args.report) if path]
+    try:
+        ensure_safe_outputs([spec_path], outputs)
+    except ValueError as exc:
+        print(f"unsafe redraw output: {exc}", file=sys.stderr)
+        return 1
+
+    spec = load_spec(spec_path)
     report = validate_spec(spec)
     if args.check_only or not report["valid"]:
         emit_report(report, Path(args.report) if args.report else None)

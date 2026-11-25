@@ -13,11 +13,16 @@ Two independent axes, never conflated:
 `fingerprint_diff.py source.json target.json` exits 0 only when:
 
 - entity counts match per type and per space (modelspace/paperspace);
+- per-entity DXF geometry signatures match, ignoring volatile handles/owners
+  and allowing the selected tolerance (default `1e-6`);
 - every source layer, block, text style, and dimension style exists in the
   target;
 - dimension, leader, text, and MTEXT counts match — a source dimension or
   leader missing from the target is a **failure**, not a warning;
 - extents agree within tolerance (default 1e-6 drawing units).
+
+Fingerprints produced before per-entity geometry signatures were added are
+rejected by the diff; regenerate both fingerprints before comparing.
 
 The diff report is included in the final response even when it passes.
 Silent passing is forbidden — report what was compared.
@@ -30,13 +35,18 @@ constraint arithmetic failures, and profile violations:
 
 | Profile | Requirement to draw |
 |---|---|
-| `strict-dimensioned` | declared unit system + every load-bearing dimension `known`/`scaled` |
+| `strict-dimensioned` | declared unit system, calibrated dimension views, `known`/`scaled` dimensions, and values agreeing with measured geometry |
 | `general` / `hybrid` | no impossible geometry; `inferred` values have assumption entries |
 | `visual-trace` | none beyond schema; output cannot claim scale |
-| `geometry-only` | annotation layers absent from the drawn output |
 
-A `strict-dimensioned` spec without units or anchors is **blocked**, not
-downgraded silently.
+A strict spec needs a usable `known`/`scaled` calibration on every view with
+dimensions. Each numeric dimension value must agree with the measured `p1` to
+`p2` distance within `max(1e-6, 1e-6 × max(|value|, measured distance))`
+drawing units. Missing calibration, missing values, or mismatched dimensions
+are **blocked**, not downgraded silently.
+
+`--geometry-only` is a separate output switch available with any evidence
+profile; it drops annotations without changing the selected profile.
 
 ## Dispositions
 
@@ -50,7 +60,8 @@ Exactly one per run, in the final response:
   `unreadable` load-bearing values, `inferred` geometry in a
   `strict-dimensioned` context.
 - `blocked` — required source evidence missing (no scale anchor for a
-  dimensioned profile, unreadable spec errors).
+  dimensioned profile, unreadable spec errors), or a required validation tool
+  is unavailable. Label the check `skipped`/`unvalidated`; do not report a pass.
 - `fail` — output corrupt or a mandatory check failed (fingerprint diff red
   on Mode A, draw failure, constraint violation).
 
@@ -59,10 +70,34 @@ take the lower one and state why.
 
 ## Report contract
 
-Every run reports: files produced, checks actually run (never "validated"
-in the abstract), fingerprint-diff result, evidence-level counts
-(`known/scaled/inferred/unreadable`), assumptions, warnings, and the
-disposition with its trigger.
+Every redraw run reports: files produced, checks actually run (never
+"validated" in the abstract), fingerprint-diff result when applicable,
+evidence-level counts (`known/scaled/inferred/unreadable`), assumptions,
+warnings, and the disposition with its trigger.
+
+## Headless CADCraft readback
+
+Run `python scripts/headless_validate.py --probe` before selecting installed
+validation or rendering tools. The probe reports OS, architecture, CADCraft
+commands/version, ezdxf audit capability, render-only alternatives, and
+native-Windows-only Core Console availability. It never launches Core Console
+and skips Windows-mounted executables under WSL.
+
+For CADCraft readback and an optional PNG:
+
+```text
+python scripts/headless_validate.py --input outputs/redraw.dxf \
+  --preview reports/cadcraft-preview.png \
+  --report reports/cadcraft-validation.json
+```
+
+The report captures the CADCraft version, entity counts, `skipped` records,
+`readNotes`, preview status, and disposition. Any skipped records or non-empty
+`readNotes` makes readback partial, skips the preview, and fails the command.
+Unknown `info` JSON shapes fail closed. Exit codes are 0 for pass, 1 for
+failure, and 2 for blocked/unavailable validation. `cadcraft-cli convert` only
+renders; it does not prove structural or dimensional accuracy. A viewer is
+optional for headless redraws and is reported as skipped unless requested.
 
 ## Visual comparison anchors
 

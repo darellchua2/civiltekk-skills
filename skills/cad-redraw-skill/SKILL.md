@@ -1,10 +1,10 @@
 ---
 name: cad-redraw-skill
 description: >-
-  Rebuild and validate 2D CAD drawings on Linux — exact redraw from a source
-  DXF/DWG, PDF-to-DXF conversion, or image-to-CAD reconstruction with
-  evidence-aware specs. Triggers: dwg redraw, redraw dxf, image to dxf, pdf
-  to dxf, drawing fingerprint, raster to cad, redraw validation.
+  Rebuild and validate 2D CAD drawings across operating systems — source
+  DXF/DWG redraw, classified PDF-to-DXF conversion, and evidence-aware image
+  reconstruction. Triggers: dwg redraw, redraw dxf, image to dxf, pdf to dxf,
+  drawing fingerprint, raster to cad, redraw validation.
 license: Apache-2.0
 compatibility: opencode
 category: CAD & Hardware Design
@@ -13,7 +13,7 @@ metadata:
   pattern: clean-room-port
 ---
 
-# CAD redraw and validation (Linux / ezdxf)
+# OS-aware CAD redraw and validation
 
 Provenance: the workflow methodology follows
 [pengxiaoan/autocad-dwg-redraw-skill](https://github.com/pengxiaoan/autocad-dwg-redraw-skill)
@@ -24,8 +24,9 @@ runtime source of truth.
 
 ## Purpose
 
-Reconstruct an editable, validated 2D CAD drawing from one of three input
-types, entirely on Linux with no AutoCAD and no Windows:
+Reconstruct an editable, validated 2D CAD drawing from source CAD, PDF, or
+image evidence. DXF is the primary deliverable. AutoCAD and Windows automation
+are never prerequisites.
 
 - **Mode A — source redraw**: a trustworthy DXF (or DWG) exists. Fingerprint
   it, rebuild it, and prove the rebuild with a fingerprint diff.
@@ -35,6 +36,10 @@ types, entirely on Linux with no AutoCAD and no Windows:
 - **Mode C — image-to-CAD**: only a raster reference (photo, scan,
   screenshot). Build an evidence-aware spec, draw from it, and compare
   visually without ever asserting dimensional accuracy from pixels.
+
+Validation is a separate decision: choose checks that are installed and match
+the claim being made. A rendered preview is visual evidence, not structural or
+dimensional validation.
 
 ## Use this skill when
 
@@ -59,7 +64,29 @@ new parametric drawings; this skill reconstructs existing ones.
 6. PDF-derived and image-derived outputs are labeled as such. An intermediate
    is never presented as an exact original CAD source.
 
-## Profiles
+## Environment and capability preflight
+
+Before recommending a tool, inspect the current OS, architecture, and installed
+capabilities:
+
+```text
+python scripts/headless_validate.py --probe
+```
+
+The probe distinguishes CADCraft `info` readback from `convert` rendering,
+ezdxf structural audits, and Matplotlib-based previews. It checks AutoCAD Core
+Console only on native Windows and never launches it. Under WSL, a
+Windows-mounted CADCraft executable is reported as skipped; do not cross-launch
+Windows tools or install anything automatically.
+
+If a required tool is absent, report the affected check as `skipped` or
+`blocked`. Recommend only a CADCraft binary matching the detected OS and
+architecture from its official releases; verify the publisher's checksum or
+signature before use. Offer a source build pinned to an official release only
+when no matching binary exists, and follow its official build instructions.
+Get explicit consent before installing any binary, dependency, or application.
+
+## Evidence profiles and output
 
 Choose by input quality; the profile sets the evidence bar:
 
@@ -70,8 +97,9 @@ Choose by input quality; the profile sets the evidence bar:
   inferred geometry labeled.
 - `visual-trace`: reproduce visible linework without asserting real-world
   scale.
-- `geometry-only`: keep geometry and construction layers; omit dimensions,
-  leaders, notes, table text.
+
+`--geometry-only` is a separate output switch, not a profile. It keeps drawing
+geometry and drops annotations without lowering the selected evidence bar.
 
 No unit or scale anchor → choose `visual-trace` or a `unitless` spec. Never
 default to millimeters because a drawing looks technical.
@@ -93,15 +121,26 @@ default to millimeters because a drawing looks technical.
 
 ## Mode B — PDF-to-DXF
 
-1. Inspect the PDF: page count, size, producer, extractable text, embedded
-   raster, vector paths. Prefer vector extraction over raster tracing.
-   `python scripts/pdf_vector_to_dxf.py --pdf input.pdf --output intermediate.dxf`
-2. Raster or mixed pages become Mode C evidence at high DPI; text is written
-   as real `TEXT`/`MTEXT` only when extractable — otherwise it stays traced
-   geometry marked uncertain.
-3. Label the intermediate PDF-derived, then run the full Mode A flow on it.
-4. Report conversion limits: vector paths vs tracing vs OCR vs inference,
-   unreadable text, approximate curves, scale assumptions.
+1. Classify the selected page before extraction:
+   `python scripts/pdf_vector_to_dxf.py --pdf input.pdf --classify-only --report reports/page.json`
+   The routes are `usable-vector`, `mixed-vector-raster`, `raster-only`,
+   `text-only`, `page-frame-only`, `unsupported-vector-only`, and `empty`.
+   Searchable text, a page border, or an embedded scan is not usable vector
+   CAD by itself.
+2. For `usable-vector` or `mixed-vector-raster`, extract supported paths:
+   `python scripts/pdf_vector_to_dxf.py --pdf input.pdf --output intermediate.dxf --report reports/conversion.json`
+   Add `--raster-output reports/page.png` when a separate visual reference is
+   useful. This raster output is not embedded in the DXF.
+3. For raster evidence, request a PNG without a DXF:
+   `python scripts/pdf_vector_to_dxf.py --pdf input.pdf --classify-only --raster-output reports/page.png --report reports/page.json`
+   Continue through Mode C; the converter does not OCR or trace raster content.
+4. PDF-derived DXF coordinates remain PDF points and unitless. The report
+   lists omitted page-frame/path items, raster content not embedded, flattened
+   curves, and text/layer/unit information that could not be recovered. The
+   converter adds a synthetic page-extents border on `BORDER`; do not treat it
+   as source geometry. Page-frame detection is heuristic, so review the route
+   before treating a large outer shape as part geometry. Label the intermediate
+   PDF-derived, then validate it using the Mode A checks.
 
 ## Mode C — image-to-CAD
 
@@ -117,9 +156,15 @@ default to millimeters because a drawing looks technical.
    Resolve all errors before drawing.
 4. **Draw**:
    `python scripts/spec_to_dxf.py --spec redraw-spec.json --output outputs/redraw.dxf`
-   (`--geometry-only` for the geometry-only profile.)
+   Use `--geometry-only` as a separate output switch when annotations are not
+   wanted; keep the chosen evidence profile unchanged.
 5. **Inspect and render**:
    `python scripts/render_preview.py --dxf outputs/redraw.dxf --png reports/preview.png`
+   Optionally run CADCraft readback and a headless PNG preview when the
+   capability probe confirms it:
+   `python scripts/headless_validate.py --input outputs/redraw.dxf --preview reports/cadcraft-preview.png --report reports/cadcraft-validation.json`.
+   A partial CADCraft read (`skipped` records or any `readNotes`) fails and
+   does not render a preview.
 6. **Compare**:
    `python scripts/compare_visual.py --source input.jpg --cad-preview reports/preview.png --anchors anchors.json --output-dir reports/comparison`
    Use the comparison to find omitted/shifted geometry — never to validate
@@ -136,14 +181,19 @@ user supplied — via `fingerprint_diff.py` and ezdxf queries. The fingerprint
 diff is reported even when it passes. Acceptance policies and dispositions:
 `references/validation.md`.
 
+`cadcraft-cli info` is a structural readback; `cadcraft-cli convert` to PNG is
+render-only. Run the capability probe before selecting either. Neither a clean
+readback nor a preview proves dimensional accuracy without the applicable
+fingerprint/spec/dimension checks.
+
 ## Handoff
 
-After creating or modifying drawings, ALWAYS hand the explicit file path(s)
-to `the cad-viewer-skill (load via skill tool)` when installed and include
-its live viewer link(s) in the final response. If it is unavailable, report
-that and rely on the deterministic checks instead of silently omitting the
-handoff. Final responses include: generated files, viewer links, validation
-actually run, evidence-level summary, assumptions, and the disposition.
+CAD Viewer is optional for headless redraws. Do not install or launch it unless
+the user requests interactive browser review. When requested and available,
+hand it the explicit file path(s) and include its live link(s); otherwise state
+that the viewer handoff was skipped. Final responses include generated files,
+viewer status, validation actually run or skipped, evidence-level summary,
+assumptions, and the disposition.
 
 ## DWG input/output
 
@@ -164,5 +214,6 @@ first, then run the writer when a DWG file is mandatory.
 Python 3.10+. Required: `ezdxf`. Optional (import-guarded with named install
 hints): `odafc` + ODA File Converter or LibreDWG for DWG, `pillow`/`numpy`/
 `opencv-python` for image preflight and comparison, `pymupdf` for PDF
-extraction, `matplotlib` for preview rendering. Run scripts with the active
-project Python from the workspace that owns the artifacts.
+extraction, `matplotlib` for preview rendering, and CADCraft CLI for optional
+headless readback/rendering. Run scripts with the active project Python from
+the workspace that owns the artifacts.

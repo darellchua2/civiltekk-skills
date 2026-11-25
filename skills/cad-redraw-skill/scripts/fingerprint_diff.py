@@ -4,16 +4,147 @@
 import argparse
 import copy
 import json
+import math
 import sys
 from pathlib import Path
+
+from path_safety import ensure_safe_outputs
 
 DEFAULT_TOLERANCE = 1e-6
 ANNOTATION_KEYS = ("dimensions", "leaders", "text", "mtext")
 SPACE_KEYS = ("modelspace", "paperspace")
 
 
+def _parse_tolerance(value: str) -> float:
+    """Parse a finite, non-negative comparison tolerance."""
+    try:
+        tolerance = float(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("tolerance must be a number") from exc
+    if not math.isfinite(tolerance) or tolerance < 0:
+        raise argparse.ArgumentTypeError(
+            "tolerance must be finite and non-negative"
+        )
+    return tolerance
+
+
+def _signature_parts(signature: dict) -> tuple[tuple, tuple[float, ...]]:
+    """Split a signature into an exact grouping key and tolerant float values."""
+    tags = signature["tags"]
+    if not isinstance(tags, list):
+        raise TypeError("tags must be a list")
+    key: list[tuple[object, ...]] = []
+    numbers: list[float] = []
+    for tag in tags:
+        if not isinstance(tag, list) or len(tag) != 2 or not isinstance(tag[0], int):
+            raise TypeError("each tag must be a [group-code, value] pair")
+        code, value = tag
+        if type(value) is float and math.isfinite(value):
+            key.append((code, "float"))
+            numbers.append(value)
+        else:
+            key.append((code, type(value).__name__, json.dumps(value, sort_keys=True)))
+    return (signature["type"], tuple(key)), tuple(numbers)
+
+
+def _geometry_mismatches(source: dict, target: dict, tolerance: float) -> list[dict]:
+    """Compare per-entity DXF signatures independent of entity order and handles."""
+    source_geometry, target_geometry = source.get("geometry"), target.get("geometry")
+    source_items = source_geometry.get("entities") if isinstance(source_geometry, dict) else None
+    target_items = target_geometry.get("entities") if isinstance(target_geometry, dict) else None
+    if not isinstance(source_items, list) or not isinstance(target_items, list):
+        return [
+            {
+                "check": "geometry",
+                "source": None,
+                "target": None,
+                "message": (
+                    "fingerprint lacks per-entity geometry signatures; regenerate both "
+                    "fingerprints with the current script"
+                ),
+            }
+        ]
+
+    source_groups: dict[tuple, list[tuple[tuple[float, ...], dict]]] = {}
+    target_groups: dict[tuple, list[tuple[tuple[float, ...], dict]]] = {}
+    try:
+        for entries, groups in (
+            (source_items, source_groups),
+            (target_items, target_groups),
+        ):
+            for signature in entries:
+                if not isinstance(signature, dict) or not isinstance(
+                    signature.get("type"), str
+                ):
+                    raise TypeError("entity signature must have a type and tags")
+                key, numbers = _signature_parts(signature)
+                groups.setdefault(key, []).append((numbers, signature))
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        return [
+            {
+                "check": "geometry",
+                "source": len(source_items),
+                "target": len(target_items),
+                "message": f"invalid geometry signatures: {exc}",
+            }
+        ]
+
+    mismatches = []
+    for key in sorted(set(source_groups) | set(target_groups), key=repr):
+        source_group = sorted(source_groups.get(key, []), key=lambda item: item[0])
+        target_group = sorted(target_groups.get(key, []), key=lambda item: item[0])
+        changed = sum(
+            any(abs(a - b) > tolerance for a, b in zip(source_numbers, target_numbers))
+            for (source_numbers, _), (target_numbers, _) in zip(
+                source_group, target_group
+            )
+        )
+        missing = max(0, len(source_group) - len(target_group))
+        extra = max(0, len(target_group) - len(source_group))
+        if changed or missing or extra:
+            entity_type = key[0]
+            mismatches.append(
+                {
+                    "check": "geometry",
+                    "source": len(source_group),
+                    "target": len(target_group),
+                    "message": (
+                        f"{entity_type} geometry signatures differ: {changed} changed, "
+                        f"{missing} missing, {extra} extra (tolerance {tolerance:g})"
+                    ),
+                }
+            )
+
+    for label, entities, fingerprints in (
+        ("source", source["entities"]["total"], source_items),
+        ("target", target["entities"]["total"], target_items),
+    ):
+        if len(fingerprints) != entities:
+            mismatches.append(
+                {
+                    "check": "geometry",
+                    "source": len(source_items),
+                    "target": len(target_items),
+                    "message": (
+                        f"{label} geometry signature count {len(fingerprints)} does not "
+                        f"match entity total {entities}"
+                    ),
+                }
+            )
+    return mismatches
+
+
+def _geometry_count(fingerprint: dict) -> int:
+    """Return the available signature count without trusting malformed metadata."""
+    geometry = fingerprint.get("geometry")
+    entities = geometry.get("entities") if isinstance(geometry, dict) else None
+    return len(entities) if isinstance(entities, list) else 0
+
+
 def compare_fingerprints(source: dict, target: dict, tolerance: float) -> dict:
     """Return the full delta report; 'match' is True only when every gate check passes."""
+    if not math.isfinite(tolerance) or tolerance < 0:
+        raise ValueError("tolerance must be finite and non-negative")
     mismatches: list[dict] = []
 
     src_types = source["entities"]["by_type"]
@@ -142,6 +273,8 @@ def compare_fingerprints(source: dict, target: dict, tolerance: float) -> dict:
                     }
                 )
 
+    mismatches.extend(_geometry_mismatches(source, target, tolerance))
+
     return {
         "match": not mismatches,
         "tolerance": tolerance,
@@ -168,6 +301,11 @@ def compare_fingerprints(source: dict, target: dict, tolerance: float) -> dict:
             },
             "annotations": list(ANNOTATION_KEYS),
             "extents": True,
+            "geometry": {
+                "source": _geometry_count(source),
+                "target": _geometry_count(target),
+                "tolerance": tolerance,
+            },
         },
         "extra_in_target": {
             "layers": sorted(
@@ -196,7 +334,8 @@ def format_summary(delta: dict) -> str:
             f"{compared['blocks']['source']} blocks, "
             f"{compared['text_styles']['source']} text styles, "
             f"{compared['dimstyles']['source']} dim styles, "
-            f"annotations {', '.join(compared['annotations'])}, extents)"
+            f"annotations {', '.join(compared['annotations'])}, extents, "
+            f"{compared['geometry']['source']} entity geometry signatures)"
         )
     else:
         lines.append(f"FAIL: {len(delta['mismatches'])} mismatch(es)")
@@ -249,6 +388,14 @@ def _fixture() -> dict:
         ],
         "blocks": [{"name": "BOLT", "insert_count": 1}],
         "styles": {"text_styles": ["Standard"], "dimstyles": ["Standard", "EZDXF"]},
+        "geometry": {
+            "tolerance": DEFAULT_TOLERANCE,
+            "entities": [
+                *({"type": "LINE", "tags": [[10, float(i)]]} for i in range(4)),
+                {"type": "CIRCLE", "tags": [[10, 30.0]]},
+                *({"type": "DIMENSION", "tags": [[10, float(i)]]} for i in range(2)),
+            ],
+        },
     }
 
 
@@ -303,15 +450,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Compare two fingerprint JSON files (see references/validation.md): "
         "exit 0 only when entity counts, layers, blocks, styles, annotations, "
-        "and extents all agree."
+        "extents, and per-entity geometry signatures all agree."
     )
     parser.add_argument("--source", help="source fingerprint JSON path")
     parser.add_argument("--target", help="target fingerprint JSON path")
     parser.add_argument(
         "--tolerance",
-        type=float,
+        type=_parse_tolerance,
         default=DEFAULT_TOLERANCE,
-        help=f"extents tolerance in drawing units (default {DEFAULT_TOLERANCE:g})",
+        help=f"geometry/extents tolerance in drawing units (default {DEFAULT_TOLERANCE:g})",
     )
     parser.add_argument("--json", help="write the full delta JSON to this path")
     parser.add_argument(
@@ -323,6 +470,15 @@ def main(argv: list[str] | None = None) -> int:
         return self_check()
     if not args.source or not args.target:
         parser.error("--source and --target are required unless --self-check is used")
+
+    if args.json:
+        try:
+            ensure_safe_outputs(
+                [Path(args.source), Path(args.target)], [Path(args.json)]
+            )
+        except ValueError as exc:
+            print(f"unsafe diff report path: {exc}", file=sys.stderr)
+            return 1
 
     delta = compare_fingerprints(
         _load_fingerprint(Path(args.source)),

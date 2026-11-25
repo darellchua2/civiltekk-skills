@@ -8,6 +8,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from path_safety import ensure_safe_outputs
+
 try:
     import numpy as np
 except ImportError:  # pragma: no cover - environment guard
@@ -327,6 +329,23 @@ def main(argv: list[str] | None = None) -> int:
             " unless --self-check is used"
         )
 
+    out_dir = Path(args.output_dir)
+    inputs = [Path(args.source), Path(args.cad_preview), Path(args.anchors)]
+    outputs = [
+        out_dir / name
+        for name in (
+            "side_by_side.png",
+            "overlay.png",
+            "difference.png",
+            "metrics.json",
+        )
+    ]
+    try:
+        ensure_safe_outputs(inputs, outputs)
+    except ValueError as exc:
+        print(f"unsafe comparison output: {exc}", file=sys.stderr)
+        return 1
+
     anchors = load_anchors(Path(args.anchors))
     model = args.model or anchors.get("model") or "affine"
     if model not in MODELS:
@@ -336,7 +355,6 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     source = load_gray(Path(args.source))
     cad = load_gray(Path(args.cad_preview))
-    out_dir = Path(args.output_dir)
     try:
         out_dir.mkdir(parents=True, exist_ok=True)
     except OSError as exc:

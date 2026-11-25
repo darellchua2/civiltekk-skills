@@ -9,6 +9,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from path_safety import ensure_safe_outputs
+
 try:
     import numpy as np
 except ImportError:  # pragma: no cover - environment guard
@@ -25,9 +27,7 @@ except ImportError:  # pragma: no cover - environment guard
     print("pillow is required: pip install pillow", file=sys.stderr)
     sys.exit(2)
 
-PROFILES = frozenset(
-    {"strict-dimensioned", "general", "hybrid", "visual-trace", "geometry-only"}
-)
+PROFILES = frozenset({"strict-dimensioned", "general", "hybrid", "visual-trace"})
 STRICT_PROFILE = "strict-dimensioned"
 BLUR_MIN = 100.0
 CONTRAST_MIN = 25.0
@@ -309,7 +309,8 @@ def main(argv: list[str] | None = None) -> int:
             "Preflight a raster source for Mode C: hash, resolution, blur, contrast,"
             " skew estimate, and scale-anchor detection. A warning becomes a blocker"
             " only when the profile requires evidence the image cannot provide;"
-            " visual-trace and geometry-only never block on scale."
+            " visual-trace never blocks on scale. Geometry-only is a separate DXF"
+            " output option, not an image evidence profile."
         )
     )
     parser.add_argument("--image", help="input raster image (PNG, JPEG, …)")
@@ -328,6 +329,12 @@ def main(argv: list[str] | None = None) -> int:
         return self_check()
     if not (args.image and args.mode and args.output):
         parser.error("--image, --mode, and --output are required unless --self-check")
+
+    try:
+        ensure_safe_outputs([Path(args.image)], [Path(args.output)])
+    except ValueError as exc:
+        print(f"unsafe preflight output: {exc}", file=sys.stderr)
+        return 1
 
     report = build_report(analyze_image(Path(args.image)), args.mode)
     try:
