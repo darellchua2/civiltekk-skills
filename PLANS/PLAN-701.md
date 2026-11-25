@@ -136,3 +136,5 @@ Every step is atomic and has a rationale, completion signal, and consumer list.
 ## Trace
 
 LOG Phase 1 escalated to full because geometry/dimension validation affects measurement trust and path aliases can overwrite source evidence.
+GATE 884d646 tier=full lint=t typecheck=t build=t unit=t e2e=n.a (17 focused Python tests; 727 Bats tests)
+LOG PDF converter self-check unavailable because PyMuPDF is absent; the output guard was exercised with an isolated stub.
