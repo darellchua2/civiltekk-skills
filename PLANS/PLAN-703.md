@@ -10,7 +10,7 @@
 - [x] Model resolution preserves the Astra override.
 - [x] Verification covers the config and deployment behavior. (Meaning confirmed with the owner at the Step 7 requirements gate: "deployment behavior" is the file setup's config writers produce, asserted by repeatable bats tests in CI. The effective window under a ChatGPT sign-in is a one-time recorded check, not an automated test.)
 - [x] No other model's limits change, and the OAuth context-cap plugin is not disabled. (Lifted from the ticket's Scope section at the Step 7 requirements gate.)
-- [ ] An `openai/gpt-6.2-astra` pin passes the deploy-time exposed-model guard. (Added at Step 5 re-validation with the owner's approval; not in the ticket text.)
+- [x] An `openai/gpt-6.2-astra` pin passes the deploy-time exposed-model guard. (Added at Step 5 re-validation with the owner's approval; not in the ticket text.)
 - [x] A kept config is never written to: declining the config overwrite does not add the override to an existing `opencode.json`, and the doc explains how existing installs opt in. (Decided with the owner at the Step 7 Mode R relay: document only.)
 
 ## Dependency & Consumer Map
@@ -49,14 +49,16 @@ _Every step MUST be atomic and carry rationale. Reject any step missing a "Why".
     — **Done:** Added the Astra context-window subsection to MIGRATION.md under "Choosing a provider"; the heading count is 1 and both test files that grep this file pass (19 ok, 0 not ok); files: MIGRATION.md; fixes: none
 
 ### Phase 2: Let Astra pins through the deploy-time guard
-- [ ] **2.1** Add `"gpt-6.2-astra"` to the `openai` array in `installer/provider-models.json`, directly after `"gpt-6-astra"`.
+- [x] **2.1** Add `"gpt-6.2-astra"` to the `openai` array in `installer/provider-models.json`, directly after `"gpt-6-astra"`.
     — **Why:** The resolver's exposed-model guard fails the deploy for any `openai/gpt-6.2-astra` pin (exit 1, "NOT exposed by provider openai") because the shipped list predates the model, while the live catalog serves it. That position is the one `deploy/regen-provider-models.mjs` (default `.sort()`) produces, so a regen keeps it.
     — **Done when:** `jq -e '.openai | index("gpt-6.2-astra") != null' installer/provider-models.json` exits 0; `node -e 'const a=require("./installer/provider-models.json").openai; process.exit(JSON.stringify(a) === JSON.stringify([...a].sort()) ? 0 : 1)'` exits 0; `bats tests/test_provider_pins.bats tests/test_provider_regen.bats` pass.
     — **Consumers affected:** `installer/resolve-models.mjs` guard (via `deploy/setup.sh`), `deploy/regen-provider-models.mjs`, `tests/test_provider_pins.bats`, `tests/test_provider_regen.bats`.
-- [ ] **2.2** Extend `tests/test_provider_pins.bats` with two tests: `astra_pin_passes_the_deploy_time_guard` pins `openai/gpt-6.2-astra` as `primary` and `reasoning` and expects the real resolver in `--dry-run` with `--provider-models installer/provider-models.json` to exit 0; `astra_pin_rejected_when_catalog_lacks_it` removes the id from a scratch copy of the file and expects a non-zero exit whose output names the missing model.
+    — **Done:** Added gpt-6.2-astra to the openai array right after gpt-6-astra; the jq index and sort-order checks exit 0, the pins and regen tests pass (14 ok), and the file minus that id is deep-equal to dev; files: installer/provider-models.json; fixes: none
+- [x] **2.2** Extend `tests/test_provider_pins.bats` with two tests: `astra_pin_passes_the_deploy_time_guard` pins `openai/gpt-6.2-astra` as `primary` and `reasoning` and expects the real resolver in `--dry-run` with `--provider-models installer/provider-models.json` to exit 0; `astra_pin_rejected_when_catalog_lacks_it` removes the id from a scratch copy of the file and expects a non-zero exit whose output names the missing model.
     — **Why:** Pins the user-visible outcome (Astra selectable through setup) and proves the new test can fail, following the file's existing induced-breakage pattern.
     — **Done when:** `bats -c tests/test_provider_pins.bats` prints 7 (it prints 5 before this step) and `bats tests/test_provider_pins.bats` reports every test ok.
     — **Consumers affected:** CI (`.github/workflows/release.yml:66-68`).
+    — **Done:** Added astra_pin_passes_the_deploy_time_guard and astra_pin_rejected_when_catalog_lacks_it; bats -c prints 7 and all 7 pass, and removing the id from the real file turns the passing test into a reported "not ok"; files: tests/test_provider_pins.bats; fixes: replaced in-test EXIT traps with a file-level teardown() in the two pre-existing negative-fixture tests and the two new ones (see Trace)
 
 ## Technical Notes
 
@@ -92,3 +94,5 @@ LOG Phase 1 escalated to full because it changes deploy/opencode.json, a deploy 
 LOG No user-facing check for the effective limit is documented: opencode api against a started server needs the server password from its log and returns an empty list until plugins load, and the managed background service listens on a fixed default port that a HOME/XDG sandbox does not isolate. Step 1.3 states what is verified and what is not instead, and the Risks bullet was corrected to match.
 GATE f4c66ea4 tier=full lint=t typecheck=n.a build=- unit=t e2e=n.a (59 Bats files, 735 tests; gated tree differs from this commit only in PLANS/PLAN-703.md, which no test reads)
 LOG Repair: the Phase 1 GATE memo above was first appended onto the end of the previous LOG line (the file had lost its trailing newline). This commit restores the line break; neither line's text changed.
+LOG Phase 2 escalated to full because it changes installer/provider-models.json, a data node read by the resolver guard, installer/init.mjs and setup.sh, and because it is the ticket exit gate.
+LOG Step 2.2 deviation: tests/test_provider_pins.bats cleaned up with an EXIT trap inside each test. In bats 1.13.0 a failing test with its own EXIT trap prints no not-ok line, only the warning that fewer tests than expected ran. Added a file-level teardown() and switched the two pre-existing negative-fixture tests to it (one line each) along with the two new tests.
