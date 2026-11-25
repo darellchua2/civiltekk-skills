@@ -26,15 +26,15 @@
 | `skills/cad-redraw-skill/scripts/spec_to_dxf.py` | spec contract | redraw users, generated DXF/report | high |
 | `skills/cad-redraw-skill/scripts/preflight_image.py` | evidence-profile contract | image redraw users, preflight report | medium |
 | `skills/cad-redraw-skill/scripts/pdf_vector_to_dxf.py` | PDF routing contract | PDF redraw users, intermediate DXF/raster evidence | high |
-| `skills/cad-redraw-skill/scripts/tool_preflight.py` | installed-tool capability model | redraw users, validation workflow | medium |
-| `skills/cad-redraw-skill/scripts/cadcraft_validate.py` | tool preflight and CADCraft CLI behavior | redraw users, validation report and preview | high |
-| `skills/cad-redraw-skill/tests/test_redraw.py` | scripts and report contracts | skill maintainers, CI | medium |
+| `skills/cad-redraw-skill/scripts/headless_validate.py` | installed-tool capability model and CADCraft CLI behavior | redraw users, validation report and preview | high |
+| `skills/cad-redraw-skill/tests/test_redraw.py` | scripts and report contracts | skill maintainers, CI, `tests/test_skill_isolation.bats` | medium |
 | `skills/cad-redraw-skill/references/redraw-spec.md` | spec validator | spec authors, `spec_to_dxf.py` | high |
 | `skills/cad-redraw-skill/references/validation.md` | fingerprint and validation scripts | redraw users, `SKILL.md` | high |
 | `skills/cad-redraw-skill/references/linux-toolchain.md` | tool preflight and verified CLI behavior | redraw users, `SKILL.md` | medium |
-| `skills/cad-redraw-skill/SKILL.md` | scripts and references | CAD users, CAD specialist agent/router | high |
+| `skills/cad-redraw-skill/SKILL.md` | scripts and references | CAD users, CAD specialist agent/router, skill registry | high |
 | `skills/cad-specialist-skill/SKILL.md` | redraw's optional viewer contract | `agents/cad-specialist-subagent.md`, routed CAD users | medium |
-| `agents/cad-specialist-subagent.md` | router and task-specific unit rules | OpenCode CAD agent users | medium |
+| `agents/cad-specialist-subagent.md` | router and task-specific unit rules | OpenCode CAD agent users, `deploy/setup.sh` | medium |
+| `installer/registry.json` | redraw skill frontmatter description | skill installer and registry consumers | low |
 
 ## Implementation Phases
 
@@ -42,14 +42,14 @@ Every step is atomic and has a rationale, completion signal, and consumer list.
 
 ### Phase 1: Make evidence and outputs safe
 
-- [ ] **1.1** Add deterministic per-entity geometry signatures to source fingerprints and compare them in `fingerprint_diff.py`.
+- [ ] **1.1** Add canonical per-entity DXF geometry signatures to source fingerprints and compare them in `fingerprint_diff.py`.
     — **Why:** counts and drawing extents alone let moved interior features pass as unchanged.
-    — **Done when:** a self-check moves an interior circle without changing counts or extents and the diff fails; identical drawings still pass.
+    — **Done when:** signatures omit volatile handles/owners, preserve geometric tags, and compare with the documented fingerprint tolerance; a self-check moves an interior circle without changing counts or extents and the diff fails; identical drawings still pass.
     — **Consumers affected:** redraw users, `fingerprint.py`, `fingerprint_diff.py`, generated redraw prompt.
 
 - [ ] **1.2** Separate image evidence profiles from geometry-only drawing output and enforce strict view calibration and dimension agreement.
     — **Why:** DPI metadata and printed labels cannot prove that measured geometry matches physical dimensions.
-    — **Done when:** strict validation requires declared units, usable calibration on each dimensioned view, and measured dimension geometry matching its authoritative value; tests reject missing calibration, DPI-only evidence, and a mismatched dimension; the four evidence profiles remain supported.
+    — **Done when:** strict validation requires declared units, usable calibration on each dimensioned view, and measured dimension geometry matching its authoritative value within a documented tolerance; tests reject missing calibration, DPI-only evidence, and a mismatched dimension; the four evidence profiles remain supported.
     — **Consumers affected:** image redraw users, `preflight_image.py`, `spec_to_dxf.py`, redraw-spec and validation references.
 
 - [ ] **1.3** Reject spec, DXF output, and report path collisions in spec validation and draw modes.
@@ -69,21 +69,21 @@ Every step is atomic and has a rationale, completion signal, and consumer list.
     — **Done when:** text-only and border-only fixtures are rejected as usable vector CAD; a mixed vector/raster fixture is identified and can emit a page raster for image evidence; converted DXF output is labeled PDF-derived.
     — **Consumers affected:** PDF redraw users, `pdf_vector_to_dxf.py`, input decision tree.
 
-- [ ] **2.2** Add an OS/architecture/tool capability probe with native-Windows-only AutoCAD Core Console detection.
+- [ ] **2.2** Add an OS/architecture/tool capability probe to `headless_validate.py`, with native-Windows-only AutoCAD Core Console detection.
     — **Why:** executable presence is not enough; a preview-only tool cannot satisfy structural validation, and WSL must not cross-launch Windows programs implicitly.
-    — **Done when:** simulated Windows, Linux, macOS, and WSL cases report OS/architecture and capability-qualified tools; WSL never probes or launches Windows executables; CADCraft, ezdxf, and render-only alternatives are distinguished.
-    — **Consumers affected:** redraw users, `tool_preflight.py`, validation workflow.
+    — **Done when:** simulated Windows, Linux, macOS, and WSL cases report OS/architecture and capability-qualified tools; WSL never probes or launches Windows executables; CADCraft `info`/`convert`, ezdxf structural checks, and render-only alternatives are distinguished.
+    — **Consumers affected:** redraw users, `headless_validate.py`, validation workflow.
 
-- [ ] **2.3** Add a headless CADCraft readback-and-preview command that treats loss notes as validation failures.
+- [ ] **2.3** Add CADCraft readback-and-preview execution to `headless_validate.py`.
     — **Why:** a zero exit code can still hide skipped DXF records or other read losses.
     — **Done when:** it captures the installed version, parses `info` output, reports `skipped`/`readNotes`, creates a PNG with `convert`, and exits nonzero for a partial read; fake-CLI tests cover clean and lossy reads, and an actual headless smoke run is recorded when the binary is available.
-    — **Consumers affected:** redraw users, CADCraft validation reports, `cadcraft_validate.py`.
+    — **Consumers affected:** redraw users, CADCraft validation reports, `headless_validate.py`.
 
 ### Phase 3: Align guidance and verify consumers
 
 - [ ] **3.1** Rewrite the redraw entry point and references around separate source-CAD, PDF, image, and validation decision trees.
     — **Why:** users need the correct evidence path before they choose a conversion or validation tool.
-    — **Done when:** documentation states four image profiles plus the separate geometry-only output flag, OS/tool capability checks, verified CADCraft CLI syntax, release/checksum/source-build consent guidance, PDF conversion losses, and honest skipped-check dispositions; fingerprint-generated prompts describe the implemented geometry checks.
+    — **Done when:** documentation states four image profiles plus the separate geometry-only output flag, OS/tool capability checks, verified CADCraft CLI syntax, release/checksum/source-build consent guidance, PDF conversion losses, and honest skipped-check dispositions; it retains useful upstream evidence/fingerprint-first practices without copying code or Windows COM/DWG assumptions; the skill description no longer claims Linux-only support, fingerprint-generated prompts describe the implemented geometry checks, and `node installer/build-registry.mjs` regenerates `installer/registry.json`.
     — **Consumers affected:** CAD users, all changed redraw scripts/references, generated prompts.
 
 - [ ] **3.2** Make CAD Viewer optional for headless redraws and scope the CAD agent's millimeter default to new authoring.
