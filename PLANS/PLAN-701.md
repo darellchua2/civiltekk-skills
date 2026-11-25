@@ -76,7 +76,7 @@ Every step is atomic and has a rationale, completion signal, and consumer list.
     — **Why:** extracted text or a page border alone is not reusable CAD geometry, while mixed pages need both vector and image evidence.
     — **Done when:** text-only and border-only fixtures are rejected as usable vector CAD; a mixed vector/raster fixture is identified and can emit a page raster for image evidence; converted DXF output is labeled PDF-derived.
     — **Consumers affected:** PDF redraw users, `pdf_vector_to_dxf.py`, input decision tree.
-    — **Done:** added vector/text/raster/page-frame routing, optional separate 150-DPI raster evidence, PDF-derived DXF provenance, and a JSON loss report; page frames and unsupported paths are excluded/reported; text-only and frame-only pages do not emit DXF; 42 focused regressions pass; PyMuPDF is absent, so the real-PDF self-check remains unavailable.
+    — **Done:** added vector/text/raster/page-frame routing, optional separate 150-DPI raster evidence, PDF-derived DXF provenance, and a JSON loss report; page frames and unsupported paths are excluded/reported; text-only and frame-only pages do not emit DXF; 43 focused regressions pass; PyMuPDF is absent, so the real-PDF self-check remains unavailable.
 
 - [x] **2.2** Add an OS/architecture/tool capability probe to `headless_validate.py`, with native-Windows-only AutoCAD Core Console detection.
     — **Why:** executable presence is not enough; a preview-only tool cannot satisfy structural validation, and WSL must not cross-launch Windows programs implicitly.
@@ -104,10 +104,11 @@ Every step is atomic and has a rationale, completion signal, and consumer list.
     — **Consumers affected:** CAD specialist router, CAD specialist agent, redraw users.
     — **Done:** redraw skips CAD Viewer unless interactive review is requested; the CAD agent's millimeter default now applies only to new authoring, while redraw units follow source evidence.
 
-- [ ] **3.3** Run the redraw regression set, skill-isolation guard, and repository verification gate against the complete branch diff.
+- [x] **3.3** Run the redraw regression set, skill-isolation guard, and repository verification gate against the complete branch diff.
     — **Why:** the change spans executable scripts, skill packaging, and shared CAD handoff guidance.
     — **Done when:** focused Python tests and `tests/test_skill_isolation.bats` pass; the full ticket exit gate is recorded; any available CADCraft smoke result is documented; diff review confirms CLI entry points and skill IDs remain compatible.
     — **Consumers affected:** all changed modules, skill installer users, PR reviewers.
+    — **Done:** 43 focused Python tests and all 727 Bats tests pass, including skill isolation; full gate and compatibility review are recorded below; CADCraft 0.18.0 live smoke passed; PDF real-input self-check remains unavailable because PyMuPDF is absent.
 
 ## Technical Notes
 
@@ -143,3 +144,8 @@ Every step is atomic and has a rationale, completion signal, and consumer list.
 LOG Phase 1 escalated to full because geometry/dimension validation affects measurement trust and path aliases can overwrite source evidence.
 GATE 884d646 tier=full lint=t typecheck=t build=t unit=t e2e=n.a (17 focused Python tests; 727 Bats tests)
 LOG PDF converter self-check unavailable because PyMuPDF is absent; the output guard was exercised with an isolated stub.
+LOG Phase 3 escalated to full because new CLI surfaces, installed skill guidance, and the shared CAD specialist handoff affect redraw and installer consumers.
+LOG Review found malformed calibration evidence could raise `TypeError`; added a string guard and regression, so strict validation returns a named calibration error.
+GATE 22f6137 tier=full lint=t typecheck=t build=t unit=t e2e=n.a (zero new Ruff/mypy findings; 43 Python tests; 727 Bats tests; compileall and registry checks; no frontend)
+LOG Gate baselines: `fingerprint.py`'s 2 and `spec_to_dxf.py`'s 11 mypy errors are unchanged; `pdf_vector_to_dxf.py` and `headless_validate.py` typecheck clean. No root build script exists, so Python compilation and registry syntax/drift checks were used.
+LOG Diff review covered all 18 changed paths and direct callers; existing CLI contracts and skill IDs remain intact. Live CADCraft 0.18.0 smoke: 46 entities, zero skipped records, no read notes, 110,482-byte PNG.
