@@ -8,6 +8,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from path_safety import ensure_safe_outputs
+
 # Checked before the ezdxf import so a missing converter never becomes a traceback.
 ODA_HINT = (
     "ODA File Converter not found: install it from "
@@ -44,8 +46,10 @@ def _check_paths(source: Path, output: Path) -> int | None:
         return _fail(1, f"input DXF not found: {source}")
     if not os.access(source, os.R_OK):
         return _fail(1, f"input DXF is not readable: {source}")
-    if source.resolve() == output.resolve():
-        return _fail(1, "output must differ from the source DXF (never overwrite)")
+    try:
+        ensure_safe_outputs([source], [output])
+    except ValueError as exc:
+        return _fail(1, str(exc))
     if output.exists():
         return _fail(1, f"output path already exists: {output}")
     return None

@@ -6,6 +6,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from path_safety import ensure_safe_outputs
+
 try:
     import ezdxf
     from ezdxf.path import Path as EzdxfPath
@@ -232,6 +234,12 @@ def main(argv: list[str] | None = None) -> int:
         return self_check()
     if not (args.pdf and args.output):
         parser.error("--pdf and --output are required unless --self-check is used")
+
+    try:
+        ensure_safe_outputs([Path(args.pdf)], [Path(args.output)])
+    except ValueError as exc:
+        print(f"unsafe PDF conversion output: {exc}", file=sys.stderr)
+        return 1
 
     counts = extract_page(Path(args.pdf), args.page, Path(args.output))
     print(

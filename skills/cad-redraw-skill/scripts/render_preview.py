@@ -6,6 +6,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from path_safety import ensure_safe_outputs
+
 try:
     import ezdxf
 except ImportError:  # pragma: no cover - environment guard
@@ -128,6 +130,13 @@ def main(argv: list[str] | None = None) -> int:
         return self_check()
     if not args.dxf or not args.png:
         parser.error("--dxf and --png are required unless --self-check is used")
+
+    outputs = [Path(path) for path in (args.png, args.pdf) if path]
+    try:
+        ensure_safe_outputs([Path(args.dxf)], outputs)
+    except ValueError as exc:
+        print(f"unsafe preview output: {exc}", file=sys.stderr)
+        return 1
 
     doc = load_drawing(Path(args.dxf))
     try:

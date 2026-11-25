@@ -3,12 +3,14 @@
 
 import argparse
 import json
+import math
 import shutil
 import subprocess
 import sys
 import tempfile
 from collections import Counter
 from pathlib import Path
+from typing import Any
 
 try:
     import ezdxf
@@ -16,10 +18,22 @@ try:
 except ImportError:  # pragma: no cover - environment guard
     print("ezdxf is required: pip install ezdxf", file=sys.stderr)
     sys.exit(2)
+from ezdxf.lldxf.tagwriter import TagCollector
+from path_safety import ensure_safe_outputs
 
 ANNOTATION_TYPES = ("TEXT", "MTEXT", "DIMENSION", "LEADER", "MLEADER")
 PROXY_TYPES = ("ACAD_PROXYENTITY", "ACAD_PROXY_OBJECT", "PROXY_ENTITY")
 ANONYMOUS_PREFIXES = ("*U",)
+GEOMETRY_TOLERANCE = 1e-6
+
+
+def _is_handle_tag(code: int) -> bool:
+    """Return whether a DXF group code carries a volatile handle/reference."""
+    return (
+        code in {5, 105, 1005, 480, 481}
+        or 320 <= code <= 369
+        or 390 <= code <= 399
+    )
 
 
 def load_drawing(path: Path) -> tuple[object, str]:
@@ -105,7 +119,7 @@ def _read_via_dwg2dxf(path: Path) -> object | None:
 
 
 def build_fingerprint(
-    doc: object, file_name: str, file_format: str, converter: str
+    doc: Any, file_name: str, file_format: str, converter: str
 ) -> dict:
     """Extract the full fingerprint dict from a loaded ezdxf document."""
     msp_entities = list(doc.modelspace())
@@ -114,6 +128,12 @@ def build_fingerprint(
         if layout.is_any_paperspace:
             ps_entities.extend(layout)
     all_entities = msp_entities + ps_entities
+    geometry_signatures = sorted(
+        (_entity_geometry_signature(entity, doc.dxfversion) for entity in all_entities),
+        key=lambda signature: json.dumps(
+            signature, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        ),
+    )
 
     by_type: Counter = Counter(e.dxftype() for e in all_entities)
     for dxftype in ANNOTATION_TYPES:
@@ -164,6 +184,10 @@ def build_fingerprint(
             "paperspace": len(ps_entities),
             "by_type": dict(sorted(by_type.items())),
         },
+        "geometry": {
+            "tolerance": GEOMETRY_TOLERANCE,
+            "entities": geometry_signatures,
+        },
         "annotations": {
             "dimensions": by_type.get("DIMENSION", 0),
             "leaders": by_type.get("LEADER", 0) + by_type.get("MLEADER", 0),
@@ -177,6 +201,29 @@ def build_fingerprint(
             "dimstyles": [dimstyle.dxf.name for dimstyle in doc.dimstyles],
         },
     }
+
+
+def _entity_geometry_signature(entity, dxfversion: str) -> dict:
+    """Capture canonical DXF tags while excluding volatile entity and owner handles."""
+    writer = TagCollector(dxfversion=dxfversion)
+    entity.export_dxf(writer)
+    tags = [
+        [tag.code, _json_tag_value(tag.value)]
+        for tag in writer.tags
+        if not _is_handle_tag(tag.code)
+    ]
+    return {"type": entity.dxftype(), "tags": tags}
+
+
+def _json_tag_value(value):
+    """Convert DXF tag values to JSON-safe primitives without losing geometry precision."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return str(value)
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    if isinstance(value, (list, tuple)):
+        return [_json_tag_value(item) for item in value]
+    return str(value)
 
 
 def _producer(doc: object) -> str | None:
@@ -252,10 +299,13 @@ def build_prompt(fp: dict) -> str:
         "The rebuild is accepted only when, compared to this fingerprint:",
         "",
         "- entity counts match per type and per space (modelspace/paperspace);",
+        f"- per-entity DXF geometry signatures match within tolerance {GEOMETRY_TOLERANCE:g};",
         "- every layer, block, text style, and dimension style listed here exists in the target;",
-        f"- dimensions ({annotations['dimensions']}), leaders ({annotations['leaders']}),"
-        f" text ({annotations['text']}), and MTEXT ({annotations['mtext']}) counts match —"
-        " a missing dimension or leader is a FAILURE, never a warning;",
+        (
+            f"- dimensions ({annotations['dimensions']}), leaders ({annotations['leaders']}),"
+            f" text ({annotations['text']}), and MTEXT ({annotations['mtext']}) counts match —"
+            " a missing dimension or leader is a FAILURE, never a warning;"
+        ),
         "- extents agree within 1e-6 drawing units.",
         "",
         "## Risk notes",
@@ -388,6 +438,18 @@ def self_check() -> int:
             == fp["entities"]["modelspace"] + fp["entities"]["paperspace"],
             "entities.total == modelspace + paperspace",
         )
+        _require(
+            len(fp["geometry"]["entities"]) == fp["entities"]["total"],
+            "geometry signature count",
+        )
+        _require(
+            all(
+                not _is_handle_tag(tag[0])
+                for item in fp["geometry"]["entities"]
+                for tag in item["tags"]
+            ),
+            "geometry signatures omit volatile handles and owner references",
+        )
         _require(fp["entities"]["modelspace"] == 9, "entities.modelspace")
         _require(fp["entities"]["paperspace"] == 1, "entities.paperspace")
         _require(fp["entities"]["by_type"]["LINE"] == 3, "entities.by_type.LINE")
@@ -452,6 +514,18 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--source and --output are required unless --self-check is used")
 
     source = Path(args.source)
+    prefix = Path(args.output)
+    try:
+        ensure_safe_outputs(
+            [source],
+            [
+                Path(f"{prefix}-fingerprint.json"),
+                Path(f"{prefix}-redraw-prompt.md"),
+            ],
+        )
+    except ValueError as exc:
+        print(f"unsafe fingerprint output: {exc}", file=sys.stderr)
+        return 1
     doc, converter = load_drawing(source)
     fp = build_fingerprint(
         doc, source.name, "dxf" if source.suffix.lower() == ".dxf" else "dwg", converter

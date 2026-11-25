@@ -13,11 +13,16 @@ Two independent axes, never conflated:
 `fingerprint_diff.py source.json target.json` exits 0 only when:
 
 - entity counts match per type and per space (modelspace/paperspace);
+- per-entity DXF geometry signatures match, ignoring volatile handles/owners
+  and allowing the selected tolerance (default `1e-6`);
 - every source layer, block, text style, and dimension style exists in the
   target;
 - dimension, leader, text, and MTEXT counts match — a source dimension or
   leader missing from the target is a **failure**, not a warning;
 - extents agree within tolerance (default 1e-6 drawing units).
+
+Fingerprints produced before per-entity geometry signatures were added are
+rejected by the diff; regenerate both fingerprints before comparing.
 
 The diff report is included in the final response even when it passes.
 Silent passing is forbidden — report what was compared.
@@ -30,13 +35,18 @@ constraint arithmetic failures, and profile violations:
 
 | Profile | Requirement to draw |
 |---|---|
-| `strict-dimensioned` | declared unit system + every load-bearing dimension `known`/`scaled` |
+| `strict-dimensioned` | declared unit system, calibrated dimension views, `known`/`scaled` dimensions, and values agreeing with measured geometry |
 | `general` / `hybrid` | no impossible geometry; `inferred` values have assumption entries |
 | `visual-trace` | none beyond schema; output cannot claim scale |
-| `geometry-only` | annotation layers absent from the drawn output |
 
-A `strict-dimensioned` spec without units or anchors is **blocked**, not
-downgraded silently.
+A strict spec needs a usable `known`/`scaled` calibration on every view with
+dimensions. Each numeric dimension value must agree with the measured `p1` to
+`p2` distance within `max(1e-6, 1e-6 × max(|value|, measured distance))`
+drawing units. Missing calibration, missing values, or mismatched dimensions
+are **blocked**, not downgraded silently.
+
+`--geometry-only` is a separate output switch available with any evidence
+profile; it drops annotations without changing the selected profile.
 
 ## Dispositions
 

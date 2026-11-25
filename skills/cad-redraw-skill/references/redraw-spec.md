@@ -22,8 +22,9 @@ the entire reconstruction. Unknown values are recorded as `"evidence":
 }
 ```
 
-- `profile`: one of `strict-dimensioned`, `general`, `hybrid`, `visual-trace`,
-  `geometry-only`.
+- `profile`: one of `strict-dimensioned`, `general`, `hybrid`, or
+  `visual-trace`. `geometry-only` is a separate `spec_to_dxf.py
+  --geometry-only` output option, not an evidence profile.
 - `units.system`: `mm`, `cm`, `m`, `in`, `ft`, or `unitless`. When the source
   has no unit or scale anchor, use `unitless` with `"declared": false` — do
   not silently default to mm.
@@ -50,7 +51,10 @@ different scales:
 `type`: `affine`, `homography`, or `dimension`. Source coordinates are image
 pixels (origin top-left); CAD coordinates are drawing units (origin chosen
 for auditability). Calibration `evidence` records how the mapping was
-derived.
+derived. A strict dimensioned spec needs usable `known` or `scaled`
+calibration on every view that contains dimensions. Affine/dimension mappings
+need at least two distinct paired anchors; homography needs four paired
+anchors with no three collinear.
 
 ## Entities
 
@@ -110,4 +114,8 @@ drops annotation layers.
 
 `strict-dimensioned` requires every load-bearing dimension to be `known` or
 `scaled` with a declared unit system; anything less blocks drawing.
-`inferred` values never satisfy `strict-dimensioned`.
+`inferred` values never satisfy `strict-dimensioned`. The authoritative
+numeric `geometry.value` must match the measured distance between `p1` and
+`p2` within `max(1e-6, 1e-6 × max(|value|, measured distance))` drawing units.
+The `--geometry-only` output switch can be used with any evidence profile; it
+drops annotation entities without changing the profile.

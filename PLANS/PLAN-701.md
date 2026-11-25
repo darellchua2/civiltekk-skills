@@ -7,13 +7,13 @@
 ## Acceptance Criteria
 
 - [ ] Route source CAD, usable PDF vectors, mixed/scanned PDFs, and raster-only references separately; report conversion loss.
-- [ ] Keep the four image evidence profiles separate from the geometry-only output switch; enforce per-view calibration and supplied-dimension agreement in strict mode.
+- [x] Keep the four image evidence profiles separate from the geometry-only output switch; enforce per-view calibration and supplied-dimension agreement in strict mode.
 - [ ] Detect OS, architecture, and installed tool capabilities; consider AutoCAD Core Console only on native Windows and never launch Windows tools implicitly from WSL.
 - [ ] Use CADCraft headlessly for DXF inspection and preview when selected; report version, skipped records, read-loss notes, and unsupported-record information, and reject partial reads.
 - [ ] Recommend a matching official CADCraft binary and checksum verification before offering a pinned source build; never install without consent.
 - [ ] Keep CAD Viewer optional for headless redraws and label unavailable required checks as skipped, unvalidated, or blocked.
-- [ ] Prevent output/report paths from overwriting protected inputs, including aliases and symlinks.
-- [ ] Detect moved interior geometry in fingerprints and reject strict dimensions that conflict with measured geometry.
+- [x] Prevent output/report paths from overwriting protected inputs, including aliases and symlinks.
+- [x] Detect moved interior geometry in fingerprints and reject strict dimensions that conflict with measured geometry.
 - [ ] Add regressions for geometry, dimension, path-collision, PDF-routing, tool-selection, and CADCraft partial-read cases; document a headless smoke run when available.
 - [ ] Update redraw references, generated prompt claims, and the specialist/router handoff without changing existing skill IDs or CLI entry points.
 
@@ -46,25 +46,29 @@ Every step is atomic and has a rationale, completion signal, and consumer list.
 
 ### Phase 1: Make evidence and outputs safe
 
-- [ ] **1.1** Add canonical per-entity DXF geometry signatures to source fingerprints and compare them in `fingerprint_diff.py`.
+- [x] **1.1** Add canonical per-entity DXF geometry signatures to source fingerprints and compare them in `fingerprint_diff.py`.
     — **Why:** counts and drawing extents alone let moved interior features pass as unchanged.
     — **Done when:** signatures omit volatile handles/owners, preserve geometric tags, and compare with the documented fingerprint tolerance; a self-check moves an interior circle without changing counts or extents and the diff fails; identical drawings still pass.
     — **Consumers affected:** redraw users, `fingerprint.py`, `fingerprint_diff.py`, generated redraw prompt.
+    — **Done:** per-entity signatures exclude volatile handle/reference codes and compare within a finite non-negative tolerance; interior-circle and legacy-fingerprint regressions pass; files: `fingerprint.py`, `fingerprint_diff.py`, `validation.md`, `test_redraw.py`; fixes: removed the Ruff B009 finding and made missing geometry/tolerance fail closed.
 
-- [ ] **1.2** Separate image evidence profiles from geometry-only drawing output and enforce strict view calibration and dimension agreement.
+- [x] **1.2** Separate image evidence profiles from geometry-only drawing output and enforce strict view calibration and dimension agreement.
     — **Why:** DPI metadata and printed labels cannot prove that measured geometry matches physical dimensions.
     — **Done when:** strict validation requires declared units, usable calibration on each dimensioned view, and measured dimension geometry matching its authoritative value within a documented tolerance; tests reject missing calibration, DPI-only evidence, and a mismatched dimension; the four evidence profiles remain supported.
     — **Consumers affected:** image redraw users, `preflight_image.py`, `spec_to_dxf.py`, redraw-spec and validation references.
+    — **Done:** strict mode checks calibrated dimension views and numeric values against measured geometry; geometry-only remains an output switch; 17 focused regressions pass; files: `preflight_image.py`, `spec_to_dxf.py`, `redraw-spec.md`, `validation.md`, `test_redraw.py`; fixes: rejected non-finite values and made malformed dimension geometry return schema errors instead of raising.
 
-- [ ] **1.3** Add one stdlib path-safety helper and apply it to redraw CLI input/output/report paths.
+- [x] **1.3** Add one stdlib path-safety helper and apply it to existing redraw CLI input/output/report paths.
     — **Why:** an aliased output can overwrite a source or another report before users can recover it.
-    — **Done when:** same-path, symlink, and existing hard-link collisions fail before writing for fingerprint, diff, preflight, PDF, spec, preview, visual-compare, DWG, and CADCraft validation commands; distinct paths still work.
+    — **Done when:** same-path, symlink, and existing hard-link collisions fail before writing for fingerprint, diff, preflight, PDF, spec, preview, visual-compare, and DWG commands; distinct paths still work. The new CADCraft validation command uses this helper when added in Step 2.3.
     — **Consumers affected:** redraw users, `path_safety.py`, all redraw CLI writers.
+    — **Done:** all eight existing redraw writers use the shared alias guard; same-path, symlink, hard-link, and distinct-path behavior passes, including PDF and spec-report CLI checks; files: `path_safety.py`, redraw writer scripts, `test_redraw.py`; fixes: none.
 
-- [ ] **1.4** Add focused stdlib regression tests for fingerprint, strict-evidence, and path-safety behavior.
+- [x] **1.4** Add focused stdlib regression tests for fingerprint, strict-evidence, and path-safety behavior.
     — **Why:** these failures affect geometry trust and source-file integrity, so each needs a runnable regression.
     — **Done when:** `python3 -m unittest discover -s skills/cad-redraw-skill/tests` covers same-path, symlink, and hard-link guards, including `--check-only --report` against the spec path, and passes.
     — **Consumers affected:** skill maintainers and the Phase 1 scripts.
+    — **Done:** focused suite passes 17 tests, including geometry, strict evidence, malformed input, and path-alias regressions; files: `tests/test_redraw.py`; fixes: none.
 
 ### Phase 2: Route input evidence and headless tools
 
@@ -80,7 +84,7 @@ Every step is atomic and has a rationale, completion signal, and consumer list.
 
 - [ ] **2.3** Add CADCraft readback-and-preview execution to `headless_validate.py`.
     — **Why:** a zero exit code can still hide skipped DXF records or other read losses.
-    — **Done when:** it captures the installed version, parses `info` output, reports `skipped`/`readNotes`, creates a PNG with `convert`, and exits nonzero for a partial read; fake-CLI tests cover clean and lossy reads, and an actual headless smoke run is recorded when the binary is available.
+    — **Done when:** it uses the shared path-safety helper, captures the installed version, parses `info` output, reports `skipped`/`readNotes`, creates a PNG with `convert`, and exits nonzero for a partial read; fake-CLI tests cover clean and lossy reads, and an actual headless smoke run is recorded when the binary is available.
     — **Consumers affected:** redraw users, CADCraft validation reports, `headless_validate.py`.
 
 ### Phase 3: Align guidance and verify consumers
@@ -128,3 +132,7 @@ Every step is atomic and has a rationale, completion signal, and consumer list.
 - CADCraft JSON may evolve; validate required fields and fail closed with a named report rather than treating an unknown shape as clean.
 - PDF border detection is heuristic; label ambiguous content as mixed/uncertain and do not upgrade it to trusted CAD.
 - Strict calibration cannot be inferred from pixels or DPI metadata; block the strict deliverable until the spec contains view-specific calibrated evidence.
+
+## Trace
+
+LOG Phase 1 escalated to full because geometry/dimension validation affects measurement trust and path aliases can overwrite source evidence.
