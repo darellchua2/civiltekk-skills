@@ -57,6 +57,16 @@ stage_config() {
     cp "$CONFIG" "$SCRATCH/opencode.json"
 }
 
+# The model resolver as setup runs it for the deployed config, with no agent
+# files. Extra arguments are passed through.
+resolve_deployed_config() {
+    node "$RESOLVER" \
+        --tiers "$TIERS" \
+        --default-map "$DEFAULT_MAP" \
+        --config-dest "$SCRATCH/opencode.json" \
+        "$@"
+}
+
 # Run one deploy-time config writer against the scratch config, then check
 # the override is still intact. Called bare (not through `run`) so a failure
 # fails the test; every check returns non-zero explicitly, because a helper
@@ -87,21 +97,14 @@ survives() {
     # The normal setup path: the resolver writes the deployed file from the
     # shipped source. The scratch dir starts empty, so a missing output
     # fails the checker instead of passing on a pre-existing copy.
-    survives "resolver (fresh copy)" node "$RESOLVER" \
-        --tiers "$TIERS" \
-        --default-map "$DEFAULT_MAP" \
-        --config-src "$CONFIG" \
-        --config-dest "$SCRATCH/opencode.json"
+    survives "resolver (fresh copy)" resolve_deployed_config --config-src "$CONFIG"
 }
 
 @test "override_survives_the_resolver_declined_copy_path" {
     # The user keeps an existing config: no --config-src, the resolver
     # patches the deployed file in place.
     stage_config
-    survives "resolver (declined copy)" node "$RESOLVER" \
-        --tiers "$TIERS" \
-        --default-map "$DEFAULT_MAP" \
-        --config-dest "$SCRATCH/opencode.json"
+    survives "resolver (declined copy)" resolve_deployed_config
 }
 
 @test "resolver_never_adds_the_override_to_a_kept_config" {
@@ -117,10 +120,7 @@ survives() {
       delete cfg.agents.general;
       fs.writeFileSync(to, JSON.stringify(cfg, null, 2) + "\n");
     ' "$CONFIG" "$SCRATCH/opencode.json"
-    run node "$RESOLVER" \
-        --tiers "$TIERS" \
-        --default-map "$DEFAULT_MAP" \
-        --config-dest "$SCRATCH/opencode.json"
+    run resolve_deployed_config
     [ "$status" -eq 0 ]
     run node -e '
       const fs = require("fs");
