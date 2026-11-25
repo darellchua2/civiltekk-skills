@@ -293,13 +293,17 @@ class PathSafetyTests(unittest.TestCase):
 
             for option in ("--report", "--raster-output"):
                 with self.subTest(option=option):
+                    target = source
+                    if option == "--raster-output":
+                        target = Path(tmp) / "source.png"
+                        target.symlink_to(source)
                     result = module.main(
                         [
                             "--pdf",
                             str(source),
                             "--classify-only",
                             option,
-                            str(source),
+                            str(target),
                         ]
                     )
                     self.assertNotEqual(result, 0)
