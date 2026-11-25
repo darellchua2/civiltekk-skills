@@ -299,7 +299,8 @@ def build_prompt(fp: dict) -> str:
         "The rebuild is accepted only when, compared to this fingerprint:",
         "",
         "- entity counts match per type and per space (modelspace/paperspace);",
-        f"- per-entity DXF geometry signatures match within tolerance {GEOMETRY_TOLERANCE:g};",
+        f"- per-entity DXF tag signatures match within tolerance {GEOMETRY_TOLERANCE:g};",
+        "  volatile entity and owner handles are excluded from those signatures;",
         "- every layer, block, text style, and dimension style listed here exists in the target;",
         (
             f"- dimensions ({annotations['dimensions']}), leaders ({annotations['leaders']}),"

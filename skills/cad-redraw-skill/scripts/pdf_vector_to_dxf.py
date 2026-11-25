@@ -2,8 +2,10 @@
 """Extract vector paths and real text from one PDF page into a generic-layer DXF."""
 
 import argparse
+import json
 import sys
 import tempfile
+from collections import Counter
 from pathlib import Path
 
 from path_safety import ensure_safe_outputs
@@ -20,9 +22,10 @@ except ImportError:  # pragma: no cover - environment guard
     print("pymupdf is required: pip install pymupdf", file=sys.stderr)
     sys.exit(2)
 
-PT_TO_MM = 25.4 / 72.0  # 1 PDF point = 0.3528 mm — documented constant, not applied
 BEZIER_TOLERANCE = 0.1  # flattening distance in PDF points
 LAYERS = {"LINEWORK": 7, "TEXT": 7, "BORDER": 8, "DIM": 3}
+SUPPORTED_PATH_OPS = frozenset({"l", "re", "qu", "c"})
+RASTER_DPI = 150
 
 
 def _pt(x: float, y: float, page_height: float) -> tuple[float, float]:
@@ -59,11 +62,23 @@ def _add_cubic(msp, p1, c1, c2, p4, page_height: float) -> int:
     return max(len(points) - 1, 0)
 
 
-def _add_path_items(msp, drawing: dict, page_height: float) -> int:
+def _add_path_items(
+    msp,
+    drawing: dict,
+    page_height: float,
+    unsupported_ops: Counter | None = None,
+    page_rect=None,
+) -> int:
     """Flatten one PDF drawing (strokes and fills) into LINE entities on LINEWORK."""
     count = 0
     for item in drawing["items"]:
         op = item[0]
+        if (
+            op in SUPPORTED_PATH_OPS
+            and page_rect is not None
+            and _is_page_frame_item(item, page_rect)
+        ):
+            continue
         if op == "l":
             count += _add_segment(
                 msp,
@@ -91,36 +106,176 @@ def _add_path_items(msp, drawing: dict, page_height: float) -> int:
             count += _add_ring(msp, corners, page_height, "LINEWORK")
         elif op == "c":
             count += _add_cubic(msp, item[1], item[2], item[3], item[4], page_height)
+        elif unsupported_ops is not None:
+            unsupported_ops[op] += 1
     return count
 
 
-def extract_page(pdf_path: Path, page_number: int, output: Path) -> dict:
-    """Extract one PDF page into a DXF; return entity counts for the summary."""
+def _page_frame_bounds(x0, y0, x1, y1, page_rect) -> bool:
+    """Recognize a centered, near-page-size rectangle as a likely page frame."""
+    # ponytail: fixed margin heuristic; add an explicit override if real frame-like parts
+    # are misclassified in production drawings.
+    width, height = page_rect.width, page_rect.height
+    if width <= 0 or height <= 0:
+        return False
+    return (
+        x1 - x0 >= width * 0.8
+        and y1 - y0 >= height * 0.8
+        and abs((x0 + x1) / 2 - (page_rect.x0 + page_rect.x1) / 2) <= width * 0.1
+        and abs((y0 + y1) / 2 - (page_rect.y0 + page_rect.y1) / 2) <= height * 0.1
+    )
+
+
+def _is_page_frame_item(item, page_rect) -> bool:
+    """Return whether a supported path item looks like a page-border segment."""
+    op = item[0]
+    if op == "re":
+        rect = item[1]
+        return _page_frame_bounds(rect.x0, rect.y0, rect.x1, rect.y1, page_rect)
+    if op == "qu":
+        quad = item[1]
+        points = (quad.ul, quad.ur, quad.lr, quad.ll)
+        return _page_frame_bounds(
+            min(point.x for point in points),
+            min(point.y for point in points),
+            max(point.x for point in points),
+            max(point.y for point in points),
+            page_rect,
+        )
+    if op == "l":
+        start, end = item[1], item[2]
+        horizontal = (
+            abs(start.y - end.y) <= page_rect.height * 0.01
+            and min(
+                abs(start.y - page_rect.y0), abs(start.y - page_rect.y1)
+            )
+            <= page_rect.height * 0.15
+            and abs(start.x - end.x) >= page_rect.width * 0.8
+        )
+        vertical = (
+            abs(start.x - end.x) <= page_rect.width * 0.01
+            and min(
+                abs(start.x - page_rect.x0), abs(start.x - page_rect.x1)
+            )
+            <= page_rect.width * 0.15
+            and abs(start.y - end.y) >= page_rect.height * 0.8
+        )
+        return horizontal or vertical
+    return False
+
+
+def classify_page(page) -> dict:
+    """Classify page evidence before conversion; frames alone are not usable CAD."""
+    drawings = page.get_drawings()
+    words = page.get_text("words")
+    image_count = len(page.get_image_info(xrefs=True))
+    frame_items = 0
+    usable_items = 0
+    usable_paths = 0
+    unsupported_ops: Counter[str] = Counter()
+    for drawing in drawings:
+        path_usable = False
+        for item in drawing.get("items", ()):
+            op = item[0]
+            if op not in SUPPORTED_PATH_OPS:
+                unsupported_ops[op] += 1
+            elif _is_page_frame_item(item, page.rect):
+                frame_items += 1
+            else:
+                usable_items += 1
+                path_usable = True
+        usable_paths += path_usable
+
+    if usable_items and image_count:
+        route = "mixed-vector-raster"
+    elif usable_items:
+        route = "usable-vector"
+    elif image_count:
+        route = "raster-only"
+    elif frame_items:
+        route = "page-frame-only"
+    elif unsupported_ops:
+        route = "unsupported-vector-only"
+    elif words:
+        route = "text-only"
+    else:
+        route = "empty"
+    return {
+        "route": route,
+        "usable_vector": usable_items > 0,
+        "usable_vector_paths": usable_paths,
+        "usable_vector_items": usable_items,
+        "page_frame_items": frame_items,
+        "text_words": sum(bool(str(word[4]).strip()) for word in words),
+        "raster_images": image_count,
+        "unsupported_path_ops": dict(sorted(unsupported_ops.items())),
+    }
+
+
+def render_page_raster(page, output: Path) -> dict:
+    """Render one page as separate image evidence at a fixed, reported DPI."""
+    scale = RASTER_DPI / 72
+    pixmap = page.get_pixmap(
+        matrix=pymupdf.Matrix(scale, scale),
+        alpha=False,
+    )
+    pixmap.save(str(output))
+    return {"path": str(output), "dpi": RASTER_DPI}
+
+
+def _open_pdf_page(pdf_path: Path, page_number: int):
+    """Open one checked page; exit with a named error for invalid PDF input."""
     try:
         doc = pymupdf.open(str(pdf_path))
     except Exception as exc:
         print(f"cannot open PDF '{pdf_path}': {exc}", file=sys.stderr)
         sys.exit(1)
     if page_number < 1 or page_number > doc.page_count:
+        page_count = doc.page_count
+        doc.close()
         print(
             f"page {page_number} does not exist: '{pdf_path}' has"
-            f" {doc.page_count} page(s)",
+            f" {page_count} page(s)",
             file=sys.stderr,
         )
         sys.exit(1)
-    page = doc[page_number - 1]
+    return doc, doc[page_number - 1]
+
+
+def classify_pdf_page(pdf_path: Path, page_number: int) -> dict:
+    """Open, classify, and close one PDF page without producing a DXF."""
+    doc, page = _open_pdf_page(pdf_path, page_number)
+    try:
+        return classify_page(page)
+    finally:
+        doc.close()
+
+
+def extract_page(pdf_path: Path, page_number: int, output: Path) -> dict:
+    """Extract usable vector content; return counts and unsupported path operations."""
+    doc, page = _open_pdf_page(pdf_path, page_number)
+    try:
+        classification = classify_page(page)
+        if not classification["usable_vector"]:
+            print(
+                f"page {page_number} of '{pdf_path}' is {classification['route']}; "
+                "no usable PDF vector geometry, so no DXF was written",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        return _write_page_dxf(pdf_path, page_number, page, output)
+    finally:
+        doc.close()
+
+
+def _write_page_dxf(pdf_path: Path, page_number: int, page, output: Path) -> dict:
+    """Write one already-classified page as PDF-derived DXF geometry."""
     drawings = page.get_drawings()
     words = page.get_text("words")
-    if not drawings and not words:
-        print(
-            f"page {page_number} of '{pdf_path}' has no vector or text content",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
     page_height = page.rect.height
     dxf = ezdxf.new("R2010", setup=True)
     dxf.units = 0  # unitless: coordinates are PDF points, scale is unverified
+    dxf.header["$PROJECTNAME"] = f"PDF-derived from {pdf_path.name}, page {page_number}"
     for name, color in LAYERS.items():
         dxf.layers.add(name, color=color)
     msp = dxf.modelspace()
@@ -136,8 +291,11 @@ def extract_page(pdf_path: Path, page_number: int, output: Path) -> dict:
         page_height,
         "BORDER",
     )
+    unsupported_ops: Counter[str] = Counter()
     for drawing in drawings:
-        lines += _add_path_items(msp, drawing, page_height)
+        lines += _add_path_items(
+            msp, drawing, page_height, unsupported_ops, page.rect
+        )
 
     texts = 0
     for word in words:
@@ -155,8 +313,59 @@ def extract_page(pdf_path: Path, page_number: int, output: Path) -> dict:
     except OSError as exc:
         print(f"cannot write DXF '{output}': {exc}", file=sys.stderr)
         sys.exit(1)
-    doc.close()
-    return {"lines": lines, "texts": texts}
+    return {
+        "lines": lines,
+        "texts": texts,
+        "curve_count": sum(
+            item[0] == "c"
+            for drawing in drawings
+            for item in drawing.get("items", ())
+        ),
+        "unsupported_path_ops": dict(sorted(unsupported_ops.items())),
+    }
+
+
+def _conversion_report(
+    pdf_path: Path,
+    page_number: int,
+    classification: dict,
+    extraction: dict | None = None,
+    raster_output: dict | None = None,
+) -> dict:
+    """Build a provenance and conversion-loss report for one PDF page."""
+    report = {
+        "source": {"path": str(pdf_path), "format": "PDF", "page": page_number},
+        "classification": classification["route"],
+        "evidence": classification,
+        "raster_output": raster_output,
+    }
+    if extraction is None:
+        report["conversion"] = None
+    else:
+        report["conversion"] = {
+            "format": "DXF",
+            "provenance": "PDF-derived",
+            "units": "unitless",
+            "coordinates": "PDF points",
+            "entities": extraction,
+            "losses": {
+                "raster_images_not_embedded": classification["raster_images"],
+                "page_frame_items_omitted": classification["page_frame_items"],
+                "unsupported_path_ops_omitted": extraction["unsupported_path_ops"],
+                "curves_flattened_to_lines": extraction["curve_count"],
+                "text_fonts_and_layout_preserved": False,
+                "source_cad_layers_and_units_recovered": False,
+            },
+        }
+    return report
+
+
+def _write_report(path: Path | None, report: dict) -> None:
+    """Write an optional JSON classification/conversion report."""
+    if path is not None:
+        path.write_text(
+            json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
 
 
 def _require(condition: bool, what: str) -> None:
@@ -211,17 +420,24 @@ def main(argv: list[str] | None = None) -> int:
     """CLI entry. Exit 0 extracted, 1 bad page/PDF, 2 environment."""
     parser = argparse.ArgumentParser(
         description=(
-            "Extract vector paths and real text from one PDF page into a DXF on"
-            " generic layers (LINEWORK, TEXT, BORDER, DIM). Coordinates stay in PDF"
-            " points with origin bottom-left (Y flipped from PyMuPDF's top-left);"
-            f" 1 pt = {PT_TO_MM:.4f} mm. Units stay unitless — declare units only"
-            " after verifying scale. Fill-only paths land on LINEWORK too; text is"
-            " written as TEXT only when PyMuPDF can extract it."
+            "Classify one PDF page before optional vector extraction. Page borders,"
+            " text-only pages, and raster-only pages are not treated as usable CAD."
+            " DXF coordinates stay in PDF points and units stay unitless."
         ),
         epilog="Mode B intermediate: PDF-derived, never claimed as original-CAD-exact.",
     )
     parser.add_argument("--pdf", help="input PDF file")
-    parser.add_argument("--output", help="output DXF path")
+    parser.add_argument("--output", help="output DXF path (usable vector pages only)")
+    parser.add_argument("--report", help="optional JSON classification/loss report")
+    parser.add_argument(
+        "--raster-output",
+        help="optional PNG page image for visual evidence, separate from the DXF",
+    )
+    parser.add_argument(
+        "--classify-only",
+        action="store_true",
+        help="classify and report the page without creating a DXF",
+    )
     parser.add_argument(
         "--page", type=int, default=1, help="1-based page number to extract (default 1)"
     )
@@ -232,22 +448,111 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.self_check:
         return self_check()
-    if not (args.pdf and args.output):
-        parser.error("--pdf and --output are required unless --self-check is used")
+    if not args.pdf:
+        parser.error("--pdf is required unless --self-check is used")
+    if args.raster_output and Path(args.raster_output).suffix.lower() != ".png":
+        parser.error("--raster-output must use the .png extension")
+    if args.classify_only and args.output:
+        parser.error("--output cannot be used with --classify-only")
+    if not args.classify_only and not args.output:
+        parser.error("--output is required unless --classify-only is used")
 
+    pdf_path = Path(args.pdf)
+    output_paths = [
+        Path(path) for path in (args.output, args.report, args.raster_output) if path
+    ]
     try:
-        ensure_safe_outputs([Path(args.pdf)], [Path(args.output)])
+        ensure_safe_outputs([pdf_path], output_paths)
     except ValueError as exc:
         print(f"unsafe PDF conversion output: {exc}", file=sys.stderr)
         return 1
 
-    counts = extract_page(Path(args.pdf), args.page, Path(args.output))
-    print(
-        f"pdf_vector_to_dxf: {args.output} — {counts['lines']} LINE (incl. border),"
-        f" {counts['texts']} TEXT; PDF-derived intermediate in PDF points"
-        f" (1 pt = {PT_TO_MM:.4f} mm), units unitless"
-    )
-    return 0
+    doc, page = _open_pdf_page(pdf_path, args.page)
+    try:
+        try:
+            classification = classify_page(page)
+            raster = (
+                render_page_raster(page, Path(args.raster_output))
+                if args.raster_output
+                else None
+            )
+        except (OSError, RuntimeError, ValueError) as exc:
+            print(
+                f"cannot inspect PDF page {args.page} in '{pdf_path}': {exc}",
+                file=sys.stderr,
+            )
+            return 1
+
+        if args.classify_only:
+            try:
+                _write_report(
+                    Path(args.report) if args.report else None,
+                    _conversion_report(
+                        pdf_path, args.page, classification, raster_output=raster
+                    ),
+                )
+            except OSError as exc:
+                print(f"cannot write report '{args.report}': {exc}", file=sys.stderr)
+                return 1
+            print(
+                f"PDF page {args.page}: {classification['route']} "
+                f"(usable vector={classification['usable_vector']}, "
+                f"raster images={classification['raster_images']}, "
+                f"text words={classification['text_words']})"
+            )
+            return 0
+
+        if not classification["usable_vector"]:
+            try:
+                _write_report(
+                    Path(args.report) if args.report else None,
+                    _conversion_report(
+                        pdf_path, args.page, classification, raster_output=raster
+                    ),
+                )
+            except OSError as exc:
+                print(f"cannot write report '{args.report}': {exc}", file=sys.stderr)
+                return 1
+            print(
+                f"PDF page {args.page} is {classification['route']}; "
+                "no usable vector geometry, so no DXF was written",
+                file=sys.stderr,
+            )
+            return 1
+
+        extraction = _write_page_dxf(
+            pdf_path, args.page, page, Path(args.output)
+        )
+        try:
+            _write_report(
+                Path(args.report) if args.report else None,
+                _conversion_report(
+                    pdf_path, args.page, classification, extraction, raster_output=raster
+                ),
+            )
+        except OSError as exc:
+            print(f"cannot write report '{args.report}': {exc}", file=sys.stderr)
+            return 1
+        print(
+            f"pdf_vector_to_dxf: {args.output} — "
+            f"{extraction['lines']} LINE (incl. border), {extraction['texts']} TEXT; "
+            f"PDF-derived, route={classification['route']}, units unitless"
+        )
+        if extraction["unsupported_path_ops"]:
+            print(
+                f"conversion loss: omitted path ops "
+                f"{extraction['unsupported_path_ops']}",
+                file=sys.stderr,
+            )
+        if classification["raster_images"]:
+            print(
+                f"conversion loss: {classification['raster_images']} embedded raster "
+                "image(s) are not included in the DXF",
+                file=sys.stderr,
+            )
+        return 0
+    finally:
+        doc.close()
 
 
 if __name__ == "__main__":
