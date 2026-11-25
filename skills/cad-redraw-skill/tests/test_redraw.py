@@ -219,6 +219,15 @@ class StrictEvidenceTests(unittest.TestCase):
             )
         )
 
+    def test_strict_dimensioned_reports_malformed_calibration_evidence(self):
+        spec = _strict_spec()
+        spec["views"][0]["calibration"]["evidence"] = []
+
+        report = spec_to_dxf.validate_spec(spec)
+
+        self.assertFalse(report["valid"])
+        self.assertIn("calibration", {error["code"] for error in report["errors"]})
+
     def test_strict_dimensioned_rejects_value_that_disagrees_with_geometry(self):
         spec = _strict_spec()
         dimension = next(entity for entity in spec["entities"] if entity["id"] == "d1")

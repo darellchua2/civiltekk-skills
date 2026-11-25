@@ -178,7 +178,8 @@ def _calibration_problem(view: dict) -> str | None:
     minimum = {"affine": 2, "dimension": 2, "homography": 4}.get(kind)
     if minimum is None:
         return f"calibration type {kind!r} is unsupported"
-    if calibration.get("evidence") not in STRICT_EVIDENCE:
+    evidence = calibration.get("evidence")
+    if not isinstance(evidence, str) or evidence not in STRICT_EVIDENCE:
         return "calibration evidence must be 'known' or 'scaled'"
     pixels, cad = calibration.get("anchors_px"), calibration.get("anchors_cad")
     if (
