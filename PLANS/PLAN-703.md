@@ -5,13 +5,13 @@
 **Base**: dev
 
 ## Acceptance Criteria
-- [ ] `deploy/opencode.json` contains the explicit GPT-6.2 Astra limits.
-- [ ] The normal setup deployment seeds these limits into the generated global `opencode.json`.
-- [ ] Model resolution preserves the Astra override.
-- [ ] Verification covers the config and deployment behavior. (Meaning confirmed with the owner at the Step 7 requirements gate: "deployment behavior" is the file setup's config writers produce, asserted by repeatable bats tests in CI. The effective window under a ChatGPT sign-in is a one-time recorded check, not an automated test.)
-- [ ] No other model's limits change, and the OAuth context-cap plugin is not disabled. (Lifted from the ticket's Scope section at the Step 7 requirements gate.)
+- [x] `deploy/opencode.json` contains the explicit GPT-6.2 Astra limits.
+- [x] The normal setup deployment seeds these limits into the generated global `opencode.json`.
+- [x] Model resolution preserves the Astra override.
+- [x] Verification covers the config and deployment behavior. (Meaning confirmed with the owner at the Step 7 requirements gate: "deployment behavior" is the file setup's config writers produce, asserted by repeatable bats tests in CI. The effective window under a ChatGPT sign-in is a one-time recorded check, not an automated test.)
+- [x] No other model's limits change, and the OAuth context-cap plugin is not disabled. (Lifted from the ticket's Scope section at the Step 7 requirements gate.)
 - [ ] An `openai/gpt-6.2-astra` pin passes the deploy-time exposed-model guard. (Added at Step 5 re-validation with the owner's approval; not in the ticket text.)
-- [ ] A kept config is never written to: declining the config overwrite does not add the override to an existing `opencode.json`, and the doc explains how existing installs opt in. (Decided with the owner at the Step 7 Mode R relay: document only.)
+- [x] A kept config is never written to: declining the config overwrite does not add the override to an existing `opencode.json`, and the doc explains how existing installs opt in. (Decided with the owner at the Step 7 Mode R relay: document only.)
 
 ## Dependency & Consumer Map
 
@@ -31,25 +31,22 @@ Commands behind the consumer claims (run at Steps 5 and 7 in the worktree): `gre
 
 _Every step MUST be atomic and carry rationale. Reject any step missing a "Why"._
 
-### Canonical step format
-- [ ] **N.M** <single atomic action — verb + target + outcome>
-    — **Why:** <what this unblocks / why it must precede others>
-    — **Done when:** <objective, checkable completion signal>
-    — **Consumers affected:** <who depends on this; none if N/A>
-
 ### Phase 1: Seed the override in the shipped config and prove the deploy pipeline keeps it
-- [ ] **1.1** Add `providers.openai.models["gpt-6.2-astra"].limit = { "context": 1050000, "input": 922000, "output": 128000 }` to `deploy/opencode.json` as a new fourth entry in `providers` (after `zai-custom`, before `mcp`), leaving the three existing providers byte-untouched.
+- [x] **1.1** Add `providers.openai.models["gpt-6.2-astra"].limit = { "context": 1050000, "input": 922000, "output": 128000 }` to `deploy/opencode.json` as a new fourth entry in `providers` (after `zai-custom`, before `mcp`), leaving the three existing providers byte-untouched.
     — **Why:** This block is the ticket's deliverable and the single source the setup flow deploys from. Under ChatGPT sign-ins OpenCode's `opencode.provider.openai-context-caps` plugin pins Astra to 272,000 input tokens; a per-model `limit` is the override OpenCode applies after that plugin, and `input` must be present because the merge is per key.
     — **Done when:** `jq -e '.providers.openai.models["gpt-6.2-astra"].limit == {"context":1050000,"input":922000,"output":128000}' deploy/opencode.json` exits 0; `jq . deploy/opencode.json > /dev/null` exits 0; `git diff --numstat -- deploy/opencode.json` reports zero deleted lines.
     — **Consumers affected:** User-space deployments (`deploy/setup.sh` copy step) and OpenCode sessions signed in to OpenAI. Accepted side effect (owner decision at Step 5): the `openai` provider is listed for every deployment, signed in or not.
-- [ ] **1.2** Add `tests/test_astra_context_override.bats`: assert the exact three-key limit, that `providers.openai.models` holds no other model and the cap plugin is not disabled, and that the block survives `installer/resolve-models.mjs` (fresh-copy and declined-copy paths), `deploy/apply-skill-profile.mjs` and `deploy/merge-packs.mjs` run against `mktemp -d` copies; assert the declined-copy path leaves a config that lacks the block free of it; include one induced-corruption negative test.
+    — **Done:** Added providers.openai with the single gpt-6.2-astra limit as the fourth provider; the jq limit check, jq validity and a zero-deletion numstat all pass, and the rest of the file is deep-equal to dev; files: deploy/opencode.json; fixes: none
+- [x] **1.2** Add `tests/test_astra_context_override.bats`: assert the exact three-key limit, that `providers.openai.models` holds no other model and the cap plugin is not disabled, and that the block survives `installer/resolve-models.mjs` (fresh-copy and declined-copy paths), `deploy/apply-skill-profile.mjs` and `deploy/merge-packs.mjs` run against `mktemp -d` copies; assert the declined-copy path leaves a config that lacks the block free of it; include one induced-corruption negative test.
     — **Why:** Covers acceptance criteria 1 to 5 and 7. The block is plain data that three deploy-time rewriters pass through, so nothing else would fail if a future rewrite dropped it, an edit removed `input`, or the decline contract were broken by writing into a kept config.
     — **Done when:** `bats tests/test_astra_context_override.bats` reports every test ok, including the induced-corruption test.
     — **Consumers affected:** CI (`.github/workflows/release.yml:66-68` runs every `tests/*.bats`).
-- [ ] **1.3** Add a short "GPT-6.2 Astra context window under ChatGPT sign-in" subsection to `MIGRATION.md` under "Choosing a provider": what the override is, why all three keys are present, that OpenAI models now appear in the picker without a sign-in, that re-running setup keeps an existing config by default so existing installs receive the override only by accepting the overwrite once or pasting the block by hand, and how to remove the block.
+    — **Done:** Added 8 bats tests covering the exact limit, both resolver paths, the lean skill profile, a pack merge, the kept-config guarantee and two negative fixtures; 8 of 8 pass, and 4 mutations of the real block each turn 5 or 6 tests red; files: tests/test_astra_context_override.bats; fixes: none
+- [x] **1.3** Add a short "GPT-6.2 Astra context window under ChatGPT sign-in" subsection to `MIGRATION.md` under "Choosing a provider": what the override is, why all three keys are present, that OpenAI models now appear in the picker without a sign-in, that re-running setup keeps an existing config by default so existing installs receive the override only by accepting the overwrite once or pasting the block by hand, and how to remove the block.
     — **Why:** The JSON cannot carry the rationale (the bats and `jq` parsers need strict JSON, and the OpenCode schema sets `additionalProperties: false` on providers and models), and the picker change is visible to every user, so the explanation and the undo need a home.
     — **Done when:** `grep -c 'GPT-6.2 Astra context window under ChatGPT sign-in' MIGRATION.md` prints 1; `bats tests/test_pack_permissions.bats tests/test_skill_isolation.bats` pass (both carry negative pins over `MIGRATION.md`).
     — **Consumers affected:** Readers of the migration guide.
+    — **Done:** Added the Astra context-window subsection to MIGRATION.md under "Choosing a provider"; the heading count is 1 and both test files that grep this file pass (19 ok, 0 not ok); files: MIGRATION.md; fixes: none
 
 ### Phase 2: Let Astra pins through the deploy-time guard
 - [ ] **2.1** Add `"gpt-6.2-astra"` to the `openai` array in `installer/provider-models.json`, directly after `"gpt-6-astra"`.
@@ -84,10 +81,12 @@ Facts verified at Step 5 against the installed OpenCode `v2.4.1` (the tag the ti
 
 ## Risks & Mitigation
 - **Picker change for non-OpenAI users.** Accepted by the owner. Documented in `MIGRATION.md` with the removal steps; the block is a self-contained JSON object and reverts cleanly.
-- **Override efficacy is source-verified, not live-verified.** A later OpenCode release that reorders transforms would re-cap Astra with no error here. Mitigation: the test pins all three keys, and the doc tells users how to check the effective limit.
+- **Override efficacy is source-verified, not live-verified.** A later OpenCode release that reorders transforms would re-cap Astra with no error here. Mitigation: the test pins all three keys, and the doc states what is verified and what is not. No user-facing check for the live window ships: the only working recipe needs a hand-copied server password, and OpenCode's managed background service listens on a fixed default port that a HOME/XDG sandbox does not isolate.
 - **Cost.** OpenAI lists higher rates for requests above 272K input tokens, and the plugin's own comment calls the caps "a usage choice, not a backend requirement". Longer Astra sessions will use more of the ChatGPT plan. Noted in the doc.
 - **Wider catalog drift left alone.** `installer/provider-models.json` differs from the live catalog in both directions beyond this one id. Regen and its drift rules are a separate concern; this plan adds only `gpt-6.2-astra`.
 - **Existing installs do not receive the override by default.** Accepted by the owner (document only). Mitigation: the doc names the two ways to opt in, and a test pins that the declined-copy path never writes the block into a kept config.
 
 ## Trace
 LOG 7 plan review: requirements gate fired on AC 4 (owner chose pipeline tests in CI; two guardrail ACs lifted from the ticket's Scope); architecture review partial, 1 Major (step 2.2 done-when could not fail) and 1 Minor (consumer-map omissions) applied to the PLAN; Mode R round 1/2 resolved (existing installs: document only, added as an AC).
+LOG Phase 1 escalated to full because it changes deploy/opencode.json, a deploy config node with consumers in deploy/setup.sh and in three scripts across deploy/ and installer/.
+LOG No user-facing check for the effective limit is documented: opencode api against a started server needs the server password from its log and returns an empty list until plugins load, and the managed background service listens on a fixed default port that a HOME/XDG sandbox does not isolate. Step 1.3 states what is verified and what is not instead, and the Risks bullet was corrected to match.
