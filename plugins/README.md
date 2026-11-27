@@ -36,6 +36,36 @@ Rules:
 5. Historical records (`LEARNINGS/`, `PLANS/`) keep old paths —
    they are never rewritten.
 
+## Built-in plugin directives in `opencode.json`
+
+`deploy/opencode.json` ships `"plugins": ["opencode.browser"]`. The entry is a
+directive for OpenCode's built-in browser plugin, not a package: the loader
+resolves it against its built-ins, nothing is installed, and the local plugins
+above stay zero-dependency.
+
+- **It changes nothing on current OpenCode.** `opencode.browser` is on by
+  default (measured `active` on v2.4.2 with an empty `plugins` array). The
+  entry records the intent and keeps the browser on if a later release makes
+  it opt-in. `tests/test_browser_plugin_pin.bats` guards it.
+- **It does not give terminal sessions a browser.** OpenCode lists the
+  `browser.*` tools for an agent only while an OpenCode desktop app
+  holds the session's pane (upstream PR
+  [anomalyco/opencode#65969](https://github.com/anomalyco/opencode/pull/65969),
+  in v2.4.2). The desktop browser itself needs the desktop app 2.4.0 or later.
+- **Browser calls do not prompt.** The desktop browser keeps your sign-ins in
+  one persistent profile, and browser operations issue no per-operation
+  permission prompts, so every agent in a desktop-held session can drive it.
+- **To turn it off**, add `"-opencode.browser"` to `plugins` (measured on
+  v2.4.2: the plugin leaves the list; a project `opencode.json` wins over the
+  global file), or deny the `browser` permission action, the documented second
+  switch. Either removes the browser tools.
+- **Reach.** The entry reaches fresh setups and re-deploys that accept the
+  config overwrite. A kept config is never written to, and loses nothing: the
+  built-in is on by default.
+
+Not set: `experimental.browser_stream_tunnel` is in the published config
+schema but absent from the v2.4.2 binary.
+
 ## Plugin notes
 
 ### `opencode-location-keepalive-v2.ts`
