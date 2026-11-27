@@ -1,7 +1,7 @@
 # Verifying OpenCode at runtime in a sandbox: two things HOME/XDG do not isolate
 
 - **Category**: anti-pattern
-- **Confidence**: 0.85
+- **Confidence**: 0.9
 - **Scope**: project
 - **Date**: 2026-11-26
 - **Ticket**: #703 (Step 5)
@@ -20,3 +20,10 @@ Never run `opencode service start`, `stop` or `restart` in a sandbox on a develo
 - Start `opencode serve --hostname 127.0.0.1 --port <port>` instead.
 - For model data, call `opencode api --server <url>` with `OPENCODE_PASSWORD` set from the server's "server password" startup line, and poll until `data` is non-empty (about three seconds here).
 - Confirm isolation first with `opencode debug paths <name>`, and judge teardown by the port no longer listening.
+
+## Update (2026-11-27, #705): `--standalone` cannot check plugins either; use the shared service
+
+- `opencode api --standalone …` starts a private server (`serve --stdio --port 0`, so no clash on port 49374) that answers and exits before plugins load. `/api/plugin` returned `data: []` and `opencode plugin --standalone list --builtin` printed "No plugins found" for every config tried on v2.4.2: a positive directive (`opencode.browser`), a disable directive (`-opencode.browser`) and a non-existent npm package name were indistinguishable, with 27 INFO lines and zero errors. Nothing can be polled inside one invocation, so a clean result there proves nothing.
+- For plugin enablement, skip the sandbox and use the developer's shared service with the global config untouched. Create scratch project locations under `/tmp/opencode/…`, each holding a minimal `opencode.json` with only the entry under test (a whole `deploy/opencode.json` would boot its MCP servers in the service), then read `GET /api/plugin?location[directory]=<path>`. The parameter is object-valued (`Expected object at ["location"]` otherwise); `?directory=` is ignored and the server falls back to its working directory. The second call returned the full list.
+- A feature that is on by default reads `active` with or without a positive entry, so the disable directive is the control that shows the loader parsed the ID. An ID the build cannot know left the list unchanged with no log line.
+- Each booted location adds a `project` row whose `worktree` column holds the directory path; delete those rows in the same step (`worktree-teardown-leaves-opencode-registry-rows`). Measured: 109 entries with `opencode.browser` active, 108 with `-opencode.browser` and the entry absent, `project` at 70 rows before and after.

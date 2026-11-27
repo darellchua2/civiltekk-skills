@@ -110,3 +110,5 @@ docs/OpenCode-Agent-Tooling-Research-2026-09-24.interactive.html
 !LEARNINGS/anti-patterns/bats-passes-done-when-has-no-pre-edit-counterexample.md
 !LEARNINGS/anti-patterns/bats-exit-trap-in-test-swallows-failure-report.md
 !LEARNINGS/anti-patterns/opencode-sandbox-runtime-verification-gotchas.md
+!LEARNINGS/solutions/pipeline-commits-without-git-identity.md
+!LEARNINGS/anti-patterns/dependent-commit-batched-with-its-edits.md
