@@ -8,8 +8,8 @@
 - [x] `deploy/opencode.json` has a `plugins` array containing `"opencode.browser"`, and is still valid standard JSON with no comments.
 - [x] `plugins/README.md` states that the entry pins an already-default-on built-in, changes nothing on current OpenCode, and how to turn the browser off.
 - [x] On OpenCode v2.4.2, a config carrying the entry loads with `opencode.browser` still `active` and no plugin load error for it.
-- [ ] No other file needs a change for the pin (skill/agent/MCP counts, `installer/registry.json`, `deploy/setup.ps1`).
-- [ ] Companion: `references/opencode.md` no longer presents "appears in the catalog with no desktop attached" as current behaviour; states the v2.4 rule with its source; keeps the probe rule.
+- [x] No other file needs a change for the pin (skill/agent/MCP counts, `installer/registry.json`, `deploy/setup.ps1`).
+- [x] Companion: `references/opencode.md` no longer presents "appears in the catalog with no desktop attached" as current behaviour; states the v2.4 rule with its source; keeps the probe rule.
 - [x] Existing CI guard tests that parse `deploy/opencode.json` still pass.
 
 ## Dependency & Consumer Map
@@ -60,10 +60,11 @@ _Every step MUST be atomic and carry rationale. Reject any step missing a "Why".
     — **Done:** Added the section between the naming-convention rules and "Plugin notes"; heading count 1, the three phrase greps each 1, section order Naming convention, Built-in plugin directives, Plugin notes, laya-guard; the Astra regression test passes 8 of 8; files: plugins/README.md; fixes: none
 
 ### Phase 3: Companion — state the current catalog rule in the browser-fallback reference
-- [ ] **3.1** Rewrite the `browser.*` entry under "Managed toolset" in `skills/browser-fallback-skill/references/opencode.md`: keep the quote and citation; replace "Appears in the session catalog even when no desktop app is attached; presence ≠ connection" with the version-dependent rule (observed 2026-09-28 on an earlier v2 build: listed with no desktop attached; since v2.4.0: listed only while a desktop app holds the session's pane, citing anomalyco/opencode#65969; observed 2026-11-27 on CLI v2.4.2: plugin active, no `browser` namespace in a terminal session) and one clause that presence is still not connection because a pane can be taken away mid-session. Leave the Probe, Mutating, Disconnect, Fallback and Interface sections byte-untouched.
+- [x] **3.1** Rewrite the `browser.*` entry under "Managed toolset" in `skills/browser-fallback-skill/references/opencode.md`: keep the quote and citation; replace "Appears in the session catalog even when no desktop app is attached; presence ≠ connection" with the version-dependent rule (observed 2026-09-28 on an earlier v2 build: listed with no desktop attached; on v2.4.2, per anomalyco/opencode#65969, listed only while a desktop app holds the session's pane; observed 2026-11-27 on CLI v2.4.2: plugin active, no `browser` namespace in a terminal session) and one clause that presence is still not connection because a pane can be taken away mid-session. Leave the Probe, Mutating, Disconnect, Fallback and Interface sections byte-untouched.
     — **Why:** The current sentence is false on v2.4 and would contradict the new README section in the same repo; the file's own load rule says to re-verify on OpenCode upgrades. The probe rule stays because attachment can change mid-session.
     — **Done when:** `grep -q 'even when no desktop app is attached' skills/browser-fallback-skill/references/opencode.md` exits 1; `grep -q '65969' skills/browser-fallback-skill/references/opencode.md` exits 0; `diff <(git show HEAD:skills/browser-fallback-skill/references/opencode.md | sed -n '/^## Probe/,$p') <(sed -n '/^## Probe/,$p' skills/browser-fallback-skill/references/opencode.md)` prints nothing; `git diff --numstat` lists that one file; `node installer/build-registry.mjs --check` exits 0.
     — **Consumers affected:** Sessions that load `browser-fallback-skill`.
+    — **Done:** Rewrote the browser.* entry: the 2026-09-28 observation kept, the v2.4.2 rule with its upstream source, and the presence-is-not-connection clause; the old phrase is gone, 65969 is cited, Probe to end is byte-identical to HEAD, the hunk is 7 added and 2 removed inside the Managed toolset entry, registry drift guard exits 0; files: skills/browser-fallback-skill/references/opencode.md; fixes: none. Deviation: the step text said "since v2.4.0"; written as v2.4.2, the version measured and the release whose notes cite #65969 (step text corrected, see Trace).
 
 ## Technical Notes
 
@@ -107,3 +108,6 @@ LOG Phase 1 escalated to full because it changes deploy/opencode.json, a deploy 
 GATE 1e837d37 tier=full lint=t typecheck=n.a build=- unit=t e2e=n.a (60 Bats files, 740 tests; gated tree differs from this commit only in PLANS/PLAN-705.md, which no test reads)
 LOG Phase 2 commit 8819046d captured this PLAN before step 2.1's tick and Done line landed (the edits and the commit were issued in one batch). Re-staged and amended before the push; nothing was pushed in the partial state.
 GATE 8819046d tier=light lint=t typecheck=n.a build=- unit=t e2e=- (1 Bats file, 8 tests, the regression test step 2.1 names; gated tree differs from this commit only in PLANS/PLAN-705.md, which no test reads)
+LOG Step 3.1 text corrected before execution: "since v2.4.0" became "on v2.4.2". v2.4.2 is the version measured and the release whose notes cite anomalyco/opencode#65969; the release that introduced the listing rule was not verified.
+LOG Ticket exit gate escalated to full unconditionally (last phase of the run).
+LOG AC 4 at the exit gate: git diff --name-only origin/dev plus untracked lists exactly deploy/opencode.json, tests/test_browser_plugin_pin.bats, plugins/README.md, skills/browser-fallback-skill/references/opencode.md and PLANS/PLAN-705.md; registry drift guard exits 0 (34 agents, 84 skills); deploy/setup.ps1 has no reference to the template. The later chore(learnings) commit adds LEARNINGS bodies and their .gitignore negations only.

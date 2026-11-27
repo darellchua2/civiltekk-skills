@@ -7,8 +7,13 @@
 ## Managed toolset
 
 - `browser.*` — "controls the browser attached by the OpenCode desktop app"
-  (https://opencode.ai/v2/docs/tools/, §Browser). Appears in the session catalog
-  even when no desktop app is attached; presence ≠ connection.
+  (https://opencode.ai/v2/docs/tools/, §Browser). Whether the tools are listed
+  depends on the OpenCode version. Observed 2026-09-28 on an earlier v2 build:
+  listed even with no desktop app attached. On v2.4.2 an agent lists them only
+  while a desktop app holds the session's pane (anomalyco/opencode#65969;
+  observed 2026-11-27: plugin `opencode.browser` active, no `browser`
+  namespace in a terminal session). Presence is still not connection: a pane
+  another window takes is withdrawn mid-session, so keep probing.
 
 ## Probe (read-only, side-effect free)
 
