@@ -441,7 +441,7 @@
       "effect": "deny"
     }
   ],
-  "plugins": [],
+  "plugins": ["opencode.browser"],
   "instructions": [
     "AGENTS.md"
   ],
