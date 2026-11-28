@@ -13,6 +13,7 @@
 // never fabricates probabilities. The CALLER (plugin) applies the p=1
 // fallback for missing answers.
 import readline from "node:readline"
+import { availableParallelism } from "node:os"
 
 // Pinned ONNX bundle revision (huggingface.co/receptron/laya-onnx commit).
 // Keep in sync with warm.mjs and deploy/setup.sh's provisioning check.
@@ -28,7 +29,14 @@ async function getModel() {
   if (!loading) {
     loading = (async () => {
       const { Laya } = await import("@receptron/laya")
-      const opts = { executionProviders: ["cpu"], revision: LAYA_REVISION }
+      // Cap the thread pool. The default takes every core, and on a 24-core
+      // box that cost 4x the CPU time of 6 threads for the same latency. Each
+      // OpenCode session runs its own sidecar, so the default multiplies.
+      const opts = {
+        executionProviders: ["cpu"],
+        revision: LAYA_REVISION,
+        sessionOptions: { intraOpNumThreads: Math.min(6, availableParallelism()) },
+      }
       const dir = modelDirOverride || process.env.LAYA_GUARD_MODEL_DIR
       if (dir) opts.modelDir = dir
       laya = await Laya.load(opts)

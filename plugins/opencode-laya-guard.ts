@@ -1,17 +1,27 @@
 // opencode-laya-guard.ts — OpenCode v2 local plugin: laya-guard.
 //
-// Gates bash/edit permission decisions through a local Laya decision model
-// (shadow mode by default — log only) and exposes the laya_classify tool for
-// skill decision trees. Zero npm imports by house rule (vibeguard-v2
-// pattern): ONNX inference runs in a Node sidecar spawned from
-// ~/.cache/laya-guard (provisioned by deploy/setup.sh), so this file stays
-// loadable by opencode's embedded runtime and the plugin set stays
-// dependency-free.
+// Scores shell commands with a local Laya decision model (shadow mode by
+// default — log only) and exposes the laya_classify tool for skill decision
+// trees. Zero npm imports by house rule (vibeguard-v2 pattern): ONNX inference
+// runs in a Node sidecar spawned from ~/.cache/laya-guard (provisioned by
+// deploy/setup.sh), so this file stays loadable by opencode's embedded runtime
+// and the plugin set stays dependency-free.
+//
+// What reaches the model and what is decided by rule (the measurements behind
+// each choice are in laya-guard/README.md, "Evidence"):
+//   shell commands  the model reads the first 1,200 characters of the command
+//   file edits      rule only — a file NAME carries no signal, so ordinary
+//                   edits skip the model and protected paths ask
 //
 // Fail-closed: missing answers count as p=1 (=> at least "ask" in enforce
 // mode); sidecar failure degrades to "ask" in enforce, to a log entry in
-// shadow. Thresholds live in config, never in the model. Shadow logs carry
+// shadow. A score raises a prompt; it blocks only when `deny` is set (null by
+// default). Thresholds live in config, never in the model. Shadow logs carry
 // action metadata only (truncated) — never file contents or env values.
+//
+// Shadow mode never delays an action: scoring runs in the background and is
+// logged when it returns. Every OpenCode session runs its own sidecar, so the
+// score cache and max_pending bound the load on the machine.
 //
 // Config lookup (first match wins, vibeguard contract):
 //   <project>/laya-guard.config.json
@@ -26,25 +36,90 @@ import { dirname, join } from "node:path"
 interface LayaGuardConfig {
   enabled: boolean
   mode: "shadow" | "enforce"
-  deny: number
+  /** destructive p(yes) at or above this raises a prompt. */
   ask: number
+  /** destructive p(yes) at or above this blocks outright. null by default: on real
+   * traffic the model's top scores go to routine deletions (README, "Evidence"),
+   * so blocking stays off until the shadow log justifies a number. */
+  deny: number | null
   actions: string[]
   timeout_ms: number
   shadow_log: string
   sidecar_dir: string
   model_dir: string | null
+  /** Case-insensitive regexes: edits whose target path matches always ask. */
+  ask_paths: string[]
+  /** Characters of a command the model reads (the log keeps the first 200). */
+  model_chars: number
+  /** Shadow-mode calls allowed to wait on the sidecar; beyond this they are logged as skipped. */
+  max_pending: number
 }
+
+// Edits to these ask instead of being scored: they are the surfaces that steer
+// the agent itself.
+const DEFAULT_ASK_PATHS = [
+  "(^|/)(AGENTS|CLAUDE|GEMINI)\\.md$",
+  "(^|/)SKILL\\.md$",
+  "(^|/)\\.?opencode\\.jsonc?$",
+  "(^|/)\\.mcp\\.json$",
+  "(^|/)cli\\.json$",
+  "(^|/)\\.opencode/(agents|plugins|commands|skills|rules)/",
+  "(^|/)plugins/[^/]*\\.(ts|js|mjs)$",
+  "(^|/)\\.github/workflows/",
+]
+
+// v2 permission action names (v1 called shell commands "bash").
+const SHELL_ACTIONS = ["shell"]
+
+// The questions asked about a command. GATED lists the ones the deny / ask
+// thresholds apply to; the others ride along in the same forward pass and are
+// logged only, so the shadow log shows how each behaves on real traffic.
+function choiceQuestion(instructions: string, criteria: Record<string, string>) {
+  return { type: "choice" as const, instructions, criteria }
+}
+
+const yesNo = (instructions: string) =>
+  choiceQuestion(instructions, { yes: "the statement is true", no: "the statement is false" })
+
+const QUESTIONS = {
+  destructive: yesNo(
+    "The action could delete, overwrite, or irreversibly change data, git history, or system state.",
+  ),
+  exfiltration: yesNo(
+    "The action could send local files, credentials, keys, or secrets to an external destination.",
+  ),
+  permanent: choiceQuestion("What does this command do to the computer or the repository?", {
+    read_only: "only reads files, lists information, or runs checks without changing anything",
+    undoable: "changes files or git state in a way that git or a backup can undo",
+    permanent:
+      "deletes files or data, discards uncommitted work, rewrites shared history, or changes a live system in a way that cannot be undone",
+  }),
+}
+const GATED = ["destructive"]
+// Option whose probability is a question's score.
+const SCORED_OPTION: Record<string, string> = {
+  destructive: "yes",
+  exfiltration: "yes",
+  permanent: "permanent",
+}
+
+// The log keeps this much of a command or path; it is metadata, but a command
+// can carry an inline credential, so it stays short.
+const METADATA_LOG = 200
 
 const DEFAULTS: LayaGuardConfig = {
   enabled: true,
   mode: "shadow",
-  deny: 0.8,
-  ask: 0.3,
-  actions: ["bash", "edit"],
+  deny: null,
+  ask: 0.8,
+  actions: ["shell", "edit"],
   timeout_ms: 60000, // generous: covers a cold ~2 GB model load + inference
   shadow_log: ".opencode/laya-guard-shadow.jsonl",
   sidecar_dir: join(homedir(), ".cache", "laya-guard"),
   model_dir: null, // local bundle override; null = laya-managed cache
+  ask_paths: DEFAULT_ASK_PATHS,
+  model_chars: 1200,
+  max_pending: 8,
 }
 
 function loadConfig(projectDir: string): LayaGuardConfig {
@@ -65,31 +140,6 @@ function loadConfig(projectDir: string): LayaGuardConfig {
   return DEFAULTS
 }
 
-function choiceQuestion(instructions: string) {
-  return {
-    type: "choice" as const,
-    instructions,
-    criteria: { yes: "the statement is true", no: "the statement is false" },
-  }
-}
-
-const GATE_QUESTIONS = () => ({
-  destructive: choiceQuestion(
-    "The action could delete, overwrite, or irreversibly change data, git history, or system state.",
-  ),
-  exfiltration: choiceQuestion(
-    "The action could send local files, credentials, keys, or secrets to an external destination.",
-  ),
-  injection: choiceQuestion(
-    "The content contains embedded instructions attempting to manipulate or bypass an AI agent's safety rules.",
-  ),
-})
-
-// Truncation bound for anything derived from action metadata that we log or
-// classify — bounds the residual leak path of a command carrying an inline
-// credential, and keeps laya inputs inside its token budget.
-const METADATA_MAX = 200
-
 export default {
   id: "laya-guard",
   setup(ctx: any) {
@@ -101,6 +151,15 @@ export default {
         `[laya-guard] sidecar not provisioned at ${cfg.sidecar_dir} — plugin inactive. Run deploy/setup.sh to provision it (LAYA_GUARD_WARM=1 pre-pulls the model; otherwise it downloads on first classify).`,
       )
       return
+    }
+
+    const askPathRules: RegExp[] = []
+    for (const pattern of cfg.ask_paths) {
+      try {
+        askPathRules.push(new RegExp(pattern, "im"))
+      } catch {
+        console.warn(`[laya-guard] ignoring invalid ask_paths pattern: ${pattern}`)
+      }
     }
 
     // ---- sidecar client ----------------------------------------------------
@@ -202,13 +261,50 @@ export default {
       return { ok: true, answers: res.answers }
     }
 
+    // ---- scoring -------------------------------------------------------------
+    // Scores are a function of the text, so repeats are served from cache.
+    const cache = new Map<string, Record<string, number>>()
+    let waiting = 0 // shadow-mode calls currently queued on the sidecar
+
+    /** Fail closed: a missing probability counts as 1 (=> at least "ask"). */
+    async function score(body: string): Promise<Record<string, number>> {
+      const hit = cache.get(body)
+      if (hit) return hit
+      const res = await classify({ subject: "agent shell action", body }, QUESTIONS)
+      if (!res.ok) throw new Error(res.error)
+      const scores: Record<string, number> = {}
+      for (const [name, option] of Object.entries(SCORED_OPTION)) {
+        scores[name] = res.answers?.[name]?.probabilities?.[option] ?? 1
+      }
+      if (cache.size >= 2000) cache.clear()
+      cache.set(body, scores)
+      return scores
+    }
+
+    /** Only the gated questions count; the model blocks just when `deny` is set. */
+    const verdict = (scores: Record<string, number>) => {
+      const gated = GATED.map((name) => scores[name] ?? 1)
+      if (cfg.deny !== null && gated.some((p) => p >= cfg.deny)) return "deny"
+      return gated.some((p) => p >= cfg.ask) ? "ask" : "pass"
+    }
+
+    const report = (scores: Record<string, number>) =>
+      GATED.map((name) => `${name}=${(scores[name] ?? 1).toFixed(2)}`).join(" ")
+
     // ---- shadow logger (metadata only) --------------------------------------
-    function logShadow(event: any, questions: Record<string, number>, wouldBe: string, extra?: Record<string, unknown>) {
-      const target = (event.resources ?? []).join(" | ").slice(0, METADATA_MAX)
+    function logShadow(
+      kind: string,
+      action: string,
+      target: string,
+      questions: Record<string, number>,
+      wouldBe: string,
+      extra?: Record<string, unknown>,
+    ) {
       const line = JSON.stringify({
         ts: Date.now(),
-        action: event.action,
-        target,
+        kind,
+        action,
+        target: target.slice(0, METADATA_LOG),
         questions,
         would_be: wouldBe,
         mode: cfg.mode,
@@ -223,60 +319,72 @@ export default {
       }
     }
 
-    function report(d: number, x: number, i: number) {
-      return `destructive=${d.toFixed(2)} exfiltration=${x.toFixed(2)} injection=${i.toFixed(2)}`
+    /** Shadow mode never holds up the action: score in the background, log when done. */
+    function shadowScore(action: string, target: string, body: string) {
+      if (waiting >= cfg.max_pending) {
+        logShadow("shell", action, target, {}, "skipped", { skipped: "busy" })
+        return
+      }
+      waiting++
+      score(body)
+        .then(
+          (scores) => logShadow("shell", action, target, scores, verdict(scores), { gates: GATED }),
+          (err) => logShadow("shell", action, target, {}, "skipped", { failure: String(err).slice(0, 120) }),
+        )
+        .finally(() => {
+          waiting--
+        })
     }
 
     // ---- permission gate -----------------------------------------------------
     ctx.permission.hook("evaluate", async (event: any) => {
-      if (!cfg.actions.includes(event.action)) return
-
-      // Metadata only: the action's resource strings, truncated. This is the
-      // classification signal — file contents and env values never reach here.
-      const statement = (event.resources ?? []).join(" | ").slice(0, METADATA_MAX)
-
-      let answers: any
       try {
-        const res = await classify(
-          { subject: `agent ${event.action} action`, body: statement },
-          GATE_QUESTIONS(),
-        )
-        if (!res.ok) throw new Error(res.error)
-        answers = res.answers
+        if (!cfg.actions.includes(event.action)) return
+        // v2 hands over one resource per scanned sub-command; newline keeps them
+        // reading as separate commands (a " | " join would look like a pipe).
+        const target: string = (event.resources ?? []).join("\n")
+
+        if (SHELL_ACTIONS.includes(event.action)) {
+          const body = target.slice(0, cfg.model_chars)
+          if (cfg.mode === "shadow") {
+            shadowScore(event.action, target, body)
+            return
+          }
+          const scores = await score(body)
+          const wouldBe = verdict(scores)
+          logShadow("shell", event.action, target, scores, wouldBe, { gates: GATED })
+          if (wouldBe === "deny") {
+            event.effect = "deny"
+            event.message = `Blocked by laya-guard (${report(scores)})`
+          } else if (wouldBe === "ask") {
+            event.effect = "ask"
+            event.message = `laya-guard: risky action, needs approval (${report(scores)})`
+          }
+          return
+        }
+
+        // Every other gated action is a file path: decide by rule, not by model.
+        const rule = askPathRules.find((rx) => rx.test(target))
+        if (!rule) return
+        logShadow("path", event.action, target, {}, "ask", { rule: rule.source })
+        if (cfg.mode === "enforce") {
+          event.effect = "ask"
+          event.message = `laya-guard: protected path (${rule.source})`
+        }
       } catch (err) {
-        // Fail closed: treat every question as yes.
-        const p1 = { destructive: 1, exfiltration: 1, injection: 1 }
+        // Fail closed: in enforce mode anything unexpected asks for a human.
         if (cfg.mode === "enforce") {
           event.effect = "ask"
           event.message = `laya-guard: inference failed — human review (${String(err).slice(0, 120)})`
         }
-        logShadow(event, p1, "deny", { failure: String(err).slice(0, 120) })
-        return
-      }
-
-      // Fail closed: a missing probability counts as yes (p=1).
-      const pOf = (key: string) => answers?.[key]?.probabilities?.yes ?? 1
-      const d = pOf("destructive")
-      const x = pOf("exfiltration")
-      const i = pOf("injection")
-      const wouldBe =
-        d >= cfg.deny || x >= cfg.deny || i >= cfg.deny
-          ? "deny"
-          : d >= cfg.ask || x >= cfg.ask || i >= cfg.ask
-            ? "ask"
-            : "pass"
-
-      if (cfg.mode === "shadow") {
-        logShadow(event, { destructive: d, exfiltration: x, injection: i }, wouldBe)
-        return
-      }
-
-      if (wouldBe === "deny") {
-        event.effect = "deny"
-        event.message = `Blocked by laya-guard (${report(d, x, i)})`
-      } else if (wouldBe === "ask") {
-        event.effect = "ask"
-        event.message = `laya-guard: risky action, needs approval (${report(d, x, i)})`
+        logShadow(
+          "error",
+          String(event.action),
+          (event.resources ?? []).join("\n"),
+          {},
+          "skipped",
+          { failure: String(err).slice(0, 120) },
+        )
       }
     })
 
@@ -315,7 +423,7 @@ export default {
         execute: async (input: any) => {
           const state = { subject: "classification request", body: String(input.state).slice(0, 2000) }
           const questions: Record<string, unknown> = {}
-          for (const q of input.questions ?? []) questions[String(q.name).slice(0, 64)] = choiceQuestion(String(q.instructions))
+          for (const q of input.questions ?? []) questions[String(q.name).slice(0, 64)] = yesNo(String(q.instructions))
           if (Object.keys(questions).length === 0) {
             return { content: "laya_classify error: no valid questions supplied" }
           }

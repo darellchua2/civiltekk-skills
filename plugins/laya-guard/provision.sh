@@ -9,8 +9,8 @@
 # and npm-installs there, so the opencode plugin file itself stays
 # dependency-free. The ~1.7 GB model pre-pull is opt-in (interactive prompt,
 # or LAYA_GUARD_WARM=1 headless); without it the model downloads lazily on
-# the first classify. Idempotent: the marker records the provisioned
-# package.json hash. Linux-only (Ubuntu target — non-Linux gets a skip
+# the first classify. Idempotent: the marker records a hash of package.json,
+# sidecar.mjs and warm.mjs. Linux-only (Ubuntu target — non-Linux gets a skip
 # notice, which is also what Windows reaches through the setup.ps1 thin
 # launcher, #474). LAYA_GUARD_SKIP=1 escapes entirely.
 #
@@ -78,8 +78,11 @@ fi
 
 local src_dir="${REPO_DIR}/plugins/laya-guard"
 local dest_dir="${LAYA_GUARD_DIR:-$HOME/.cache/laya-guard}"
+# The marker covers every file this hook copies. Hashing package.json alone
+# meant a sidecar-only fix never shipped: the marker still matched, the old
+# sidecar.mjs stayed in place.
 local pkg_hash marker
-pkg_hash="$(sha256sum "$src_dir/package.json" | cut -d' ' -f1)"
+pkg_hash="$(cat "$src_dir/package.json" "$src_dir/sidecar.mjs" "$src_dir/warm.mjs" | sha256sum | cut -d' ' -f1)"
 marker="$dest_dir/.provisioned"
 
 if [ -f "$marker" ] && [ -f "$dest_dir/sidecar.mjs" ] && [ "$(cat "$marker" 2>/dev/null)" = "$pkg_hash" ]; then
