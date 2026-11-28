@@ -112,3 +112,9 @@ docs/OpenCode-Agent-Tooling-Research-2026-09-24.interactive.html
 !LEARNINGS/anti-patterns/opencode-sandbox-runtime-verification-gotchas.md
 !LEARNINGS/solutions/pipeline-commits-without-git-identity.md
 !LEARNINGS/anti-patterns/dependent-commit-batched-with-its-edits.md
+!LEARNINGS/anti-patterns/v2-renamed-permission-action-bash-to-shell-hook-never-fired.md
+!LEARNINGS/anti-patterns/provision-marker-hashes-manifest-only-script-fixes-never-ship.md
+!LEARNINGS/solutions/cap-onnx-runtime-thread-pool-per-process.md
+!LEARNINGS/anti-patterns/cue-word-prefilter-then-model-flags-docs-about-agents.md
+!LEARNINGS/anti-patterns/activating-dormant-deny-rules-without-history-check.md
+!LEARNINGS/patterns/decision-model-needs-signal-text-not-a-label.md
