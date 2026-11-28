@@ -27,8 +27,7 @@ the capture/fix tiers; this skill supplies the decision tree and discipline.
    - The diff touches no frontend surface (`components/**/*.{tsx,jsx,vue,
      svelte}`, `app|pages|routes|src/ui`, rendered-route handlers) → report
      "no frontend surface in diff", stop.
-2. **Load** `playwright-responsive-audit-skill` and run its detect tier:
-   mobile/tablet/desktop viewports against the diff's affected pages.
+2. **Load** `playwright-responsive-audit-skill` and run its detect tier: the house viewport matrix against the diff's affected pages.
 3. **Fix tier:** auto-fixable defects (missing viewport meta, unbounded widths,
    overflow) fixed directly; layout-judgment defects reported, not guessed.
 4. **Re-verify tier:** re-capture only the fixed viewports/pages.
