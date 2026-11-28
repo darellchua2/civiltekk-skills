@@ -120,7 +120,10 @@ Return the complete defect inventory, fixes applied, remaining issues, and itera
 When a Tier 2 fix needs visual verification (one-shot captures use `bash` intentionally — only the DETECT/RE-VERIFY passes run as background commands):
 
 1. Use `bash` to run a Playwright screenshot capture script at the target breakpoint
-2. Delegate the screenshot to `image-analyzer-subagent` via the Task tool:
+2. Delegate the screenshot to `image-analyzer-subagent` via the harness
+   delegation mechanism (OpenCode — the `subagent` tool; Claude Code — the
+   Task tool; other/none — no delegation channel: mark the Tier 2 review
+   inconclusive rather than interpreting the screenshot inline):
    - Pass: screenshot file path, expected layout description (from wireframer baseline), verification question
    - Receive: structured analysis (defects found, confidence level, recommendations)
 3. Accept or reject the fix based on the analysis
