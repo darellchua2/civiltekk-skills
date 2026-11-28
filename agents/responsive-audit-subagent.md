@@ -75,14 +75,7 @@ Loaded skill: `playwright-responsive-audit-skill` — this defines the 6 detecti
 
 ## Background Execution Model
 
-Every DETECT/RE-VERIFY pass runs as its own background shell command: `background: true` returns immediately, the session is notified when the command exits, and that notification carries the pass results. Always pass an explicit `timeout` (ms) sized for the suite. The methodology (6 assertions, 3 tiers, closed loop) is unchanged.
-
-1. Start ONE long-running background server for cross-iteration queries: `npx playwright show-report` (headless). Read its HTML over HTTP — it never delivers test results.
-2. Per pass: run `npx playwright test` as a background command with an explicit `timeout` (ms). Wait for the exit notification before classifying — do not poll.
-3. Early-abort a running pass by killing its process (foreground `pkill -f` on the runner pattern) once the first defect is confirmed — don't wait for the full suite.
-4. Before returning, stop what you started: `pkill -f` the show-report server; every test pass has already exited.
-
-**Fallback:** background shells are a v2 built-in, so no permission change is needed. On non-OpenCode runtimes without them, run the same passes as batch `bash` (`npx playwright test`) per iteration — correct but slower. Background execution is an optimization, not a dependency.
+Owned by `playwright-responsive-audit-skill` §Background execution — follow it verbatim: per-pass background commands with explicit timeouts, results read from exit notifications, one long-running `show-report` server, early abort and cleanup via `pkill -f`. Subagent deltas: screenshot capture stays one-shot `bash` (§Screenshot Delegation); no other deltas — on runtimes without background shells, the methodology's fallback applies unchanged.
 
 ## Audit Workflow
 
@@ -149,10 +142,7 @@ Use them to **cross-corroborate** a Playwright finding, not to replace it — e.
 
 ## CodeGraph Integration
 
-When `.codegraph/` exists in the target project:
-- Use `codegraph_impact` before modifying components to understand change radius
-- Use `codegraph_callers`/`callees` to verify fix doesn't break downstream consumers
-- Use `codegraph_search` to find similar patterns (e.g., other tables that need the same table→card transform)
+When the target project has `.codegraph/`: use `codegraph_explore` (Code Mode, pass the target project path) before and after modifying components — change radius, downstream consumers, and sibling patterns (e.g. other tables that need the same table→card transform). Absent → grep/glob for the same questions.
 
 ## Workflow Context
 
@@ -171,7 +161,7 @@ When invoked after a `uiux-reviewer-subagent` run, accept the reviewer's axis-5 
 Only modify files under the target page directory:
 - `src/app/**/components/**` — component fixes (Tailwind classes, structural transforms)
 - `src/app/**/{page,layout}.tsx` — page-level layout fixes
-- `e2e/responsive/**/*.spec.ts` — regression spec emission
+- `e2e/responsive/**/*.spec.ts` — regression spec emission (presence-only: assert the components a user needs are present and usable at each viewport — never class, pixel, or bounding-box assertions; geometry belongs to the audit pass, not to checked-in specs)
 
 Do NOT modify:
 - `playwright.config.ts` (primary session handles viewport matrix)

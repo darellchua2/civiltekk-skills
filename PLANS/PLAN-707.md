@@ -39,23 +39,27 @@
 
 ### Phase 2: Subagent (`agents/responsive-audit-subagent.md`)
 
-- [ ] **2.1** Rewrite the "CodeGraph Integration" section to the one exposed tool (`codegraph_explore`, run with the target project path) for change-radius and sibling-pattern checks, with a grep fallback when absent.
+- [x] **2.1** Rewrite the "CodeGraph Integration" section to the one exposed tool (`codegraph_explore`, run with the target project path) for change-radius and sibling-pattern checks, with a grep fallback when absent.
     — **Why:** the section names four tools (`codegraph_impact`, `codegraph_callers`, `codegraph_callees`, `codegraph_search`) that the MCP does not expose; an agent following it invents calls.
     — **Done when:** no `codegraph_impact`/`codegraph_callers`/`codegraph_callees`/`codegraph_search` string remains (AC4).
     — **Consumers affected:** none (self-contained guidance).
-- [ ] **2.2** Replace the "Background Execution Model" restatement with a two-line pointer to the methodology skill's execution model, plus the one genuine subagent delta (screenshot capture stays one-shot `bash`; only DETECT/RE-VERIFY passes run as background commands).
+    — **Done:** section rewritten to codegraph_explore only; files: agents/responsive-audit-subagent.md; fixes: none
+- [x] **2.2** Replace the "Background Execution Model" restatement with a two-line pointer to the methodology skill's execution model, plus the one genuine subagent delta (screenshot capture stays one-shot `bash`; only DETECT/RE-VERIFY passes run as background commands).
     — **Why:** the section restates the methodology skill's model nearly line for line; parallel restatements drift.
     — **Done when:** the section is ≤4 lines, names the methodology skill as owner, and keeps the screenshot one-shot rule (AC5).
     — **Consumers affected:** none (the workflow steps reference the model generically).
-- [ ] **2.3** Add the presence-only rule to File Scope's `e2e/responsive/**` line: emitted regression specs assert components are present and usable at each viewport — never class, pixel, or bounding-box assertions; geometry belongs to the audit pass, not to checked-in specs.
+    — **Done:** restatement replaced by the pointer + deltas; files: agents/responsive-audit-subagent.md; fixes: none
+- [x] **2.3** Add the presence-only rule to File Scope's `e2e/responsive/**` line: emitted regression specs assert components are present and usable at each viewport — never class, pixel, or bounding-box assertions; geometry belongs to the audit pass, not to checked-in specs.
     — **Why:** emitted specs rot on every intentional layout change when they pin geometry.
     — **Done when:** the File Scope line carries the presence-only rule (AC3).
     — **Consumers affected:** the repos receiving emitted specs (their CI and future diffs).
+    — **Done:** presence-only rule added to the e2e emission line; files: agents/responsive-audit-subagent.md; fixes: none
 
-- [ ] **2.4** Align `skills/responsive-audit-inline-skill/SKILL.md` §Decision tree step 2: replace the hardcoded "mobile/tablet/desktop viewports" phrasing with "the house viewport matrix (`playwright-responsive-audit-skill`)".
+- [x] **2.4** Align `skills/responsive-audit-inline-skill/SKILL.md` §Decision tree step 2: replace the hardcoded "mobile/tablet/desktop viewports" phrasing with "the house viewport matrix (`playwright-responsive-audit-skill`)".
     — **Why:** AC2 widens the matrix to six viewports; the inline delegate's hardcoded trio would contradict it post-merge (found in plan review — consumer inspection of the map's third node).
     — **Done when:** the inline skill names the house matrix instead of the three viewport names.
     — **Consumers affected:** `skills/plan-execution-inline-skill` (delegation row unchanged).
+    — **Done:** inline decision tree names the house matrix; files: skills/responsive-audit-inline-skill/SKILL.md; fixes: none
 
 
 ### Phase 3: Verification and generalization gate
@@ -91,3 +95,4 @@ None — no blocked-by tickets.
 ## Trace
 
 GATE f9369ced tier=light lint=- typecheck=n.a. build=n.a. unit=t e2e=n.a.
+GATE 7a19071c tier=light lint=- typecheck=n.a. build=n.a. unit=t e2e=n.a.
