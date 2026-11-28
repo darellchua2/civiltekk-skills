@@ -6,13 +6,13 @@
 
 ## Acceptance Criteria
 
-- [ ] AC1 — the methodology skill documents the overflow measurement rule: root `scrollWidth` vs root `clientWidth`, never `window.innerWidth`
-- [ ] AC2 — the methodology skill documents the six-viewport named house matrix (phone-portrait, phone-landscape, tablet-portrait, tablet-landscape, desktop, desktop-wide) with a subsetting note
-- [ ] AC3 — the subagent's File Scope carries a presence-only rule for emitted regression specs
-- [ ] AC4 — no `codegraph_impact`/`codegraph_callers`/`codegraph_callees`/`codegraph_search` reference remains in `agents/responsive-audit-subagent.md`
-- [ ] AC5 — the subagent's execution-model section carries only subagent-specific deltas (the methodology skill owns the model)
-- [ ] AC6 — generalization gate: the diffs name no origin project and no project-specific vocabulary
-- [ ] AC7 — guard tests pass; no frontmatter changes (`installer/registry.json` untouched)
+- [x] AC1 — the methodology skill documents the overflow measurement rule: root `scrollWidth` vs root `clientWidth`, never `window.innerWidth`
+- [x] AC2 — the methodology skill documents the six-viewport named house matrix (phone-portrait, phone-landscape, tablet-portrait, tablet-landscape, desktop, desktop-wide) with a subsetting note
+- [x] AC3 — the subagent's File Scope carries a presence-only rule for emitted regression specs
+- [x] AC4 — no `codegraph_impact`/`codegraph_callers`/`codegraph_callees`/`codegraph_search` reference remains in `agents/responsive-audit-subagent.md`
+- [x] AC5 — the subagent's execution-model section carries only subagent-specific deltas (the methodology skill owns the model)
+- [x] AC6 — generalization gate: the diffs name no origin project and no project-specific vocabulary
+- [x] AC7 — guard tests pass; no frontmatter changes (`installer/registry.json` untouched)
 
 ## Dependency & Consumer Map
 
@@ -64,18 +64,21 @@
 
 ### Phase 3: Verification and generalization gate
 
-- [ ] **3.1** Generalizer gate over the full branch diff: no origin-project names and no project-specific vocabulary anywhere in the changed files. (AC6)
+- [x] **3.1** Generalizer gate over the full branch diff: no origin-project names and no project-specific vocabulary anywhere in the changed files. (AC6)
     — **Why:** AC6 — ported content must be transferable (a stranger's project executes it without the origin story).
     — **Done when:** `git diff origin/dev...feat/707` contains none of: "canvastekk", "Tekk", "phone-layout", "usePhoneLayout", "useDensity", "viewport-matrix".
     — **Consumers affected:** none.
-- [ ] **3.2** Run the repo's skill guard tests and confirm no frontmatter change. (AC7)
+    — **Done:** gate re-scoped to the changed content files (skills/, agents/) after PLAN self-hits; content files clean of all six strings; files: PLANS/PLAN-707.md; fixes: none
+- [x] **3.2** Run the repo's skill guard tests and confirm no frontmatter change. (AC7)
     — **Why:** AC7 — the registry and the isolation guards must stay green for a body-only change.
     — **Done when:** the guard suite passes and `git status installer/registry.json` reports no diff.
     — **Consumers affected:** CI (test suite must stay green on the PR).
-- [ ] **3.3** Acceptance-criteria sweep: re-read AC1–AC7 against the changed files; each must map to an implementing hunk.
+    — **Done:** skill-isolation guards pass; installer/registry.json has no diff; files: none; fixes: none
+- [x] **3.3** Acceptance-criteria sweep: re-read AC1–AC7 against the changed files; each must map to an implementing hunk.
     — **Why:** belt for the thin reviewer map — nothing silently forgotten.
     — **Done when:** each AC cites its hunk (file + section).
     — **Consumers affected:** Step 7 reviewers and Step 9 code review.
+    — **Done:** AC1/AC2 verified in the methodology (scrollWidth rule, six-viewport matrix), AC3/AC4/AC5 in the subagent, AC6 via 3.1, AC7 via 3.2; files: none; fixes: none
 
 ## Technical Notes
 
@@ -96,3 +99,5 @@ None — no blocked-by tickets.
 
 GATE f9369ced tier=light lint=- typecheck=n.a. build=n.a. unit=t e2e=n.a.
 GATE 7a19071c tier=light lint=- typecheck=n.a. build=n.a. unit=t e2e=n.a.
+LOG 3.1: generalizer gate re-scoped to skills/ agents/ after PLAN self-hits (zero-reference-gate learning); content files clean.
+GATE 5e9c0d3f tier=full lint=- typecheck=n.a. build=n.a. unit=t e2e=n.a. (exit gate; full by ticket-exit rule — docs-only diff, unit = skill guards; content tree identical to the pushed HEAD)
