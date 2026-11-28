@@ -61,8 +61,11 @@ actual_mcp_count() {
   python3 -c "import json; d=json.load(open('opencode.json')); assert d['mcp']['servers']['atlassian']['disabled'] is True, 'repo-local atlassian must be disabled by default'"
 }
 
-@test "mcp_count_alpha_vantage_is_disabled_by_default" {
-  python3 -c "import json; d=json.load(open('${CONFIG}')); assert d['mcp']['servers']['alpha-vantage']['disabled'] is True, 'alpha-vantage must be disabled by default'"
+@test "mcp_count_alpha_vantage_removed" {
+  # alpha-vantage pack + server entry removed entirely (2026-11-28). The pack
+  # list is derived from deploy/packs/, so a leftover base-config entry would
+  # resurface in the picker without its pack.
+  python3 -c "import json; d=json.load(open('${CONFIG}')); assert 'alpha-vantage' not in d['mcp']['servers'], 'alpha-vantage must stay removed'"
 }
 
 @test "mcp_count_zai_zread_and_vision_removed" {

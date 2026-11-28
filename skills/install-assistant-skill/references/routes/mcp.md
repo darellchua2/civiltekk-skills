@@ -35,7 +35,6 @@ Present the table to the user before touching anything.
 | Server(s) | Needs before enable |
 |-----------|---------------------|
 | `playwright`, `chrome-devtools` | Chrome/Chromium installed (`google-chrome`/`chromium` on PATH; else advise `npx playwright install chromium` for playwright) |
-| `alpha-vantage` | `ALPHA_VANTAGE_API_KEY` env var (free tier exists) |
 | `nanobanana` | `GEMINI_API_KEY` env var (free tier exists) |
 | `zai-web-reader`, `zai-web-search` | `ZAI_API_KEY` env var |
 | `markitdown` | python3 + pip (setup.sh pip-installs `markitdown-mcp`; small) |
@@ -85,9 +84,6 @@ inventory itself is plain Node and runs anywhere Node runs.
 
 - Atlassian is **disabled globally by default** and must not be force-enabled
   globally (project opt-in only — AGENTS.md MCP routing).
-- Remote servers with OAuth-primary upstreams (e.g. alpha-vantage) ship
-  `"oauth": false` + static Bearer headers; if the upstream rejects the key,
-  report it — pilot-verify note lives in the pack `$comment`.
 - The Autodesk precedent (#554): never advise enabling an MCP whose endpoints
   are not verifiable from the vendor's own docs.
 

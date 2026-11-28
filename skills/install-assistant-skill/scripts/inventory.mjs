@@ -22,7 +22,6 @@ import { join, resolve } from "node:path";
 
 const PACK_OF = {
   "playwright": "playwright",
-  "alpha-vantage": "alpha-vantage",
   "nanobanana": "nanobanana",
   "markitdown": "markitdown",
   "docling": "docling",
@@ -33,8 +32,8 @@ const PACK_OF = {
 const DEMO = {
   mcp: { servers: {
     "playwright": { type: "local", command: ["npx", "-y", "@playwright/mcp@latest"], disabled: true },
-    "alpha-vantage": { type: "remote", url: "https://mcp.alphavantage.co/mcp",
-      headers: { Authorization: "Bearer {env:ALPHA_VANTAGE_API_KEY}" }, disabled: true },
+    "nanobanana": { type: "local", command: ["npx", "-y", "@mindstone/mcp-server-nano-banana@latest"],
+      environment: { GEMINI_API_KEY: "{env:GEMINI_API_KEY}" }, disabled: true },
     "zai-web-search": { type: "remote", url: "https://api.z.ai/api/mcp/web_search_prime/mcp",
       headers: { Authorization: "Bearer {env:ZAI_API_KEY}" }, disabled: false },
   } },
@@ -117,7 +116,7 @@ function main() {
     // Hermetic: judge demo keys against a fixed env, not the ambient one,
     // so the documented self-check behaves identically on every machine.
     process.env.ZAI_API_KEY = "demo-set";
-    delete process.env.ALPHA_VANTAGE_API_KEY;
+    delete process.env.GEMINI_API_KEY;
   }
   const rows = Object.entries(servers).map(([n, s]) => row(n, s))
     .sort((a, b) => Number(b.enabled) - Number(a.enabled) || a.name.localeCompare(b.name));

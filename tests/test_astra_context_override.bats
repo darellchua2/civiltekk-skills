@@ -145,11 +145,11 @@ survives() {
 
 @test "override_survives_a_pack_merge" {
     stage_config
-    survives "merge-packs (alpha-vantage)" \
+    survives "merge-packs (markitdown)" \
         node deploy/merge-packs.mjs \
         --config "$SCRATCH/opencode.json" \
         --packs-dir deploy/packs \
-        --packs alpha-vantage
+        --packs markitdown
 }
 
 @test "survives_helper_fails_on_a_failing_writer_or_a_dropped_override" {

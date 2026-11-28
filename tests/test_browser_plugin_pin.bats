@@ -87,11 +87,11 @@ survives() {
         node deploy/apply-skill-profile.mjs \
         --config "$SCRATCH/opencode.json" \
         --profiles deploy/skill-profiles.json
-    survives "merge-packs (alpha-vantage)" \
+    survives "merge-packs (markitdown)" \
         node deploy/merge-packs.mjs \
         --config "$SCRATCH/opencode.json" \
         --packs-dir deploy/packs \
-        --packs alpha-vantage
+        --packs markitdown
 }
 
 @test "survives_helper_fails_on_a_failing_writer_or_a_dropped_pin" {

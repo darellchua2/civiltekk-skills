@@ -696,15 +696,6 @@
         ],
         "disabled": true
       },
-      "alpha-vantage": {
-        "type": "remote",
-        "url": "https://mcp.alphavantage.co/mcp",
-        "oauth": false,
-        "headers": {
-          "Authorization": "Bearer {env:ALPHA_VANTAGE_API_KEY}"
-        },
-        "disabled": true
-      },
       "nanobanana": {
         "type": "local",
         "command": [

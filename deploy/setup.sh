@@ -690,7 +690,7 @@ USAGE:
     --enable-pack <csv>   Enable provider pack(s) — flips mcp.servers.<server>.disabled
                           and appends v2 permissions-array allow rules for the
                           named packs. Available
-                          packs: markitdown, nextjs, docling, chrome-devtools, playwright, alpha-vantage, nanobanana
+                          packs: markitdown, nextjs, docling, chrome-devtools, playwright, nanobanana
                           (comma-separated pack names, e.g. two packs — see the derived list under MCP SERVERS).
                           No-op if omitted; default state of every pack is OFF.
 

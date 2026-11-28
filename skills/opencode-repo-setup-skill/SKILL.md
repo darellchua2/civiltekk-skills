@@ -56,7 +56,7 @@ One multi-select question + one yes/no per extra. Options are built from the det
 
 **MCP enables** (any of):
 - `atlassian` — Jira/Confluence tools (~5–6.5k tok/session when enabled; see caveats below)
-- markitdown / docling / chrome-devtools / next-devtools / playwright / alpha-vantage / nanobanana — via global `--enable-pack` if not already enabled (alpha-vantage needs `ALPHA_VANTAGE_API_KEY`; nanobanana needs `GEMINI_API_KEY`)
+- markitdown / docling / chrome-devtools / next-devtools / playwright / nanobanana — via global `--enable-pack` if not already enabled (nanobanana needs `GEMINI_API_KEY`)
 
 **Extras**:
 - "Initialize CodeGraph index? (`codegraph init -i`)" — only if `.codegraph/` absent and repo is code-heavy; on accept, also append the CodeGraph rule block (below) to `<repo>/AGENTS.md`

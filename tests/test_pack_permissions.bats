@@ -11,7 +11,7 @@ SETUP="deploy/setup.sh"
 SETUP_PS1="deploy/setup.ps1"
 
 # pack-name:server-keys pairs (explicit enumeration — no dir glob)
-PACK_SERVERS="markitdown:markitdown docling:docling chrome-devtools:chrome-devtools nextjs:next-devtools playwright:playwright alpha-vantage:alpha-vantage nanobanana:nanobanana"
+PACK_SERVERS="markitdown:markitdown docling:docling chrome-devtools:chrome-devtools nextjs:next-devtools playwright:playwright nanobanana:nanobanana"
 
 # =============================================================================
 # Pack file shape (all MCP packs)
