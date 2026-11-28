@@ -18,7 +18,20 @@ Closed-loop responsive auditing: 6 Playwright detection assertions (horizontal o
 
 ## Viewport matrix (house standard)
 
-Desktop 1280×720 (Chrome) · Mobile 375×667 (Pixel 5, touch) · Tablet 768×1024 (iPad gen 7, touch) — as `projects` entries in `playwright.config.ts` with `devices[...]` presets.
+| Name | Size | Touch |
+|---|---|---|
+| `phone-portrait` | 375×667 | yes |
+| `phone-landscape` | 667×375 | yes |
+| `tablet-portrait` | 768×1024 | yes |
+| `tablet-landscape` | 1024×768 | yes |
+| `desktop` | 1280×720 | no |
+| `desktop-wide` | 1440×900 | no |
+
+As `projects` entries in `playwright.config.ts` with `devices[...]` presets. Projects may subset for runtime cost — keep `phone-landscape` when trimming: a landscape phone is where `max-md:`-style width bugs surface, and it is the viewport most audits never see.
+
+## Overflow measurement (assertion #1)
+
+Measure horizontal overflow as root `scrollWidth` vs root `clientWidth` (`document.documentElement`) — never against `window.innerWidth`. Under mobile emulation an overflowing page shrinks to fit and `innerWidth` grows with the overflow, so an `innerWidth` comparison false-negatives exactly on the pages that overflow. Report the widest offending element with the viewport name.
 
 ## 3 fix-confidence tiers
 

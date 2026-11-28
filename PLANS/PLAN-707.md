@@ -26,14 +26,16 @@
 
 ### Phase 1: Methodology skill (`skills/playwright-responsive-audit-skill/SKILL.md`)
 
-- [ ] **1.1** Add an "Overflow measurement" rule to the assertion documentation: measure root `scrollWidth` against root `clientWidth`; never compare against `window.innerWidth` (mobile emulation shrinks an overflowing page to fit and `innerWidth` grows with it); report the widest offending element with the viewport name. (AC1)
+- [x] **1.1** Add an "Overflow measurement" rule to the assertion documentation: measure root `scrollWidth` against root `clientWidth`; never compare against `window.innerWidth` (mobile emulation shrinks an overflowing page to fit and `innerWidth` grows with it); report the widest offending element with the viewport name. (AC1)
     — **Why:** assertion #1 (horizontal overflow) false-negatives under mobile emulation without this rule.
     — **Done when:** the methodology file contains the root-comparison rule and the explicit `window.innerWidth` prohibition.
     — **Consumers affected:** responsive-audit-subagent and responsive-audit-inline-skill inherit detection behavior.
-- [ ] **1.2** Replace the 3-viewport "house standard" block with the six named viewports (phone-portrait 375×667 touch, phone-landscape 667×375 touch, tablet-portrait 768×1024 touch, tablet-landscape 1024×768 touch, desktop 1280×720, desktop-wide 1440×900), keeping the `playwright.config.ts` `devices[...]` guidance and adding a subsetting note (projects may subset for runtime cost; landscape phone is the highest-value addition). (AC2)
+    — **Done:** overflow rule added (root scrollWidth vs clientWidth; innerWidth prohibited); files: skills/playwright-responsive-audit-skill/SKILL.md; fixes: none
+- [x] **1.2** Replace the 3-viewport "house standard" block with the six named viewports (phone-portrait 375×667 touch, phone-landscape 667×375 touch, tablet-portrait 768×1024 touch, tablet-landscape 1024×768 touch, desktop 1280×720, desktop-wide 1440×900), keeping the `playwright.config.ts` `devices[...]` guidance and adding a subsetting note (projects may subset for runtime cost; landscape phone is the highest-value addition). (AC2)
     — **Why:** landscape phones and tablets are unaudited today; they are where width-split layout bugs surface.
     — **Done when:** the matrix table lists all six named viewports with sizes and touch flags, plus one subsetting sentence.
     — **Consumers affected:** responsive-audit-subagent (pass count), responsive-audit-inline-skill (viewport phrasing).
+    — **Done:** six named viewports replace the 3-viewport block, with the subsetting note; files: skills/playwright-responsive-audit-skill/SKILL.md; fixes: none
 
 ### Phase 2: Subagent (`agents/responsive-audit-subagent.md`)
 
@@ -85,3 +87,7 @@ None — no blocked-by tickets.
 
 - Six viewports raise per-audit runtime → the matrix carries an explicit subsetting note; projects with tight budgets subset and keep landscape phone.
 - Wrapper files drifting from the methodology again → Phase 2 slims the restatement instead of editing the two copies in tandem.
+
+## Trace
+
+GATE f9369ced tier=light lint=- typecheck=n.a. build=n.a. unit=t e2e=n.a.
