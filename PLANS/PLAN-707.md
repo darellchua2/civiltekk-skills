@@ -101,3 +101,5 @@ GATE f9369ced tier=light lint=- typecheck=n.a. build=n.a. unit=t e2e=n.a.
 GATE 7a19071c tier=light lint=- typecheck=n.a. build=n.a. unit=t e2e=n.a.
 LOG 3.1: generalizer gate re-scoped to skills/ agents/ after PLAN self-hits (zero-reference-gate learning); content files clean.
 GATE 5e9c0d3f tier=full lint=- typecheck=n.a. build=n.a. unit=t e2e=n.a. (exit gate; full by ticket-exit rule — docs-only diff, unit = skill guards; content tree identical to the pushed HEAD)
+
+GATE e23fe4d4 tier=full lint=- typecheck=n.a. build=n.a. unit=t e2e=n.a. (review-fix re-gate; final pushed SHA)

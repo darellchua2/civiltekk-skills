@@ -20,9 +20,9 @@ Closed-loop responsive auditing: 6 Playwright detection assertions (horizontal o
 
 | Name | Size | Touch |
 |---|---|---|
-| `phone-portrait` | 375×667 | yes |
+| `phone-portrait` | 375×667 (Pixel 5) | yes |
 | `phone-landscape` | 667×375 | yes |
-| `tablet-portrait` | 768×1024 | yes |
+| `tablet-portrait` | 768×1024 (iPad gen 7) | yes |
 | `tablet-landscape` | 1024×768 | yes |
 | `desktop` | 1280×720 | no |
 | `desktop-wide` | 1440×900 | no |
