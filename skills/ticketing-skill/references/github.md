@@ -26,7 +26,7 @@ the ask-don't-invent rule.
 
 | Operation | Possible via git? | Behavior |
 |-----------|-------------------|----------|
-| Create issue | **No** — issues live in GitHub's database, unreachable via git protocol | Emit a paste-ready issue body (SKILL.md §Create schema) to a local file + print the repo's New-issue web URL (`https://github.com/<owner>/<repo>/issues/new`) for the user to submit manually |
+| Create issue | **No** — issues live in GitHub's database, unreachable via git protocol | Emit a paste-ready issue body (rendering schema: `references/phases/create.md` §Rendering schema) to a local file + print the repo's New-issue web URL (`https://github.com/<owner>/<repo>/issues/new`) for the user to submit manually |
 | Label / classify | **No** | Report skipped with a note; include the detected label names in the emitted body for manual application |
 | Progress comment | **No** | Report skipped with a note |
 | Close ticket | **Yes, indirectly** | `Closes #<num>` / `Fixes #<num>` / `Resolves #<num>` in a commit message closes the issue server-side when the commit lands on the default branch (GitHub parses keywords on push — no `gh` needed) |
@@ -51,7 +51,7 @@ gh issue view <issue-number> --json title,body,labels
 # Assign labels
 gh issue edit <issue-number> --add-label "<label1>,<label2>"
 
-# Progress comment (house template per SKILL.md §Update)
+# Progress comment (house template per references/phases/update.md)
 gh issue comment <num> --body-file <file>
 
 # Verify
@@ -136,6 +136,25 @@ elif [[ "$pr_title" =~ ^feat ]];     then labels+=("minor")
 else                                      labels+=("patch")
 fi
 ```
+
+## Epic / parent grouping
+
+- **Portable floor**: children carry a `Parent: #N` body line (SKILL.md
+  §Create) — works on every plan, parses with plain gh.
+- **Native sub-issues**: GitHub tracks parent/child natively via the
+  sub-issue API (GraphQL `addSubIssue`). *Verify locally: confirm the
+  org's plan supports sub-issues before relying on the API — the body-ref
+  link is the floor that always works.*
+- An epic is a normal parent issue — no special type or label required;
+  keep the epic's Acceptance Criteria as the union of its children's.
+
+## Attribution (author/assignee)
+
+- The issue author is the `gh auth` user by construction (token owner —
+  GitHub does not allow spoofing); `--assignee @me` self-assigns the same
+  identity.
+- `git config user.name`/`user.email` are NOT valid assignee sources
+  (display name, not a login; email may be a private noreply address).
 
 ## Ticket key format
 

@@ -1,9 +1,9 @@
 # ticketing-skill
 
-One skill for the whole ticket lifecycle on **GitHub Issues** or **JIRA** —
-create, start (in-progress), classify/label, update from commits, close
-post-merge, and the ticket-key ↔ branch ↔ commit plumbing that ties tickets
-to git.
+One skill for the whole ticket lifecycle on **GitHub Issues** (the default)
+or **JIRA** (opt-in) — create, start (in-progress), classify/label, update
+from commits, close post-merge, and the ticket-key ↔ branch ↔ commit plumbing
+that ties tickets to git.
 
 Consolidates six former skills (#599): `ticket-creation-skill`,
 `git-issue-labeler-skill`, `git-issue-updater-skill`,
@@ -19,17 +19,19 @@ Consolidates six former skills (#599): `ticket-creation-skill`,
 flowchart TD
     T["Ticket request"] --> P{"Platform? §Platform Detection"}
     T --> L{"Lifecycle op? §Lifecycle"}
-    P -- "explicit key / request" --> G["github → references/github.md"]
-    P -- "PROJ-123 / explicit / MCP present" --> J["jira → references/jira.md"]
-    P -- "ambiguous" --> A["ask once, then proceed"]
+    P -- "explicit: #N / 'GitHub issue'" --> G["github → references/github.md"]
+    P -- "explicit JIRA only: 'JIRA' or PROJ-123 key" --> J["jira → references/jira.md"]
+    P -- "no signal" --> D["default: github — announce, never ask"]
 
-    L -->|create| C["§Create — intake · classify · validate · preview · submit"]
+    L -->|create| C["§Create — field spec + rendering schema; mechanics in phases/create.md"]
     L -->|classify / label| CL["§Classify/Label — type + priority; PRs: exactly one semver label"]
     L -->|start| S["§Start — execution begins; check-first idempotent"]
-    L -->|update| U["§Update — commit → progress comment, idempotent"]
-    L -->|close| X["§Close — post-merge transition, exactly once"]
+    L -->|update| U["§Update — commit → progress comment, idempotent; phases/update.md"]
+    L -->|close| X["§Close — post-merge transition, exactly once; phases/close.md"]
     L -->|plumbing| K["§Git plumbing — key ↔ branch ↔ commit footers"]
 
+    C --> EP["single vs parent? ask at intake — epic = parent ticket<br/>(GitHub: Parent: #N, sub-issues verify-locally · JIRA: native)"]
+    C --> HAND["multi-ticket? sequence handoff + blocked-by: refs<br/>→ /run-worktree-pipeline"]
     G --> GH{"gh available?"}
     GH -- "yes" --> FULL["tier 1 — full CRUD via gh"]
     GH -- "no" --> PR["tier 2 — prompt: install gh?"]
@@ -39,8 +41,6 @@ flowchart TD
     J --> JM{"atlassian MCP enabled?<br/>§MCP Availability Guard"}
     JM -- "yes" --> MM["MCP tools (discovery → create → transition)"]
     JM -- "no" --> MR["REST fallback — API token + curl,<br/>or report skipped (never block)"]
-
-    C --> HAND["multi-ticket? sequence handoff + blocked-by: refs<br/>→ /run-worktree-pipeline"]
 ```
 
 ## What stays outside

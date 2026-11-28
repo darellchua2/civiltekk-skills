@@ -1,13 +1,15 @@
 # JIRA — platform values for ticketing-skill
 
-> **Load rule:** read this file when the resolved platform is `jira` (per
-> SKILL.md §Platform Detection — a `PROJ-123`-style ref, an explicit JIRA
-> request, or an enabled atlassian MCP). It carries the VALUES — MCP tools,
-> REST endpoints, taxonomy vocabulary, key formats. The METHOD (guards,
-> lifecycle routing, idempotency contracts) lives in SKILL.md and never here.
-> The MCP availability policy is SKILL.md §MCP Availability Guard (canonical
-> home) — this file only lists endpoints. Values marked *verify locally* must
-> be confirmed against the target site/project (schemes vary by JIRA version).
+> **Load rule:** read only when the resolved platform is `jira` (per
+> SKILL.md §Platform Detection — the user explicitly says JIRA or gives a
+> `PROJ-123`-style key; the repo using Atlassian tools alone never selects
+> this file). It carries the VALUES — MCP tools, REST endpoints, taxonomy
+> vocabulary, key formats. The METHOD (guards, lifecycle routing,
+> idempotency contracts) lives in SKILL.md and never here. The MCP
+> availability policy is SKILL.md §MCP Availability Guard (canonical
+> home) — this file only lists endpoints. Values marked *verify locally*
+> must be confirmed against the target site/project (schemes vary by JIRA
+> version).
 >
 > **Contributors:** copying this file's skeleton is the extension path for a
 > new tracker platform (`references/<platform>.md`) — values only, no method.
@@ -130,6 +132,30 @@ Pick the start target by priority: any transition whose
 projects customize status names, not status categories. Method
 (check-first, transition-once) is SKILL.md §Start; same endpoints as close
 (`GET`/`POST /rest/api/3/issue/{key}/transitions`).
+
+## Epic / parent grouping
+
+- Create the epic with type `Epic` (or the project's hierarchical parent
+  type), children with `--parent <EPIC-KEY>` (v3 `parent` field — the same
+  parameter the MCP discovery workflow lists for sub-tasks). *Verify
+  locally: team-managed vs company-managed projects differ in epic support.*
+- Hierarchy per §Vocabulary: `Epic → Story/Task → Sub-task`.
+
+## Attribution (author/assignee)
+
+- Reporter defaults to the account behind the MCP token / REST credentials —
+  automatic, no field needed.
+- Assignee must be set explicitly by `accountId` (JIRA never assigns by
+  display name or email): own accountId via `GET /rest/api/3/myself`; set
+  via `PUT /rest/api/3/issue/{key}/assignee` with `{"accountId": "<id>"}` —
+  the only guaranteed path.
+- `atlassian_createJiraIssue` (v1, pinned) assignee parameter: **unverified —
+  server absent** (2026-09-19 static inspection: Atlassian's supported-tools
+  page documents v2 only — there the create tool is `createJiraIssue` with no
+  published per-parameter schema and `editJiraIssue` is the documented
+  field-edit path; the pinned v1 schema is not statically published).
+  Re-inspect live when a project enables the atlassian MCP; until then use
+  the REST PUT above, or MCP v2 `editJiraIssue` where v2 is enabled.
 
 ## Ticket key format & git plumbing
 

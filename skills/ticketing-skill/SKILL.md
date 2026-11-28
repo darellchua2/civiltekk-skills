@@ -1,11 +1,11 @@
 ---
 name: ticketing-skill
 description: >-
-  Ticket lifecycle for GitHub Issues and JIRA — create, start (in-progress),
-  classify/label, update from commits, close (post-merge, idempotent),
-  ticket-key↔branch plumbing. CRUD only: no branches, PLANs, execution.
-  Triggers: any ticket/issue create·start·label·update·close, bug report,
-  feature request.
+  Ticket lifecycle for GitHub Issues (default) or JIRA — create, start
+  (in-progress), classify/label, update from commits, close (post-merge,
+  idempotent), ticket-key↔branch plumbing, epic/parent grouping. CRUD only:
+  no branches, PLANs, execution. Triggers: any ticket/issue
+  create·start·label·update·close, bug report, feature request.
 license: Apache-2.0
 compatibility: opencode
 category: Git/Workflow
@@ -17,11 +17,15 @@ Consolidates `ticket-creation-skill`, `git-issue-labeler-skill`,
 
 ## What I do
 
-Ticket CRUD and classification on GitHub Issues or JIRA — nothing else:
+Ticket CRUD and classification — **GitHub Issues is the default tracker;
+JIRA is opt-in**:
 
-1. **Detect Platform** (§Platform Detection) — GitHub or JIRA
-2. **Route the lifecycle op** (§Lifecycle): create · classify/label · start · update · close · git plumbing
-3. **Load the platform values** (`references/github.md` / `references/jira.md`)
+1. **Resolve the tracker** (§Platform Detection) — `github` unless the user
+   explicitly says JIRA; GitHub is also the fallback when JIRA is unavailable.
+2. **Route the lifecycle op** (§Lifecycle): create · classify/label · start ·
+   update · close · git plumbing — op mechanics live in the phase files.
+3. **Load the values** for the resolved tracker (`references/github.md` /
+   `references/jira.md`) plus the phase file for the op.
 
 Branch creation, PLAN generation, execution, and release/versioning belong to
 `worktree-pipeline-skill` (`/run-worktree-pipeline`) and
@@ -31,95 +35,78 @@ Branch creation, PLAN generation, execution, and release/versioning belong to
 
 | Read | When | Use |
 |------|------|-----|
-| `references/github.md` | resolved platform is `github` | gh commands, 3-tier tooling fallback, label vocabulary + LABELS array, semver rule, `#N` key format, templates contract |
-| `references/jira.md` | resolved platform is `jira` | MCP discovery workflow, REST endpoints, type/priority vocabulary, transitions, `PROJ-123` key format, description templates |
+| `references/github.md` | resolved tracker is `github` | gh commands, 3-tier tooling fallback, label vocabulary + LABELS array, semver rule, `#N` key format, epic/parent linking, attribution rules, templates contract |
+| `references/jira.md` | resolved tracker is `jira` | MCP discovery workflow, REST endpoints, type/priority vocabulary, transitions, `PROJ-123` key format, epic/parent linking, attribution rules, description templates |
+| `references/phases/create.md` | lifecycle op is **create** | five-stage intake mechanics, epic/sequence handoff, `blocked-by:` convention |
+| `references/phases/update.md` | lifecycle op is **update** | ref-to-artifact mechanics, progress-comment template, idempotency check |
+| `references/phases/close.md` | lifecycle op is **close** | post-merge transition mechanics, merge-comment template, failure isolation |
 
-Side files carry VALUES only; this file carries the METHOD. An unknown
-platform (Linear, Azure Boards, …) → detect-and-ask; if
-`references/<platform>.md` does not exist, report the platform as
-unsupported and suggest contributing a side file — never improvise endpoints.
+Side files carry VALUES and OP MECHANICS; this file carries the METHOD —
+decision gates, contracts, vocab routing. An unknown platform (Linear, Azure
+Boards, …) → detect-and-ask; if `references/<platform>.md` does not exist,
+report the platform as unsupported and suggest contributing a side file —
+never improvise endpoints.
 
 ## Platform Detection
 
-Resolve in priority order — explicit beats inferred, inferred beats asked:
+GitHub Issues is the default tracker. JIRA is never assumed — not from
+project configuration, installed tools, or conventions alone.
 
-1. **Explicit**: user names a JIRA key (`PROJ-123`) or says JIRA → `jira`;
-   names `#123` / "GitHub issue" / "create issue" → `github`.
-2. **Repo signals**: ticket key format in branch/commits; for JIRA, ONLY if
-   `atlassian_*` tools exist in the tool list (see §MCP Availability Guard) —
-   tools absent means JIRA is unavailable: run the GitHub flow and report
-   JIRA steps as skipped, never hallucinate `atlassian_*` calls.
-3. **Ambiguous** ("create ticket"): ask once — "Which platform? GitHub Issues
-   (default) / JIRA" — then proceed. One ask per run.
+1. **The user names the tracker** — "JIRA" or a `PROJ-123`-style key →
+   `jira`; a `#123` ref, "GitHub issue", "create issue" → `github`. Explicit
+   beats everything.
+2. **The artifacts name the ticket** (update/close ops): a `#N` in the
+   branch/commits/PR → `github`; a JIRA-shaped key there → `jira`. The key
+   IS the ticket's identity — there is no second ticket to prefer.
+3. **No signal at all** → `github`. Never ask which platform; announce the
+   default in one line ("defaulting to GitHub Issues") and proceed. A repo's
+   JIRA usage (env vars, AGENTS.md mentions, enabled tools) is a data point
+   to report, never a route.
 
-Before any GitHub operation, resolve the **tooling tier**
-(`references/github.md` §Tooling fallback): `gh` present → full CRUD; missing
-→ prompt the user to install (`gh-cli-setup-skill`); declined → git-only tier
-with its honest per-operation limits.
+Every `jira` resolution runs through §MCP Availability Guard before any
+`atlassian_*` call. Before any GitHub operation, resolve the **tooling
+tier** (`references/github.md` §Tooling fallback): `gh` present → full CRUD;
+missing → prompt the user to install (`gh-cli-setup-skill`); declined →
+git-only tier with its honest per-operation limits.
 
 ## Lifecycle
 
 ### Create
 
 The agent runs the same intake a human runs in the browser issue form. Never
-invent field values; ask for what is missing.
+invent field values; ask for what is missing. The five-stage mechanics
+(classify → intake → validate → preview → submit) are
+`references/phases/create.md`; the parity contract is here.
 
-**Stage 1 — Classify.** Variant from content: `bug` (broken, reproducible →
-bug template, repo form `.github/ISSUE_TEMPLATE/bug_report.yml`) or
-`feature`/`task` (new capability or contained work → feature template).
-Final type/label resolution happens at classify/label below; the variant here
-selects the template.
-
-**Stage 2 — Intake.** Batch one question round for every required field
-missing from the request. Field labels are canonical — they match
-`templates/` verbatim so agent-created and human-created tickets are
-structurally identical.
+**Field spec** (canonical; matches `templates/*.yml` verbatim so agent- and
+form-created tickets are structurally identical):
 
 *Bug variant* (mirrors `bug_report.yml`): Title (≤72 chars, required) ·
 Problem description (required) · Steps to reproduce (numbered, required) ·
 Expected vs Actual (one line each, required) · Environment (OS/Node/opencode
-version + install method, required) · Logs/screenshots (optional) ·
+version + install method, required) · Logs / screenshots (optional) ·
 References (optional).
 
 *Feature/Task variant* (mirrors `feature_request.yml`): Title (≤72, required)
-· Problem/use case (required) · Proposed solution (required) · Alternatives
-considered (optional) · Acceptance criteria (required, definition of done) ·
-Scope (required, agent flow only — flows to the PLAN, never the browser form)
-· References (optional).
-
-**Stage 3 — Validate.** Required fields non-empty. Missing required → ask,
-not guess. Each sub-item in a multi-ticket run gets its own intake round; a
-sub-item without acceptance criteria fails validation.
-
-**Stage 4 — Preview.** Render title + body, show the user for confirmation
-or edits before any creation call.
-
-**Stage 5 — Submit.** After confirmation, create per the platform side file
-(gh commands / MCP-REST flow). Prefix titles with the form's `title` prefix
-(`[Bug]: ` / `[Feature]: `) so agent- and form-created tickets match triage
-filters.
+· Problem / use case (required) · Proposed solution (required) ·
+Alternatives considered (optional) · Acceptance criteria (required,
+definition of done) · Scope (required, agent flow only — flows to the PLAN,
+never the browser form) · References (optional).
 
 **Rendering schema** — one canonical schema, two renderings; variant selects
-sections; sections mirror the form headings. GitHub bug body: `### Problem
-description` / `### Steps to reproduce` / `### Expected vs Actual` /
-`### Environment` / `### Logs / screenshots` / `### References`. GitHub
-feature body: `### Problem / use case` / `### Proposed solution` /
-`### Alternatives considered` (omit if none) / `### Acceptance criteria`
-(checklist) / `### References`. JIRA description mapping per
+sections; sections mirror the form headings. The section-by-section schema:
+`references/phases/create.md` §Rendering schema. JIRA description mapping per
 `references/jira.md` §Description templates.
 
-**Scope**: single ticket vs parent with sub-issues/subtasks — ask. Parents
-get body-ref linking (`Parent: #N`) on GitHub; native subtasks on JIRA.
+**Epic / parent grouping.** Single ticket vs parent with children — ask,
+batched with intake. An epic is a parent ticket, not a new type: GitHub — a
+normal parent issue whose children carry `Parent: #N` (the portable floor;
+native sub-issues per `references/github.md` §Epic — verify locally). JIRA —
+native Epic/parent per `references/jira.md` §Epic. "If possible" means the
+body-ref link is always available; richer linkage is best-effort.
 
-**Sequence handoff** (multi-ticket runs only): end with the executable
-tickets in suggested order for `/run-worktree-pipeline`, one-line rationale
-per position; order derivation = user-stated dependencies > user-given order
-> content inference (always labeled "inferred"); omit the umbrella parent.
-When the user states dependencies, write `blocked-by: <ref>` as a plain body
-line under a `### Dependencies` heading in the DEPENDENT ticket (bare refs:
-`#458`, `PROJ-123`, `owner/repo#458`) so the pipeline's skip-guard enforces
-the order. Editing an existing body: fetch, append, write back — body edits
-REPLACE, never blindly append.
+**Sequence handoff** (multi-ticket runs only) — ordering derivation and the
+`blocked-by:` convention: `references/phases/create.md`.
 
 ### Classify / Label
 
@@ -166,35 +153,14 @@ applies — JIRA unavailable → report the transition skipped).
 After pushing commits that reference a ticket (and before PR creation, to
 keep the tracker current):
 
-1. **Latest commit**: `git log -1 --format='%H %an %aI %s'`; files via
-   `git diff-tree --no-commit-id --name-only -r HEAD`.
-2. **Determine the ticket ref** — never guess: GitHub `#(\d+)` in the commit
+1. **Determine the ticket ref** — never guess: GitHub `#(\d+)` in the commit
    message first; then JIRA `[A-Z]+-\d+`; then branch name (`123` → `#123`,
-   `PROJ-123` → JIRA); else ask the user.
-3. **Post one progress comment** in the house template below (GitHub via gh;
-   JIRA per §MCP Availability Guard / side-file endpoint).
-4. **Idempotency**: one comment per commit push — skip if a comment matching
-   that commit hash already exists.
-
-House comment template — same shape every update so progress is diffable:
-
-```markdown
-## Progress Update - <YYYY-MM-DD at HH:mm (UTC offset)>
-
-### Changes Made
-- <subject-line bullets from commits>
-
-### Statistics
-- **Commits**: <n> · **Files changed**: <n> (+<adds>/−<dels>)
-
-### Commit Link
-- [<short-hash>]($REPO_URL/commit/<sha>) — <subject>
-
-### Files Changed
-- <paths>
-```
-
-Rules: real user + timestamp from `git log`, never invented; no editorializing.
+   `PROJ-123` → `jira`, §Platform Detection point 2); else ask the user.
+2. **One progress comment per commit push** — mechanics, idempotency check
+   (skip when a comment with that commit hash exists), and the house
+   comment template: `references/phases/update.md`. JIRA unavailable →
+   report skipped (§MCP Availability Guard), never block the calling
+   workflow.
 
 ### Close (post-merge)
 
@@ -208,20 +174,9 @@ never by PR creation itself.
 2. **Check current status first** — already done-category → skip the
    transition, still add/verify the merge comment. This is the
    transition-once guard.
-3. **Transition** to the done-category target (pick priority and endpoints
-   per the side file); add the merge comment (template below).
-4. Failure isolation: a comment failure must not trigger a second transition
-   attempt; log and continue where possible.
-
-```markdown
-## Pull Request Merged
-### Status Update
-- **Previous**: <from> → **New**: <to>
-### Merge Details
-- **PR**: #<num> — <title> (<merge SHA>)
-### Files Changed
-- <summary or count>
-```
+3. **Transition + merge comment** — mechanics, the merge-comment template,
+   and failure isolation (a comment failure must not trigger a second
+   transition attempt): `references/phases/close.md`.
 
 ### Git plumbing (ticket keys ↔ branches ↔ commits)
 
@@ -255,33 +210,6 @@ The `atlassian` MCP server is **disabled by default** (opt-in). Before any
 
 GitHub-side operations are unaffected (gh or git per the tooling tier).
 Per-operation REST endpoints: `references/jira.md` §REST fallback endpoints.
-
-## Attribution (author/assignee)
-
-- **GitHub**: the issue author is the `gh auth` user by construction (token
-  owner — GitHub does not allow spoofing); `--assignee @me` self-assigns the
-  same identity. `git config user.name`/`user.email` are NOT valid assignee
-  sources (display name, not a login; email may be a private noreply
-  address).
-- **JIRA reporter**: defaults to the account behind the MCP token / REST
-  credentials — automatic, no field needed.
-- **JIRA assignee**: must be set explicitly by `accountId` (JIRA never
-  assigns by display name or email):
-  1. Fetch own accountId: REST `curl -u email:token
-     https://<site>.atlassian.net/rest/api/3/myself` → `.accountId` (on
-     Atlassian MCP v2, `atlassianUserInfo`/`lookupJiraAccountId` are the
-     MCP-native equivalents).
-  2. Set assignee: REST `PUT /rest/api/3/issue/{key}/assignee` with
-     `{"accountId": "<id>"}` — the only guaranteed path; works from the
-     §MCP Availability Guard REST fallback.
-  3. `atlassian_createJiraIssue` (v1, pinned) assignee parameter:
-     **unverified — server absent** (2026-09-19 static inspection:
-     Atlassian's supported-tools page documents v2 only — there the create
-     tool is `createJiraIssue` with no published per-parameter schema and
-     `editJiraIssue` is the documented field-edit path; the pinned v1 schema
-     is not statically published). Re-inspect live when a project enables
-     the atlassian MCP; until then use the REST PUT above, or MCP v2
-     `editJiraIssue` where v2 is enabled.
 
 ## Boundaries
 
